@@ -1,5 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
@@ -2349,7 +2350,12 @@ app.post('/api/admin/diagnostics/ai-playground', authMiddleware, superAdminMiddl
 // C. Firebase Real Diagnostics
 app.post('/api/admin/diagnostics/firebase', authMiddleware, superAdminMiddleware, async (req: Request, res: Response) => {
   const startTime = Date.now();
-  const apiKey = process.env.VITE_FIREBASE_API_KEY || (db as any).data?.firebaseApiKey || '';
+  let fileConfigApiKey = '';
+  try {
+    const cfg = JSON.parse(fs.readFileSync('./firebase-applet-config.json', 'utf8'));
+    fileConfigApiKey = cfg.apiKey || '';
+  } catch {}
+  const apiKey = process.env.VITE_FIREBASE_API_KEY || (db as any).data?.firebaseApiKey || fileConfigApiKey;
   const projectId = 'yearinvo-ai';
   const authDomain = 'yearinvo-ai.firebaseapp.com';
   const storageBucket = 'yearinvo-ai.firebasestorage.app';

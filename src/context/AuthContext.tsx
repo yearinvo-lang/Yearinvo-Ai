@@ -34,6 +34,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return (localStorage.getItem('yia_theme') as 'dark' | 'light') || 'dark';
   });
 
+  const parseJsonResponse = async (res: Response) => {
+    const contentType = res.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      return await res.json().catch(() => null);
+    }
+    const rawText = await res.text().catch(() => '');
+    return { error: rawText.slice(0, 150) || `Server responded with status ${res.status}` };
+  };
+
   const apiRequest = async (url: string, options: RequestInit = {}) => {
     const headers = new Headers(options.headers || {});
     if (token) {
@@ -47,11 +56,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     const res = await fetch(url, { ...options, headers });
+    const data = await parseJsonResponse(res);
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({ error: 'Request failed' }));
-      throw new Error(errData.error || `HTTP error ${res.status}`);
+      const errMsg = (data && data.error) ? data.error : `Server request error (${res.status})`;
+      throw new Error(errMsg);
     }
-    return res.json();
+    return data;
   };
 
   const refreshUserData = async () => {
@@ -61,16 +71,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     try {
       const data = await apiRequest('/api/auth/me');
-      setUser(data.user);
-      setWorkspaces(data.workspaces || []);
-      if (data.activeWorkspace) {
-        setActiveWorkspaceState(data.activeWorkspace);
-      } else if (data.workspaces && data.workspaces.length > 0) {
-        setActiveWorkspaceState(data.workspaces[0]);
+      if (data && data.user) {
+        setUser(data.user);
+        setWorkspaces(data.workspaces || []);
+        if (data.activeWorkspace) {
+          setActiveWorkspaceState(data.activeWorkspace);
+        } else if (data.workspaces && data.workspaces.length > 0) {
+          setActiveWorkspaceState(data.workspaces[0]);
+        }
+      } else {
+        setToken(null);
+        localStorage.removeItem('yia_token');
       }
     } catch (err) {
       console.error('Failed to restore session:', err);
-      // Auto-fallback to demo session if token invalid so user is never locked out
       setToken(null);
       localStorage.removeItem('yia_token');
     } finally {
@@ -79,32 +93,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    // If no token, auto-login into demo workspace or platform admin for smooth user preview
     const autoInit = async () => {
       const savedToken = localStorage.getItem('yia_token');
       if (savedToken) {
         await refreshUserData();
       } else {
-        // Initial auto-login with admin demo account so user can evaluate the live SaaS immediately
-        try {
-          const res = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: 'yearinvo@gmail.com', password: 'admin123' }),
-          });
-          if (res.ok) {
-            const data = await res.json();
-            setUser(data.user);
-            setToken(data.token);
-            localStorage.setItem('yia_token', data.token);
-            setWorkspaces(data.workspaces || []);
-            setActiveWorkspaceState(data.activeWorkspace || data.workspaces[0] || null);
-          }
-        } catch (e) {
-          console.error('Initial auto-login err:', e);
-        } finally {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     };
 
@@ -118,9 +112,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, firebaseUid }),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        return { success: false, error: data.error || 'Login failed' };
+      const data = await parseJsonResponse(res);
+      if (!res.ok || !data || data.error) {
+        return { success: false, error: (data && data.error) || `Login failed (${res.status})` };
       }
       setUser(data.user);
       setToken(data.token);
@@ -140,9 +134,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(inputData),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        return { success: false, error: data.error || 'Registration failed' };
+      const data = await parseJsonResponse(res);
+      if (!res.ok || !data || data.error) {
+        return { success: false, error: (data && data.error) || `Registration failed (${res.status})` };
       }
       setUser(data.user);
       setToken(data.token);
