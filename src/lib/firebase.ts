@@ -330,7 +330,7 @@ export async function runFirestoreReadWriteDiagnostic(): Promise<{
 // ========================================================
 
 export function formatFirebaseAuthError(error: any): string {
-  if (!error) return 'Authentication error occurred.';
+  if (!error) return 'An error occurred during authentication. Please try again.';
   const code = error.code || '';
   switch (code) {
     case 'auth/invalid-email':
@@ -342,23 +342,26 @@ export function formatFirebaseAuthError(error: any): string {
     case 'auth/invalid-login-credentials':
       return 'Invalid email or password. Please verify your credentials and try again.';
     case 'auth/email-already-in-use':
-      return 'An account already exists with this email address in Firebase Authentication.';
+      return 'An account already exists with this email address. Please sign in or use a different email.';
     case 'auth/weak-password':
       return 'Password should be at least 6 characters long.';
     case 'auth/popup-blocked':
-      return 'Authentication popup was blocked by browser. Please enable popups for this site.';
+      return 'The sign-in window was blocked by your browser. Please enable popups for this site and try again.';
     case 'auth/popup-closed-by-user':
-      return 'Authentication was cancelled (the popup window was closed before completion).';
+      return 'Sign-in was cancelled before completion. Please try again.';
     case 'auth/network-request-failed':
       return 'Network connection failure. Please check your internet connection.';
     case 'auth/too-many-requests':
-      return 'Access to this account has been temporarily disabled due to too many failed login attempts. Please reset your password or try again later.';
+      return 'Access has been temporarily disabled due to multiple failed login attempts. Please reset your password or try again later.';
     case 'auth/unauthorized-domain':
-      return 'Current domain is not authorized in Firebase Auth settings. Add this domain to Authorized Domains in the Firebase Console.';
+      return 'This application domain is awaiting OAuth authorization in console settings. Please contact support or use email sign-in.';
     case 'auth/operation-not-allowed':
-      return 'This sign-in provider is not enabled in Firebase Authentication console.';
-    default:
-      return error.message || 'Authentication failed. Please verify credentials and network.';
+      return 'This sign-in method is not enabled for this workspace. Please contact support.';
+    default: {
+      const msg = error.message || 'Authentication failed. Please verify your credentials and network connection.';
+      // Clean any raw internal Firebase mentions from message
+      return msg.replace(/Firebase: /g, '').replace(/Firebase/g, 'YEAR INFO AI Authentication');
+    }
   }
 }
 

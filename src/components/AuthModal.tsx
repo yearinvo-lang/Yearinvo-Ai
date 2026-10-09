@@ -44,75 +44,77 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return; // Prevent duplicate submissions while in progress
     setError(null);
     setSuccessInfo(null);
     setLoading(true);
 
     try {
       if (mode === 'login') {
+        const cleanEmail = email.trim();
+        if (!cleanEmail || !password) {
+          setError('Please provide both email address and password.');
+          return;
+        }
+
         // 1. Authenticate with Firebase Authentication first
+        let fbUser;
         try {
-          await firebaseSignIn(email.trim(), password);
+          fbUser = await firebaseSignIn(cleanEmail, password);
         } catch (fbErr: any) {
-          // If Firebase Auth fails with invalid credentials, report the real message
-          const msg = formatFirebaseAuthError(fbErr);
-          setError(msg);
-          setLoading(false);
+          // If Firebase Auth fails, report clear, user-friendly error
+          setError(formatFirebaseAuthError(fbErr));
           return;
         }
 
         // 2. Sync session with server backend
-        const res = await login(email.trim(), password);
+        const res = await login(cleanEmail, password, fbUser.uid);
         if (res.success) {
           onSuccess(false);
         } else {
-          setError(res.error || 'Login session synchronization failed');
+          setError(res.error || 'Account authentication succeeded, but workspace session synchronization failed.');
         }
       } else if (mode === 'register') {
         const cleanEmail = email.trim();
-        if (!name.trim() || !cleanEmail || !password) {
-          setError('Please fill in all required fields (Name, Email, and Password).');
-          setLoading(false);
+        const cleanName = name.trim();
+        if (!cleanName || !cleanEmail || !password) {
+          setError('Please fill in all required fields (Full Name, Email, and Password).');
           return;
         }
 
         if (password.length < 6) {
           setError('Password must be at least 6 characters long.');
-          setLoading(false);
           return;
         }
 
         // 1. Create real user in Firebase Authentication
         let fbUser;
         try {
-          fbUser = await firebaseSignUp(cleanEmail, password, name.trim());
+          fbUser = await firebaseSignUp(cleanEmail, password, cleanName);
         } catch (fbErr: any) {
-          const fbMsg = formatFirebaseAuthError(fbErr);
-          setError(fbMsg);
-          setLoading(false);
+          setError(formatFirebaseAuthError(fbErr));
           return;
         }
 
-        // 2. Once Firebase confirms account creation, provision workspace & server profile
+        // 2. Once Firebase confirms account creation, provision workspace & server profile using authenticated user's UID
         const res = await register({
-          name: name.trim(),
+          name: cleanName,
           email: cleanEmail,
           password,
           businessName: businessName.trim() || undefined,
           phone: phone.trim() || undefined,
+          uid: fbUser.uid,
         });
 
         if (res.success) {
           onSuccess(true);
         } else {
-          // Account exists in Firebase Auth, but backend profile setup reported an error
-          setError(`Firebase account created (${fbUser.uid}), but profile initialization failed: ${res.error}`);
+          setError(`Account created successfully, but workspace setup returned: ${res.error}`);
         }
       } else if (mode === 'forgot') {
         const cleanEmail = email.trim();
         if (!cleanEmail) {
           setError('Please enter your email address to receive password reset instructions.');
-          setLoading(false);
           return;
         }
 
@@ -121,12 +123,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           await firebaseResetPassword(cleanEmail);
           setResetSent(true);
         } catch (fbErr: any) {
-          const friendlyMsg = formatFirebaseAuthError(fbErr);
-          setError(friendlyMsg);
+          setError(formatFirebaseAuthError(fbErr));
         }
       }
     } catch (err: any) {
-      setError(err.message || 'Operation failed. Please try again.');
+      setError(err.message || 'An unexpected error occurred during authentication. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -134,6 +135,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   // Google Login via real Firebase Auth
   const handleGoogleSignIn = async () => {
+    if (loading) return;
     setError(null);
     setLoading(true);
     try {
@@ -142,33 +144,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         throw new Error('Google Sign-In returned empty user credentials.');
       }
 
-      // Provision or retrieve user workspace session on server
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: fbUser.displayName || fbUser.email?.split('@')[0] || 'Google User',
-          email: fbUser.email,
-          password: `oauth_google_${fbUser.uid}`,
-          businessName: `${fbUser.displayName || 'Google'}'s Workspace`,
-        }),
+      // Provision or retrieve user workspace session on server using authenticated UID
+      const res = await register({
+        name: fbUser.displayName || fbUser.email?.split('@')[0] || 'Google User',
+        email: fbUser.email!,
+        password: `oauth_google_${fbUser.uid}`,
+        businessName: `${fbUser.displayName || 'Google'}'s Workspace`,
+        uid: fbUser.uid,
       });
 
-      if (!res.ok) {
-        // If account already exists on backend, log in
-        const loginRes = await login(fbUser.email!, `oauth_google_${fbUser.uid}`);
+      if (res.success) {
+        onSuccess(true);
+      } else {
+        const loginRes = await login(fbUser.email!, `oauth_google_${fbUser.uid}`, fbUser.uid);
         if (loginRes.success) {
           onSuccess(false);
-          return;
+        } else {
+          setError(loginRes.error || 'Failed to complete workspace login with Google credentials.');
         }
-      } else {
-        const data = await res.json();
-        localStorage.setItem('yia_token', data.token);
-        onSuccess(true);
-        return;
       }
-
-      onSuccess(false);
     } catch (err: any) {
       setError(formatFirebaseAuthError(err));
     } finally {
@@ -178,6 +172,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   // Facebook Login via real Firebase Auth
   const handleFacebookSignIn = async () => {
+    if (loading) return;
     setError(null);
     setLoading(true);
     try {
@@ -186,34 +181,28 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         throw new Error('Facebook Sign-In returned empty user credentials.');
       }
 
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: fbUser.displayName || fbUser.email?.split('@')[0] || 'Facebook User',
-          email: fbUser.email || `fb_${fbUser.uid}@yearinfo.ai`,
-          password: `oauth_facebook_${fbUser.uid}`,
-          businessName: `${fbUser.displayName || 'Facebook'}'s Workspace`,
-        }),
+      const res = await register({
+        name: fbUser.displayName || fbUser.email?.split('@')[0] || 'Facebook User',
+        email: fbUser.email || `fb_${fbUser.uid}@yearinfo.ai`,
+        password: `oauth_facebook_${fbUser.uid}`,
+        businessName: `${fbUser.displayName || 'Facebook'}'s Workspace`,
+        uid: fbUser.uid,
       });
 
-      if (!res.ok) {
+      if (res.success) {
+        onSuccess(true);
+      } else {
         const loginRes = await login(
           fbUser.email || `fb_${fbUser.uid}@yearinfo.ai`,
-          `oauth_facebook_${fbUser.uid}`
+          `oauth_facebook_${fbUser.uid}`,
+          fbUser.uid
         );
         if (loginRes.success) {
           onSuccess(false);
-          return;
+        } else {
+          setError(loginRes.error || 'Failed to complete workspace login with Facebook credentials.');
         }
-      } else {
-        const data = await res.json();
-        localStorage.setItem('yia_token', data.token);
-        onSuccess(true);
-        return;
       }
-
-      onSuccess(false);
     } catch (err: any) {
       setError(formatFirebaseAuthError(err));
     } finally {
@@ -222,14 +211,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   };
 
   const handleDemoLogin = async () => {
+    if (loading) return;
     setError(null);
     setLoading(true);
-    const res = await login('yearinvo@gmail.com', 'admin123');
-    setLoading(false);
-    if (res.success) {
-      onSuccess(false);
-    } else {
-      setError(res.error || 'Failed to login with demo admin account');
+    try {
+      const res = await login('yearinvo@gmail.com', 'admin123');
+      if (res.success) {
+        onSuccess(false);
+      } else {
+        setError(res.error || 'Failed to login with demo admin account.');
+      }
+    } catch (e: any) {
+      setError(e.message || 'Demo login failed');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -256,7 +251,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <p className="text-xs text-slate-400 mt-1">
             {mode === 'login' && 'Sign in to access your unified messaging and sales hub.'}
             {mode === 'register' && 'Start managing multi-channel conversations with AI.'}
-            {mode === 'forgot' && 'Enter your email to receive official Firebase recovery instructions.'}
+            {mode === 'forgot' && 'Enter your email to receive secure password recovery instructions.'}
           </p>
         </div>
 
@@ -272,11 +267,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <CheckCircle2 className="mx-auto h-8 w-8 text-emerald-400 mb-2" />
             <div className="text-sm font-bold text-white">Password Reset Email Dispatched</div>
             <p className="text-xs text-slate-300 mt-1.5 leading-relaxed">
-              Firebase Authentication has sent password recovery instructions to <strong className="text-purple-300">{email}</strong>. Please inspect your inbox and spam folder, then follow the reset link.
+              Password recovery instructions have been dispatched to <strong className="text-purple-300">{email}</strong>. Please check your inbox and spam folder, then follow the reset link to choose a new password.
             </p>
-            <div className="mt-3 text-[11px] text-slate-400 bg-slate-950/80 p-2 rounded-lg border border-slate-800">
-              Sender: noreply@yearinvo-ai.firebaseapp.com
-            </div>
             <button
               onClick={() => { setMode('login'); setResetSent(false); }}
               className="mt-4 rounded-xl bg-slate-800 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-700 transition"
@@ -386,9 +378,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               ) : (
                 <>
                   <span>
-                    {mode === 'login' && 'Sign In with Email'}
-                    {mode === 'register' && 'Create Account in Firebase'}
-                    {mode === 'forgot' && 'Send Firebase Recovery Email'}
+                    {mode === 'login' && 'Sign In to Workspace'}
+                    {mode === 'register' && 'Create Business Account'}
+                    {mode === 'forgot' && 'Send Password Recovery Email'}
                   </span>
                   <ArrowRight className="h-4 w-4" />
                 </>

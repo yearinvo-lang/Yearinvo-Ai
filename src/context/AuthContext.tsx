@@ -9,8 +9,8 @@ interface AuthContextType {
   loading: boolean;
   language: 'en' | 'bn';
   theme: 'dark' | 'light';
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  register: (data: { name: string; email: string; password: string; businessName?: string; phone?: string }) => Promise<{ success: boolean; error?: string }>;
+  login: (email: string, password?: string, firebaseUid?: string) => Promise<{ success: boolean; error?: string }>;
+  register: (data: { name: string; email: string; password: string; businessName?: string; phone?: string; uid?: string }) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   setActiveWorkspace: (ws: Workspace) => void;
   toggleLanguage: () => void;
@@ -111,12 +111,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     autoInit();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password?: string, firebaseUid?: string) => {
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, firebaseUid }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -133,7 +133,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (inputData: { name: string; email: string; password: string; businessName?: string; phone?: string }) => {
+  const register = async (inputData: { name: string; email: string; password: string; businessName?: string; phone?: string; uid?: string }) => {
     try {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
@@ -162,6 +162,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         headers: { Authorization: `Bearer ${token}` },
       }).catch(() => {});
     }
+    // Also sign out from Firebase client instance
+    import('../lib/firebase.ts').then((mod) => {
+      mod.firebaseSignOut().catch(() => {});
+    }).catch(() => {});
+
     setUser(null);
     setToken(null);
     setWorkspaces([]);

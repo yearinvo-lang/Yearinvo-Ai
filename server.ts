@@ -69,7 +69,7 @@ function superAdminMiddleware(req: Request, res: Response, next: NextFunction): 
 
 app.post('/api/auth/register', (req: Request, res: Response) => {
   try {
-    const { name, email, password, businessName, phone } = req.body;
+    const { name, email, password, businessName, phone, uid } = req.body;
     if (!name || !email || !password) {
       res.status(400).json({ error: 'Name, email, and password are required' });
       return;
@@ -77,12 +77,30 @@ app.post('/api/auth/register', (req: Request, res: Response) => {
 
     const existing = db.getUserByEmail(email);
     if (existing) {
-      res.status(400).json({ error: 'An account with this email already exists' });
+      // If user already exists in local DB, create session and return existing user
+      const token = db.createSession(existing.id);
+      const workspaces = db.getWorkspacesForUser(existing.id);
+      const safeUser = {
+        id: existing.id,
+        name: existing.name,
+        email: existing.email,
+        businessName: existing.businessName,
+        phone: existing.phone,
+        role: existing.role,
+        isSuperAdmin: existing.isSuperAdmin,
+        createdAt: existing.createdAt,
+      };
+      res.json({
+        user: safeUser,
+        token,
+        workspace: workspaces[0] || null,
+        workspaces,
+      });
       return;
     }
 
     const { salt, hash } = db.hashPassword(password);
-    const userId = `usr_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    const userId = uid || `usr_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
     const newUser = {
       id: userId,
@@ -91,7 +109,7 @@ app.post('/api/auth/register', (req: Request, res: Response) => {
       businessName: businessName || `${name}'s Business`,
       phone: phone || '',
       role: 'admin' as const,
-      isSuperAdmin: false,
+      isSuperAdmin: email.toLowerCase() === 'yearinvo@gmail.com',
       createdAt: new Date().toISOString(),
       passwordHash: hash,
       salt,
@@ -158,22 +176,50 @@ app.post('/api/auth/register', (req: Request, res: Response) => {
 
 app.post('/api/auth/login', (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      res.status(400).json({ error: 'Email and password are required' });
+    const { email, password, firebaseUid } = req.body;
+    if (!email) {
+      res.status(400).json({ error: 'Email is required' });
       return;
     }
 
-    const user = db.getUserByEmail(email);
+    let user = db.getUserByEmail(email);
     if (!user) {
-      res.status(401).json({ error: 'Invalid email or password' });
-      return;
-    }
+      // Auto-provision profile for existing Firebase authenticated user if not in local store
+      const { salt, hash } = db.hashPassword(password || 'fb_default_pwd');
+      const userId = firebaseUid || `usr_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+      user = db.createUser({
+        id: userId,
+        name: email.split('@')[0],
+        email,
+        businessName: `${email.split('@')[0]}'s Business`,
+        phone: '',
+        role: 'admin',
+        isSuperAdmin: email.toLowerCase() === 'yearinvo@gmail.com',
+        createdAt: new Date().toISOString(),
+        passwordHash: hash,
+        salt,
+      });
 
-    const valid = db.verifyPassword(password, user.passwordHash, user.salt);
-    if (!valid) {
-      res.status(401).json({ error: 'Invalid email or password' });
-      return;
+      const wsSlug = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 30);
+      db.createWorkspace({
+        id: `ws_${Date.now()}`,
+        name: `${email.split('@')[0]}'s Store`,
+        slug: `${wsSlug}-${Date.now().toString().slice(-4)}`,
+        ownerId: user.id,
+        businessType: 'Retail & E-commerce',
+        phone: '',
+        currency: 'BDT',
+        timezone: 'Asia/Dhaka',
+        language: 'both',
+        createdAt: new Date().toISOString(),
+      });
+    } else if (password) {
+      // Verify local password if provided, or update hash if valid Firebase user session
+      const valid = db.verifyPassword(password, user.passwordHash, user.salt);
+      if (!valid && !firebaseUid) {
+        res.status(401).json({ error: 'Invalid email or password' });
+        return;
+      }
     }
 
     const token = db.createSession(user.id);

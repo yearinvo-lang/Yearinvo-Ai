@@ -72,6 +72,30 @@
       "createdAt": "2026-10-09T17:30:04.272Z",
       "passwordHash": "47cca862af2a737220adc1b58b1aebf633e4ffcc44e16c10e1aefa2ef5e6a083e0619cfb1faca6ce4961c9c84d0074a36605b4278d990ddeee67666a0f51ce1c",
       "salt": "b8a06b0d6a0a3603f438efeb403d374d"
+    },
+    {
+      "id": "usr_1791568717601_8kplb2",
+      "name": "Test Business User",
+      "email": "whitelabel_test_1791568715832@example.com",
+      "businessName": "Apex Store",
+      "phone": "",
+      "role": "admin",
+      "isSuperAdmin": false,
+      "createdAt": "2026-10-09T17:58:37.601Z",
+      "passwordHash": "df511dd658de399b8dd3e6c2d92666fb692c64d40f6e391d8ed8f16a9782c6602ec24455ca1f9386fa9e019c502aa9c64e1600b440bbb6feccd9b00acdf78c0a",
+      "salt": "07c1eb6b40b9a707db24108a2dbfafe3"
+    },
+    {
+      "id": "JHjnIbHUXlSDDFpTGMTlGiVUHWq1",
+      "name": "Test Business User",
+      "email": "whitelabel_test_1791568733165@example.com",
+      "businessName": "Apex Store",
+      "phone": "",
+      "role": "admin",
+      "isSuperAdmin": false,
+      "createdAt": "2026-10-09T17:58:54.994Z",
+      "passwordHash": "2dd1bf0160253fc73cb6cd94345472bed768adfd5074835bb9675a38a98e92c5ec6fcf1a8e4c76d5664e5cca79f29a24d093b4edd1b24f9f0f6bf650058ffa16",
+      "salt": "39cb5cf10f384ce7230ac8ea6eda2d2c"
     }
   ],
   "sessions": [
@@ -131,9 +155,24 @@
       "expiresAt": 1792171792500
     },
     {
-      "token": "81f4f40ca957fbe3b0b040ea100f0de96c315ad96568134b338a90dbcf5fa163",
-      "userId": "usr_1791567004272_cmom78",
-      "expiresAt": 1792171804276
+      "token": "0d64adfc5220fbbcf0ca899c72b5b4e63996ea45468c05868a4e5557ae1bf4f4",
+      "userId": "usr_superadmin",
+      "expiresAt": 1792172089991
+    },
+    {
+      "token": "8a9bad6f467b18abb3f17e0d3c4d2eb0fc12df8e279edd66eb2fb6fc9452908a",
+      "userId": "usr_1791568717601_8kplb2",
+      "expiresAt": 1792173517609
+    },
+    {
+      "token": "1f3e03c22b6d87e9a1452b1ba7c1104278d73f20429ecc72a2aafaa7df45b06c",
+      "userId": "JHjnIbHUXlSDDFpTGMTlGiVUHWq1",
+      "expiresAt": 1792173534996
+    },
+    {
+      "token": "c82b5928c6433dccfa01d7211d909655e890228404194832b5662d904121aade",
+      "userId": "JHjnIbHUXlSDDFpTGMTlGiVUHWq1",
+      "expiresAt": 1792173535018
     }
   ],
   "workspaces": [
@@ -214,6 +253,30 @@
       "language": "both",
       "createdAt": "2026-10-09T17:30:04.273Z",
       "address": ""
+    },
+    {
+      "id": "ws_1791568717602",
+      "name": "Apex Store",
+      "slug": "apex-store-7602",
+      "ownerId": "usr_1791568717601_8kplb2",
+      "businessType": "Retail & E-commerce",
+      "phone": "",
+      "currency": "BDT",
+      "timezone": "Asia/Dhaka",
+      "language": "both",
+      "createdAt": "2026-10-09T17:58:37.602Z"
+    },
+    {
+      "id": "ws_1791568734995",
+      "name": "Apex Store",
+      "slug": "apex-store-4995",
+      "ownerId": "JHjnIbHUXlSDDFpTGMTlGiVUHWq1",
+      "businessType": "Retail & E-commerce",
+      "phone": "",
+      "currency": "BDT",
+      "timezone": "Asia/Dhaka",
+      "language": "both",
+      "createdAt": "2026-10-09T17:58:54.995Z"
     }
   ],
   "workspaceMembers": [
@@ -245,6 +308,16 @@
     {
       "workspaceId": "ws_1791567004273",
       "userId": "usr_1791567004272_cmom78",
+      "role": "owner"
+    },
+    {
+      "workspaceId": "ws_1791568717602",
+      "userId": "usr_1791568717601_8kplb2",
+      "role": "owner"
+    },
+    {
+      "workspaceId": "ws_1791568734995",
+      "userId": "JHjnIbHUXlSDDFpTGMTlGiVUHWq1",
       "role": "owner"
     }
   ],
@@ -499,6 +572,90 @@
       "status": "not_connected",
       "metadata": {
         "widgetKey": "yia_widget_ws_1791567004273"
+      }
+    },
+    {
+      "id": "ch_facebook_ws_1791568717602",
+      "workspaceId": "ws_1791568717602",
+      "type": "facebook",
+      "name": "Facebook Pages",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_messenger_ws_1791568717602",
+      "workspaceId": "ws_1791568717602",
+      "type": "messenger",
+      "name": "Facebook Messenger",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_instagram_ws_1791568717602",
+      "workspaceId": "ws_1791568717602",
+      "type": "instagram",
+      "name": "Instagram",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_whatsapp_ws_1791568717602",
+      "workspaceId": "ws_1791568717602",
+      "type": "whatsapp",
+      "name": "WhatsApp Business",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_livechat_ws_1791568717602",
+      "workspaceId": "ws_1791568717602",
+      "type": "livechat",
+      "name": "Website Live Chat",
+      "status": "not_connected",
+      "metadata": {
+        "widgetKey": "yia_widget_ws_1791568717602"
+      }
+    },
+    {
+      "id": "ch_facebook_ws_1791568734995",
+      "workspaceId": "ws_1791568734995",
+      "type": "facebook",
+      "name": "Facebook Pages",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_messenger_ws_1791568734995",
+      "workspaceId": "ws_1791568734995",
+      "type": "messenger",
+      "name": "Facebook Messenger",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_instagram_ws_1791568734995",
+      "workspaceId": "ws_1791568734995",
+      "type": "instagram",
+      "name": "Instagram",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_whatsapp_ws_1791568734995",
+      "workspaceId": "ws_1791568734995",
+      "type": "whatsapp",
+      "name": "WhatsApp Business",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_livechat_ws_1791568734995",
+      "workspaceId": "ws_1791568734995",
+      "type": "livechat",
+      "name": "Website Live Chat",
+      "status": "not_connected",
+      "metadata": {
+        "widgetKey": "yia_widget_ws_1791568734995"
       }
     }
   ],
@@ -1087,6 +1244,50 @@
       "enableDirectOrderCreation": true,
       "customGreetingBn": "আসসালামু আলাইকুম! আমাদের শপে আপনাকে স্বাগতম। আমি কীভাবে সাহায্য করতে পারি?",
       "customGreetingEn": "Welcome to xsAXDA! How may I help you today?"
+    },
+    {
+      "workspaceId": "ws_1791568717602",
+      "enabled": false,
+      "model": "gemini-3.8-flash",
+      "brandVoice": "friendly",
+      "languageMode": "auto_detect",
+      "autoReplyChannels": [],
+      "businessHoursOnly": false,
+      "businessHoursStart": "09:00",
+      "businessHoursEnd": "22:00",
+      "humanTakeoverKeywords": [
+        "human",
+        "agent",
+        "support",
+        "manush",
+        "kotha bolbo"
+      ],
+      "confidenceThreshold": 0.75,
+      "enableDirectOrderCreation": true,
+      "customGreetingBn": "আসসালামু আলাইকুম! Apex Store-এ আপনাকে স্বাগতম। আমি কীভাবে সহযোগিতা করতে পারি?",
+      "customGreetingEn": "Welcome to Apex Store! How may I help you today?"
+    },
+    {
+      "workspaceId": "ws_1791568734995",
+      "enabled": false,
+      "model": "gemini-3.8-flash",
+      "brandVoice": "friendly",
+      "languageMode": "auto_detect",
+      "autoReplyChannels": [],
+      "businessHoursOnly": false,
+      "businessHoursStart": "09:00",
+      "businessHoursEnd": "22:00",
+      "humanTakeoverKeywords": [
+        "human",
+        "agent",
+        "support",
+        "manush",
+        "kotha bolbo"
+      ],
+      "confidenceThreshold": 0.75,
+      "enableDirectOrderCreation": true,
+      "customGreetingBn": "আসসালামু আলাইকুম! Apex Store-এ আপনাকে স্বাগতম। আমি কীভাবে সহযোগিতা করতে পারি?",
+      "customGreetingEn": "Welcome to Apex Store! How may I help you today?"
     }
   ],
   "knowledgeItems": [
@@ -1323,6 +1524,38 @@
       "startedAt": "2026-10-09T17:30:04.275Z",
       "expiresAt": "2026-10-23T17:30:04.275Z",
       "requestedAt": "2026-10-09T17:30:04.275Z",
+      "currentUsage": {
+        "conversationsThisMonth": 0,
+        "aiRepliesThisMonth": 0,
+        "scheduledPostsThisMonth": 0
+      }
+    },
+    {
+      "id": "sub_1791568717603",
+      "workspaceId": "ws_1791568717602",
+      "workspaceName": "Apex Store",
+      "planId": "plan_starter",
+      "planName": "Starter",
+      "status": "active",
+      "startedAt": "2026-10-09T17:58:37.603Z",
+      "expiresAt": "2026-10-23T17:58:37.603Z",
+      "requestedAt": "2026-10-09T17:58:37.603Z",
+      "currentUsage": {
+        "conversationsThisMonth": 0,
+        "aiRepliesThisMonth": 0,
+        "scheduledPostsThisMonth": 0
+      }
+    },
+    {
+      "id": "sub_1791568734996",
+      "workspaceId": "ws_1791568734995",
+      "workspaceName": "Apex Store",
+      "planId": "plan_starter",
+      "planName": "Starter",
+      "status": "active",
+      "startedAt": "2026-10-09T17:58:54.996Z",
+      "expiresAt": "2026-10-23T17:58:54.996Z",
+      "requestedAt": "2026-10-09T17:58:54.996Z",
       "currentUsage": {
         "conversationsThisMonth": 0,
         "aiRepliesThisMonth": 0,
