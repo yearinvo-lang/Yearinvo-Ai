@@ -1,0 +1,36 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Default deny all unknown storage paths
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.email == 'yearinvo@gmail.com';
+    }
+
+    // Product images: public or authenticated reads, authenticated write with size and type constraints
+    match /workspaces/{workspaceId}/products/{fileName} {
+      allow read: if true;
+      allow write: if isSignedIn() &&
+                      request.resource.size <= 10 * 1024 * 1024 &&
+                      request.resource.contentType.matches('image/.*');
+      allow delete: if isSignedIn() || isAdmin();
+    }
+
+    // Post media (Images/Videos): authenticated access with size and type constraints
+    match /workspaces/{workspaceId}/posts/{fileName} {
+      allow read: if true;
+      allow write: if isSignedIn() &&
+                      request.resource.size <= 50 * 1024 * 1024 &&
+                      (request.resource.contentType.matches('image/.*') || request.resource.contentType.matches('video/.*'));
+      allow delete: if isSignedIn() || isAdmin();
+    }
+  }
+}

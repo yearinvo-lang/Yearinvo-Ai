@@ -1,0 +1,1583 @@
+{
+  "users": [
+    {
+      "id": "usr_superadmin",
+      "name": "YEAR INFO Admin",
+      "email": "yearinvo@gmail.com",
+      "businessName": "YEAR INFO AI Platform",
+      "phone": "+8801700000000",
+      "role": "superadmin",
+      "isSuperAdmin": true,
+      "avatarUrl": "",
+      "createdAt": "2026-10-09T13:45:00.051Z",
+      "passwordHash": "c130b686e660958becceb26c44d07dd2901d4e344e578027fe9ba882bf50a963c540d2e1d732ee31b33629983af8d8a6d9783f1ecc6b7b50f7601523c364d162",
+      "salt": "seed-salt-admin-key-2026"
+    },
+    {
+      "id": "usr_1791561279006_56kih7",
+      "name": "Regular Store Owner",
+      "email": "testcustomer@example.com",
+      "businessName": "My Fashion Shop",
+      "phone": "",
+      "role": "admin",
+      "isSuperAdmin": false,
+      "createdAt": "2026-10-09T15:54:39.006Z",
+      "passwordHash": "1d01ab37456588fcde6591a450aff21148bd9fbb8ac4dc92ce11bb7c728b751be7e64eac5584f66be78cb3d77c0ee9624542fff2070d3221086cbd498c23dae0",
+      "salt": "71b773636ca445df5b9460908b8e03ff"
+    },
+    {
+      "id": "usr_1791561927115_49xu1j",
+      "name": "auicn",
+      "email": "yearinvo1@gmail.com",
+      "businessName": "iadncs",
+      "phone": "01932999999",
+      "role": "admin",
+      "isSuperAdmin": false,
+      "createdAt": "2026-10-09T16:05:27.115Z",
+      "passwordHash": "9196cd936422f67e7aa09f369c28002addda45d178fe65e95ae168c5ddda9097e10dba0d174d3d3fbf0deec804907bc633d1007702cac6288bd79941c42ad627",
+      "salt": "df48af20a97b682a6d080b2bc1870c6f"
+    },
+    {
+      "id": "usr_1791562230725_y0r63",
+      "name": "rfweasv",
+      "email": "yearinvo2@gmail.com",
+      "businessName": "afcasdc",
+      "phone": "323432433",
+      "role": "admin",
+      "isSuperAdmin": false,
+      "createdAt": "2026-10-09T16:10:30.725Z",
+      "passwordHash": "4d0d63b855b987a0c8b15ba006ea3bc4180bab7f910a115f51bd8fd08bd913923b713ffdcde3077e258215ee96bebd530f18d3f43e577196adc2866543155a50",
+      "salt": "80b88a31e05492c7eb0bc42e26b0c679"
+    },
+    {
+      "id": "usr_1791563585421_7vu85",
+      "name": "qacsdc",
+      "email": "yearinvo3@gmail.com",
+      "businessName": "c asd",
+      "phone": "12345678908",
+      "role": "admin",
+      "isSuperAdmin": false,
+      "createdAt": "2026-10-09T16:33:05.421Z",
+      "passwordHash": "376a7179cae88b7bdb7a6ac78b24a87b4d2f1d9454cf367cc741c894a3fba25a432321ca8192a56eddd4b871eab99a9777dd73858a2061d51b11cb55e1a9511e",
+      "salt": "11c7406950e682b583402476e1f48da3"
+    },
+    {
+      "id": "usr_1791567004272_cmom78",
+      "name": "yearinvo4@gmail.com",
+      "email": "yearinvo4@gmail.com",
+      "businessName": "xsAXDA",
+      "phone": "2W314123E4123",
+      "role": "admin",
+      "isSuperAdmin": false,
+      "createdAt": "2026-10-09T17:30:04.272Z",
+      "passwordHash": "47cca862af2a737220adc1b58b1aebf633e4ffcc44e16c10e1aefa2ef5e6a083e0619cfb1faca6ce4961c9c84d0074a36605b4278d990ddeee67666a0f51ce1c",
+      "salt": "b8a06b0d6a0a3603f438efeb403d374d"
+    }
+  ],
+  "sessions": [
+    {
+      "token": "4b3ea32e9a845c700af6eceb56f546317a4071db3ff5535c9b231d376078c05e",
+      "userId": "usr_superadmin",
+      "expiresAt": 1792158314165
+    },
+    {
+      "token": "c154054dac7fc2cfb9787805d579826fa52ab9a20fe9efb80ccf23b95930389f",
+      "userId": "usr_superadmin",
+      "expiresAt": 1792163374386
+    },
+    {
+      "token": "882ff7e02099a38be532a456191235af8baf8b82096e325b0e8b70bebaead80f",
+      "userId": "usr_superadmin",
+      "expiresAt": 1792163380082
+    },
+    {
+      "token": "af3b3f02c40eb7b261ab0dea63ac15c70a69472f88604b9591af5ca54e678886",
+      "userId": "usr_superadmin",
+      "expiresAt": 1792166066698
+    },
+    {
+      "token": "48e98597d22e9014c2316788c6200cf9a0b4f38e7e486ce47232b3c3075e6578",
+      "userId": "usr_1791561279006_56kih7",
+      "expiresAt": 1792166079008
+    },
+    {
+      "token": "e6d3bee743c9d8c733d03022b1d624263bdba8c1fc11a0a02e12974c0076e738",
+      "userId": "usr_superadmin",
+      "expiresAt": 1792166084161
+    },
+    {
+      "token": "8780312b342a98a1c6f139913c34c2237e2c2556386c05e82e824f38b7d36b4e",
+      "userId": "usr_superadmin",
+      "expiresAt": 1792171193632
+    },
+    {
+      "token": "ec42a63cf98a18f52d8cbfdd17faf3d83e81b5f33520ea6785d3161cae9fdbc8",
+      "userId": "usr_superadmin",
+      "expiresAt": 1792171231498
+    },
+    {
+      "token": "fa843059cc13ee563bc8dd9d007b98799b694cb5d56135831c46e200bf2728be",
+      "userId": "usr_superadmin",
+      "expiresAt": 1792171240752
+    },
+    {
+      "token": "fc2d864ea75d826c4214b60f27cd44f22fafbef9d78c36182432b947c0ade05e",
+      "userId": "usr_superadmin",
+      "expiresAt": 1792171250149
+    },
+    {
+      "token": "7dd9923bfbf1fa77057f575872e65450bb6aeee21d7368894828d5706093cf3d",
+      "userId": "usr_superadmin",
+      "expiresAt": 1792171792500
+    },
+    {
+      "token": "81f4f40ca957fbe3b0b040ea100f0de96c315ad96568134b338a90dbcf5fa163",
+      "userId": "usr_1791567004272_cmom78",
+      "expiresAt": 1792171804276
+    }
+  ],
+  "workspaces": [
+    {
+      "id": "ws_demo_store",
+      "name": "Dhaka Fashion Hub",
+      "slug": "dhaka-fashion-hub",
+      "ownerId": "usr_superadmin",
+      "businessType": "E-commerce & Fashion",
+      "phone": "+8801812345678",
+      "currency": "BDT",
+      "timezone": "Asia/Dhaka",
+      "language": "both",
+      "address": "House 42, Road 11, Banani, Dhaka-1213",
+      "website": "https://dhakafashion.example.com",
+      "createdAt": "2026-10-09T13:45:00.052Z"
+    },
+    {
+      "id": "ws_1791561279007",
+      "name": "My Fashion Shop",
+      "slug": "my-fashion-shop-9007",
+      "ownerId": "usr_1791561279006_56kih7",
+      "businessType": "Retail & E-commerce",
+      "phone": "",
+      "currency": "BDT",
+      "timezone": "Asia/Dhaka",
+      "language": "both",
+      "createdAt": "2026-10-09T15:54:39.007Z"
+    },
+    {
+      "id": "ws_1791561927116",
+      "name": "iadncs",
+      "slug": "iadncs-7116",
+      "ownerId": "usr_1791561927115_49xu1j",
+      "businessType": "Retail & E-commerce",
+      "phone": "01932999999",
+      "currency": "BDT",
+      "timezone": "Asia/Dhaka",
+      "language": "both",
+      "createdAt": "2026-10-09T16:05:27.116Z",
+      "address": ""
+    },
+    {
+      "id": "ws_1791562230725",
+      "name": "afcasdc",
+      "slug": "afcasdc-0725",
+      "ownerId": "usr_1791562230725_y0r63",
+      "businessType": "Retail & E-commerce",
+      "phone": "323432433",
+      "currency": "BDT",
+      "timezone": "Asia/Dhaka",
+      "language": "both",
+      "createdAt": "2026-10-09T16:10:30.725Z",
+      "address": ""
+    },
+    {
+      "id": "ws_1791563585423",
+      "name": "c asd",
+      "slug": "c-asd-5423",
+      "ownerId": "usr_1791563585421_7vu85",
+      "businessType": "Retail & E-commerce",
+      "phone": "12345678908",
+      "currency": "BDT",
+      "timezone": "Asia/Dhaka",
+      "language": "both",
+      "createdAt": "2026-10-09T16:33:05.423Z",
+      "address": ""
+    },
+    {
+      "id": "ws_1791567004273",
+      "name": "xsAXDA",
+      "slug": "xsaxda-4273",
+      "ownerId": "usr_1791567004272_cmom78",
+      "businessType": "Retail & E-commerce",
+      "phone": "2W314123E4123",
+      "currency": "BDT",
+      "timezone": "Asia/Dhaka",
+      "language": "both",
+      "createdAt": "2026-10-09T17:30:04.273Z",
+      "address": ""
+    }
+  ],
+  "workspaceMembers": [
+    {
+      "workspaceId": "ws_demo_store",
+      "userId": "usr_superadmin",
+      "role": "owner"
+    },
+    {
+      "workspaceId": "ws_1791561279007",
+      "userId": "usr_1791561279006_56kih7",
+      "role": "owner"
+    },
+    {
+      "workspaceId": "ws_1791561927116",
+      "userId": "usr_1791561927115_49xu1j",
+      "role": "owner"
+    },
+    {
+      "workspaceId": "ws_1791562230725",
+      "userId": "usr_1791562230725_y0r63",
+      "role": "owner"
+    },
+    {
+      "workspaceId": "ws_1791563585423",
+      "userId": "usr_1791563585421_7vu85",
+      "role": "owner"
+    },
+    {
+      "workspaceId": "ws_1791567004273",
+      "userId": "usr_1791567004272_cmom78",
+      "role": "owner"
+    }
+  ],
+  "channels": [
+    {
+      "id": "ch_facebook_ws_demo_store",
+      "workspaceId": "ws_demo_store",
+      "type": "facebook",
+      "name": "Facebook Pages",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_messenger_ws_demo_store",
+      "workspaceId": "ws_demo_store",
+      "type": "messenger",
+      "name": "Facebook Messenger",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_instagram_ws_demo_store",
+      "workspaceId": "ws_demo_store",
+      "type": "instagram",
+      "name": "Instagram",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_whatsapp_ws_demo_store",
+      "workspaceId": "ws_demo_store",
+      "type": "whatsapp",
+      "name": "WhatsApp Business",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_livechat_ws_demo_store",
+      "workspaceId": "ws_demo_store",
+      "type": "livechat",
+      "name": "Website Live Chat",
+      "status": "not_connected",
+      "metadata": {
+        "widgetKey": "yia_widget_ws_demo_store"
+      }
+    },
+    {
+      "id": "ch_facebook_ws_1791561279007",
+      "workspaceId": "ws_1791561279007",
+      "type": "facebook",
+      "name": "Facebook Pages",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_messenger_ws_1791561279007",
+      "workspaceId": "ws_1791561279007",
+      "type": "messenger",
+      "name": "Facebook Messenger",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_instagram_ws_1791561279007",
+      "workspaceId": "ws_1791561279007",
+      "type": "instagram",
+      "name": "Instagram",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_whatsapp_ws_1791561279007",
+      "workspaceId": "ws_1791561279007",
+      "type": "whatsapp",
+      "name": "WhatsApp Business",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_livechat_ws_1791561279007",
+      "workspaceId": "ws_1791561279007",
+      "type": "livechat",
+      "name": "Website Live Chat",
+      "status": "not_connected",
+      "metadata": {
+        "widgetKey": "yia_widget_ws_1791561279007"
+      }
+    },
+    {
+      "id": "ch_facebook_ws_1791561927116",
+      "workspaceId": "ws_1791561927116",
+      "type": "facebook",
+      "name": "Facebook Pages",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_messenger_ws_1791561927116",
+      "workspaceId": "ws_1791561927116",
+      "type": "messenger",
+      "name": "Facebook Messenger",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_instagram_ws_1791561927116",
+      "workspaceId": "ws_1791561927116",
+      "type": "instagram",
+      "name": "Instagram",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_whatsapp_ws_1791561927116",
+      "workspaceId": "ws_1791561927116",
+      "type": "whatsapp",
+      "name": "WhatsApp Business",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_livechat_ws_1791561927116",
+      "workspaceId": "ws_1791561927116",
+      "type": "livechat",
+      "name": "Website Live Chat",
+      "status": "not_connected",
+      "metadata": {
+        "widgetKey": "yia_widget_ws_1791561927116"
+      }
+    },
+    {
+      "id": "ch_facebook_ws_1791562230725",
+      "workspaceId": "ws_1791562230725",
+      "type": "facebook",
+      "name": "Facebook Pages",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_messenger_ws_1791562230725",
+      "workspaceId": "ws_1791562230725",
+      "type": "messenger",
+      "name": "Facebook Messenger",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_instagram_ws_1791562230725",
+      "workspaceId": "ws_1791562230725",
+      "type": "instagram",
+      "name": "Instagram",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_whatsapp_ws_1791562230725",
+      "workspaceId": "ws_1791562230725",
+      "type": "whatsapp",
+      "name": "WhatsApp Business",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_livechat_ws_1791562230725",
+      "workspaceId": "ws_1791562230725",
+      "type": "livechat",
+      "name": "Website Live Chat",
+      "status": "not_connected",
+      "metadata": {
+        "widgetKey": "yia_widget_ws_1791562230725"
+      }
+    },
+    {
+      "id": "ch_facebook_ws_1791563585423",
+      "workspaceId": "ws_1791563585423",
+      "type": "facebook",
+      "name": "Facebook Pages",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_messenger_ws_1791563585423",
+      "workspaceId": "ws_1791563585423",
+      "type": "messenger",
+      "name": "Facebook Messenger",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_instagram_ws_1791563585423",
+      "workspaceId": "ws_1791563585423",
+      "type": "instagram",
+      "name": "Instagram",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_whatsapp_ws_1791563585423",
+      "workspaceId": "ws_1791563585423",
+      "type": "whatsapp",
+      "name": "WhatsApp Business",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_livechat_ws_1791563585423",
+      "workspaceId": "ws_1791563585423",
+      "type": "livechat",
+      "name": "Website Live Chat",
+      "status": "not_connected",
+      "metadata": {
+        "widgetKey": "yia_widget_ws_1791563585423"
+      }
+    },
+    {
+      "id": "ch_facebook_ws_1791567004273",
+      "workspaceId": "ws_1791567004273",
+      "type": "facebook",
+      "name": "Facebook Pages",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_messenger_ws_1791567004273",
+      "workspaceId": "ws_1791567004273",
+      "type": "messenger",
+      "name": "Facebook Messenger",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_instagram_ws_1791567004273",
+      "workspaceId": "ws_1791567004273",
+      "type": "instagram",
+      "name": "Instagram",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_whatsapp_ws_1791567004273",
+      "workspaceId": "ws_1791567004273",
+      "type": "whatsapp",
+      "name": "WhatsApp Business",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_livechat_ws_1791567004273",
+      "workspaceId": "ws_1791567004273",
+      "type": "livechat",
+      "name": "Website Live Chat",
+      "status": "not_connected",
+      "metadata": {
+        "widgetKey": "yia_widget_ws_1791567004273"
+      }
+    }
+  ],
+  "customers": [
+    {
+      "id": "cust_1",
+      "workspaceId": "ws_demo_store",
+      "name": "Tanvir Hossain",
+      "phone": "01712998877",
+      "email": "tanvir.h@gmail.com",
+      "primaryChannel": "messenger",
+      "channelIdentifiers": [
+        {
+          "channelType": "messenger",
+          "externalId": "fb_user_tanvir"
+        }
+      ],
+      "totalOrders": 1,
+      "totalSpent": 2220,
+      "tags": [
+        "VIP",
+        "Panjabi Buyer"
+      ],
+      "notes": "Prefers Size 42 L",
+      "createdAt": "2026-10-07T13:45:00.053Z"
+    },
+    {
+      "id": "cust_2",
+      "workspaceId": "ws_demo_store",
+      "name": "Nusrat Jahan",
+      "phone": "01855667788",
+      "email": "nusrat.j@yahoo.com",
+      "primaryChannel": "instagram",
+      "channelIdentifiers": [
+        {
+          "channelType": "instagram",
+          "externalId": "ig_user_nusrat",
+          "username": "nusrat_j"
+        }
+      ],
+      "totalOrders": 0,
+      "totalSpent": 0,
+      "tags": [
+        "Inquiry"
+      ],
+      "createdAt": "2026-10-08T13:45:00.053Z"
+    },
+    {
+      "id": "cust_3",
+      "workspaceId": "ws_demo_store",
+      "name": "Kamrul Hasan",
+      "phone": "01911223344",
+      "primaryChannel": "livechat",
+      "channelIdentifiers": [
+        {
+          "channelType": "livechat",
+          "externalId": "guest_visitor_kamrul"
+        }
+      ],
+      "totalOrders": 0,
+      "totalSpent": 0,
+      "tags": [
+        "Live Visitor"
+      ],
+      "createdAt": "2026-10-09T13:45:00.053Z"
+    },
+    {
+      "id": "cust_live_1791553525047",
+      "workspaceId": "ws_demo_store",
+      "name": "Visitor Rahim",
+      "primaryChannel": "livechat",
+      "channelIdentifiers": [
+        {
+          "channelType": "livechat",
+          "externalId": "visitor_test_1"
+        }
+      ],
+      "totalOrders": 0,
+      "totalSpent": 0,
+      "tags": [
+        "Live Chat Visitor"
+      ],
+      "createdAt": "2026-10-09T13:45:25.047Z"
+    },
+    {
+      "id": "cust_live_1791566117313",
+      "workspaceId": "ws_1791563585423",
+      "name": "Online Visitor",
+      "primaryChannel": "livechat",
+      "channelIdentifiers": [
+        {
+          "channelType": "livechat",
+          "externalId": "visitor_mjrcx"
+        }
+      ],
+      "totalOrders": 0,
+      "totalSpent": 0,
+      "tags": [
+        "Live Chat Visitor"
+      ],
+      "createdAt": "2026-10-09T17:15:17.313Z"
+    }
+  ],
+  "conversations": [
+    {
+      "id": "conv_live_1791566117314",
+      "workspaceId": "ws_1791563585423",
+      "customerId": "cust_live_1791566117313",
+      "customerName": "Online Visitor",
+      "channel": "livechat",
+      "channelName": "Live Chat",
+      "status": "open",
+      "unreadCount": 1,
+      "lastMessageText": "tumi tahole ki koro aikhane",
+      "lastMessageAt": "2026-10-09T17:16:02.648Z",
+      "aiActive": true,
+      "createdAt": "2026-10-09T17:15:17.314Z"
+    },
+    {
+      "id": "conv_live_1791553525048",
+      "workspaceId": "ws_demo_store",
+      "customerId": "cust_live_1791553525047",
+      "customerName": "Visitor Rahim",
+      "channel": "livechat",
+      "channelName": "Live Chat",
+      "status": "human_handled",
+      "unreadCount": 0,
+      "lastMessageText": "hai",
+      "lastMessageAt": "2026-10-09T15:48:21.854Z",
+      "aiActive": false,
+      "createdAt": "2026-10-09T13:45:25.048Z"
+    },
+    {
+      "id": "conv_1",
+      "workspaceId": "ws_demo_store",
+      "customerId": "cust_1",
+      "customerName": "Tanvir Hossain",
+      "customerPhone": "01712998877",
+      "channel": "messenger",
+      "channelName": "Messenger",
+      "status": "ai_handled",
+      "unreadCount": 0,
+      "lastMessageText": "ধন্যবাদ ভাইয়া, সাইজ ৪২ কনফার্ম করলাম। ক্যাশ অন ডেলিভারিতে পাঠিয়ে দিন।",
+      "lastMessageAt": "2026-10-09T10:45:00.053Z",
+      "aiActive": true,
+      "createdAt": "2026-10-08T13:45:00.053Z"
+    },
+    {
+      "id": "conv_2",
+      "workspaceId": "ws_demo_store",
+      "customerId": "cust_2",
+      "customerName": "Nusrat Jahan",
+      "customerPhone": "01855667788",
+      "channel": "instagram",
+      "channelName": "Instagram Direct",
+      "status": "open",
+      "unreadCount": 0,
+      "lastMessageText": "Aapnader Jamdani saree ta ki delivery charge included?",
+      "lastMessageAt": "2026-10-09T13:15:00.053Z",
+      "aiActive": true,
+      "createdAt": "2026-10-09T08:45:00.053Z"
+    },
+    {
+      "id": "conv_3",
+      "workspaceId": "ws_demo_store",
+      "customerId": "cust_3",
+      "customerName": "Kamrul Hasan",
+      "channel": "livechat",
+      "channelName": "Website Chat",
+      "status": "human_handled",
+      "unreadCount": 0,
+      "lastMessageText": "ki obostha",
+      "lastMessageAt": "2026-10-09T15:48:11.390Z",
+      "aiActive": false,
+      "createdAt": "2026-10-09T13:35:00.054Z"
+    }
+  ],
+  "messages": [
+    {
+      "id": "msg_1",
+      "conversationId": "conv_1",
+      "workspaceId": "ws_demo_store",
+      "senderType": "customer",
+      "senderName": "Tanvir Hossain",
+      "content": "আসসালামু আলাইকুম! রয়্যাল নেভি সুতি পাঞ্জাবির সাইজ ৪২ কি স্টকে আছে? দাম কত?",
+      "timestamp": "2026-10-09T09:45:00.054Z",
+      "deliveryStatus": "read"
+    },
+    {
+      "id": "msg_2",
+      "conversationId": "conv_1",
+      "workspaceId": "ws_demo_store",
+      "senderType": "ai",
+      "senderName": "YEAR INFO AI Agent",
+      "content": "ওয়ালাইকুম আসসালাম! জ্বী, প্রিমিয়াম সুতি পাঞ্জাবি - রয়্যাল নেভি (Size 42 / L) বর্তমানে স্টকে রয়েছে। ডিসকাউন্টে দাম ২১৫০ টাকা (রেগুলার ২৪৫০ টাকা)। ঢাকার ভিতরে ডেলিভারি চার্জ ৭০ টাকা। আপনি কি অর্ডার করতে চান?",
+      "timestamp": "2026-10-09T09:51:00.054Z",
+      "deliveryStatus": "delivered",
+      "aiAssisted": true
+    },
+    {
+      "id": "msg_3",
+      "conversationId": "conv_1",
+      "workspaceId": "ws_demo_store",
+      "senderType": "customer",
+      "senderName": "Tanvir Hossain",
+      "content": "ধন্যবাদ ভাইয়া, সাইজ ৪২ কনফার্ম করলাম। ক্যাশ অন ডেলিভারিতে পাঠিয়ে দিন। ঠিকানা: বাড়ি ১২, রোড ৪, ধানমন্ডি, ঢাকা। মোবাইল: ০১৭১২৯৯৮৮৭৭।",
+      "timestamp": "2026-10-09T10:45:00.054Z",
+      "deliveryStatus": "read"
+    },
+    {
+      "id": "msg_4",
+      "conversationId": "conv_2",
+      "workspaceId": "ws_demo_store",
+      "senderType": "customer",
+      "senderName": "Nusrat Jahan",
+      "content": "Aapnader Jamdani saree ta ki delivery charge included?",
+      "timestamp": "2026-10-09T13:15:00.054Z",
+      "deliveryStatus": "delivered"
+    },
+    {
+      "id": "msg_5",
+      "conversationId": "conv_3",
+      "workspaceId": "ws_demo_store",
+      "senderType": "customer",
+      "senderName": "Kamrul Hasan",
+      "content": "Can I get delivery in Chittagong by tomorrow?",
+      "timestamp": "2026-10-09T13:35:00.054Z",
+      "deliveryStatus": "delivered"
+    },
+    {
+      "id": "msg_live_1791553525048",
+      "conversationId": "conv_live_1791553525048",
+      "workspaceId": "ws_demo_store",
+      "senderType": "customer",
+      "senderName": "Visitor Rahim",
+      "content": "পাঞ্জাবির দাম কত এবং ঢাকার ভেতরে ডেলিভারি চার্জ কত?",
+      "timestamp": "2026-10-09T13:45:25.048Z",
+      "deliveryStatus": "delivered"
+    },
+    {
+      "id": "msg_live_ai_1791553525051",
+      "conversationId": "conv_live_1791553525048",
+      "workspaceId": "ws_demo_store",
+      "senderType": "ai",
+      "senderName": "YEAR INFO AI Agent",
+      "content": "Inside Dhaka delivery charge is 70 BDT (delivery within 24-48 hours). Outside Dhaka delivery charge is 130 BDT via Steadfast/SA Paribahan (delivery within 3-4 days). Cash on Delivery is available all over Bangladesh.",
+      "timestamp": "2026-10-09T13:45:25.051Z",
+      "deliveryStatus": "delivered",
+      "aiAssisted": true
+    },
+    {
+      "id": "msg_1791560885675_pkvge",
+      "conversationId": "conv_3",
+      "workspaceId": "ws_demo_store",
+      "senderType": "agent",
+      "senderName": "YEAR INFO Admin",
+      "content": "hi",
+      "attachments": [],
+      "timestamp": "2026-10-09T15:48:05.675Z",
+      "deliveryStatus": "delivered"
+    },
+    {
+      "id": "msg_1791560891390_zua1c",
+      "conversationId": "conv_3",
+      "workspaceId": "ws_demo_store",
+      "senderType": "agent",
+      "senderName": "YEAR INFO Admin",
+      "content": "ki obostha",
+      "attachments": [],
+      "timestamp": "2026-10-09T15:48:11.390Z",
+      "deliveryStatus": "delivered"
+    },
+    {
+      "id": "msg_1791560901854_w8nec",
+      "conversationId": "conv_live_1791553525048",
+      "workspaceId": "ws_demo_store",
+      "senderType": "agent",
+      "senderName": "YEAR INFO Admin",
+      "content": "hai",
+      "attachments": [],
+      "timestamp": "2026-10-09T15:48:21.854Z",
+      "deliveryStatus": "delivered"
+    },
+    {
+      "id": "msg_live_1791566117317",
+      "conversationId": "conv_live_1791566117314",
+      "workspaceId": "ws_1791563585423",
+      "senderType": "customer",
+      "senderName": "Online Visitor",
+      "content": "পাঞ্জাবির দাম ও সাইজ কত?",
+      "timestamp": "2026-10-09T17:15:17.317Z",
+      "deliveryStatus": "delivered"
+    },
+    {
+      "id": "msg_live_1791566131103",
+      "conversationId": "conv_live_1791566117314",
+      "workspaceId": "ws_1791563585423",
+      "senderType": "customer",
+      "senderName": "Online Visitor",
+      "content": "ঢাকার ভেতরে ডেলিভারি চার্জ কত?",
+      "timestamp": "2026-10-09T17:15:31.103Z",
+      "deliveryStatus": "delivered"
+    },
+    {
+      "id": "msg_live_1791566142929",
+      "conversationId": "conv_live_1791566117314",
+      "workspaceId": "ws_1791563585423",
+      "senderType": "customer",
+      "senderName": "Online Visitor",
+      "content": "ki koren",
+      "timestamp": "2026-10-09T17:15:42.929Z",
+      "deliveryStatus": "delivered"
+    },
+    {
+      "id": "msg_live_1791566150193",
+      "conversationId": "conv_live_1791566117314",
+      "workspaceId": "ws_1791563585423",
+      "senderType": "customer",
+      "senderName": "Online Visitor",
+      "content": "hi",
+      "timestamp": "2026-10-09T17:15:50.193Z",
+      "deliveryStatus": "delivered"
+    },
+    {
+      "id": "msg_live_1791566162648",
+      "conversationId": "conv_live_1791566117314",
+      "workspaceId": "ws_1791563585423",
+      "senderType": "customer",
+      "senderName": "Online Visitor",
+      "content": "tumi tahole ki koro aikhane",
+      "timestamp": "2026-10-09T17:16:02.648Z",
+      "deliveryStatus": "delivered"
+    }
+  ],
+  "internalNotes": [],
+  "products": [
+    {
+      "id": "prod_1",
+      "workspaceId": "ws_demo_store",
+      "name": "Premium Cotton Panjabi - Royal Navy",
+      "nameBengali": "প্রিমিয়াম সুতি পাঞ্জাবি - রয়্যাল নেভি",
+      "sku": "PANJABI-NV-01",
+      "category": "Menswear",
+      "description": "100% fine cotton traditional embroidery Panjabi, perfect for festive and casual wear.",
+      "price": 2450,
+      "discountPrice": 2150,
+      "stock": 35,
+      "images": [
+        "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=600&auto=format&fit=crop&q=80"
+      ],
+      "variants": [
+        {
+          "id": "v_1",
+          "name": "Size 40 (M)",
+          "price": 2150,
+          "stock": 12,
+          "sku": "PANJABI-NV-40"
+        },
+        {
+          "id": "v_2",
+          "name": "Size 42 (L)",
+          "price": 2150,
+          "stock": 15,
+          "sku": "PANJABI-NV-42"
+        },
+        {
+          "id": "v_3",
+          "name": "Size 44 (XL)",
+          "price": 2150,
+          "stock": 8,
+          "sku": "PANJABI-NV-44"
+        }
+      ],
+      "available": true,
+      "shippingInfo": "Standard 48 hours delivery",
+      "createdAt": "2026-10-09T13:45:00.052Z"
+    },
+    {
+      "id": "prod_2",
+      "workspaceId": "ws_demo_store",
+      "name": "Handloom Jamdani Saree - Crimson Gold",
+      "nameBengali": "হ্যান্ডলুম জামদানি শাড়ি - ক্রিমসন গোল্ড",
+      "sku": "SAREE-JAM-CR",
+      "category": "Womenswear",
+      "description": "Authentic 84-count Dhakai Jamdani woven with golden zari motifs on soft crimson cotton silk base.",
+      "price": 5200,
+      "discountPrice": 4750,
+      "stock": 14,
+      "images": [
+        "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&auto=format&fit=crop&q=80"
+      ],
+      "variants": [],
+      "available": true,
+      "shippingInfo": "Handled with luxury box packaging",
+      "createdAt": "2026-10-09T13:45:00.052Z"
+    },
+    {
+      "id": "prod_3",
+      "workspaceId": "ws_demo_store",
+      "name": "Pure Leather Bifold Wallet",
+      "nameBengali": "আসল চামড়ার ওয়ালেট",
+      "sku": "WALLET-LTH-01",
+      "category": "Accessories",
+      "description": "Top-grain cowhide leather with 8 card slots, currency divider and RFID protection.",
+      "price": 1250,
+      "discountPrice": 990,
+      "stock": 50,
+      "images": [
+        "https://images.unsplash.com/photo-1627123424574-724758594e93?w=600&auto=format&fit=crop&q=80"
+      ],
+      "variants": [],
+      "available": true,
+      "shippingInfo": "Delivery within 24 hours in Dhaka",
+      "createdAt": "2026-10-09T13:45:00.052Z"
+    }
+  ],
+  "orders": [
+    {
+      "id": "ord_1001",
+      "orderNumber": "YIA-2026-1001",
+      "workspaceId": "ws_demo_store",
+      "customerId": "cust_1",
+      "customerName": "Tanvir Hossain",
+      "customerPhone": "01712998877",
+      "deliveryAddress": "House 12, Road 4, Dhanmondi, Dhaka",
+      "items": [
+        {
+          "productId": "prod_1",
+          "productName": "Premium Cotton Panjabi - Royal Navy",
+          "sku": "PANJABI-NV-42",
+          "variantId": "v_2",
+          "variantName": "Size 42 (L)",
+          "unitPrice": 2150,
+          "quantity": 1,
+          "subtotal": 2150
+        }
+      ],
+      "subtotal": 2150,
+      "deliveryCharge": 70,
+      "discount": 0,
+      "total": 2220,
+      "status": "confirmed",
+      "paymentStatus": "pending",
+      "paymentMethod": "cash_on_delivery",
+      "conversationId": "conv_1",
+      "aiAssisted": true,
+      "notes": "AI assisted order. Size 42 L confirmed.",
+      "createdAt": "2026-10-09T11:15:00.054Z",
+      "updatedAt": "2026-10-09T11:15:00.054Z"
+    }
+  ],
+  "aiSettings": [
+    {
+      "workspaceId": "ws_demo_store",
+      "enabled": true,
+      "model": "gemini-3.8-flash",
+      "brandVoice": "friendly",
+      "languageMode": "auto_detect",
+      "autoReplyChannels": [
+        "messenger",
+        "instagram",
+        "livechat"
+      ],
+      "businessHoursOnly": false,
+      "businessHoursStart": "09:00",
+      "businessHoursEnd": "22:00",
+      "humanTakeoverKeywords": [
+        "human",
+        "agent",
+        "support",
+        "manush",
+        "kotha bolbo",
+        "representative"
+      ],
+      "confidenceThreshold": 0.8,
+      "enableDirectOrderCreation": true,
+      "customGreetingBn": "আসসালামু আলাইকুম! ঢাকা ফ্যাশন হাব এ আপনাকে স্বাগতম। আমি আপনার সেলস অ্যাসিস্ট্যান্ট। কিভাবে সাহায্য করতে পারি?",
+      "customGreetingEn": "Welcome to Dhaka Fashion Hub! How may I assist your shopping today?"
+    },
+    {
+      "workspaceId": "ws_1791561279007",
+      "enabled": false,
+      "model": "gemini-3.8-flash",
+      "brandVoice": "friendly",
+      "languageMode": "auto_detect",
+      "autoReplyChannels": [],
+      "businessHoursOnly": false,
+      "businessHoursStart": "09:00",
+      "businessHoursEnd": "22:00",
+      "humanTakeoverKeywords": [
+        "human",
+        "agent",
+        "support",
+        "manush",
+        "kotha bolbo"
+      ],
+      "confidenceThreshold": 0.75,
+      "enableDirectOrderCreation": true,
+      "customGreetingBn": "আসসালামু আলাইকুম! My Fashion Shop-এ আপনাকে স্বাগতম। আমি কীভাবে সহযোগিতা করতে পারি?",
+      "customGreetingEn": "Welcome to My Fashion Shop! How may I help you today?"
+    },
+    {
+      "workspaceId": "ws_1791561927116",
+      "enabled": false,
+      "model": "gemini-3.8-flash",
+      "brandVoice": "friendly",
+      "languageMode": "auto_detect",
+      "autoReplyChannels": [],
+      "businessHoursOnly": false,
+      "businessHoursStart": "09:00",
+      "businessHoursEnd": "22:00",
+      "humanTakeoverKeywords": [
+        "human",
+        "agent",
+        "support",
+        "manush",
+        "kotha bolbo"
+      ],
+      "confidenceThreshold": 0.75,
+      "enableDirectOrderCreation": true,
+      "customGreetingBn": "আসসালামু আলাইকুম! আমাদের শপে আপনাকে স্বাগতম। আমি কীভাবে সাহায্য করতে পারি?",
+      "customGreetingEn": "Welcome to iadncs! How may I help you today?"
+    },
+    {
+      "workspaceId": "ws_1791562230725",
+      "enabled": false,
+      "model": "gemini-3.8-flash",
+      "brandVoice": "friendly",
+      "languageMode": "auto_detect",
+      "autoReplyChannels": [],
+      "businessHoursOnly": false,
+      "businessHoursStart": "09:00",
+      "businessHoursEnd": "22:00",
+      "humanTakeoverKeywords": [
+        "human",
+        "agent",
+        "support",
+        "manush",
+        "kotha bolbo"
+      ],
+      "confidenceThreshold": 0.75,
+      "enableDirectOrderCreation": true,
+      "customGreetingBn": "আসসালামু আলাইকুম! আমাদের শপে আপনাকে স্বাগতম। আমি কীভাবে সাহায্য করতে পারি?",
+      "customGreetingEn": "Welcome to afcasdc! How may I help you today?"
+    },
+    {
+      "workspaceId": "ws_1791563585423",
+      "enabled": false,
+      "model": "gemini-3.8-flash",
+      "brandVoice": "friendly",
+      "languageMode": "auto_detect",
+      "autoReplyChannels": [],
+      "businessHoursOnly": false,
+      "businessHoursStart": "09:00",
+      "businessHoursEnd": "22:00",
+      "humanTakeoverKeywords": [
+        "human",
+        "agent",
+        "support",
+        "manush",
+        "kotha bolbo"
+      ],
+      "confidenceThreshold": 0.75,
+      "enableDirectOrderCreation": true,
+      "customGreetingBn": "আসসালামু আলাইকুম! আমাদের শপে আপনাকে স্বাগতম। আমি কীভাবে সাহায্য করতে পারি?",
+      "customGreetingEn": "Welcome to c asd! How may I help you today?"
+    },
+    {
+      "workspaceId": "ws_1791567004273",
+      "enabled": false,
+      "model": "gemini-3.8-flash",
+      "brandVoice": "friendly",
+      "languageMode": "auto_detect",
+      "autoReplyChannels": [],
+      "businessHoursOnly": false,
+      "businessHoursStart": "09:00",
+      "businessHoursEnd": "22:00",
+      "humanTakeoverKeywords": [
+        "human",
+        "agent",
+        "support",
+        "manush",
+        "kotha bolbo"
+      ],
+      "confidenceThreshold": 0.75,
+      "enableDirectOrderCreation": true,
+      "customGreetingBn": "আসসালামু আলাইকুম! আমাদের শপে আপনাকে স্বাগতম। আমি কীভাবে সাহায্য করতে পারি?",
+      "customGreetingEn": "Welcome to xsAXDA! How may I help you today?"
+    }
+  ],
+  "knowledgeItems": [
+    {
+      "id": "kn_1",
+      "workspaceId": "ws_demo_store",
+      "category": "delivery",
+      "question": "Delivery charges and turnaround time",
+      "answer": "Inside Dhaka delivery charge is 70 BDT (delivery within 24-48 hours). Outside Dhaka delivery charge is 130 BDT via Steadfast/SA Paribahan (delivery within 3-4 days). Cash on Delivery is available all over Bangladesh.",
+      "language": "both",
+      "updatedAt": "2026-10-09T13:45:00.052Z"
+    },
+    {
+      "id": "kn_2",
+      "workspaceId": "ws_demo_store",
+      "category": "payment",
+      "question": "Accepted payment methods",
+      "answer": "We accept Cash on Delivery (COD), bKash (Merchant / Personal Send Money), Nagad, and Bank Transfer.",
+      "language": "both",
+      "updatedAt": "2026-10-09T13:45:00.052Z"
+    },
+    {
+      "id": "kn_3",
+      "workspaceId": "ws_demo_store",
+      "category": "policy",
+      "question": "Return & Exchange policy",
+      "answer": "Returns are accepted within 3 days of delivery if the product is defective, wrong size, or damaged during transit. Rider present return fee is 70 BDT.",
+      "language": "both",
+      "updatedAt": "2026-10-09T13:45:00.052Z"
+    }
+  ],
+  "aiUsageRecords": [],
+  "scheduledPosts": [
+    {
+      "id": "post_1",
+      "workspaceId": "ws_demo_store",
+      "platforms": [
+        "facebook",
+        "instagram"
+      ],
+      "caption": "নতুন বৈশাখী কালেকশন ২০২৬! প্রিমিয়াম সুতি পাঞ্জাবি ও ধুনট হ্যান্ডলুম জামদানি এখন স্টকে। আপনার সাইজ শেষ হবার আগেই ইনবক্সে অর্ডার কনফার্ম করুন। ✨",
+      "hashtags": [
+        "#DhakaFashion",
+        "#YearInfoAI",
+        "#Panjabi",
+        "#Jamdani",
+        "#BangladeshEcommerce"
+      ],
+      "mediaUrls": [
+        "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=800&auto=format&fit=crop&q=80"
+      ],
+      "scheduledAt": "2026-10-10T01:45:00.054Z",
+      "timezone": "Asia/Dhaka",
+      "status": "scheduled",
+      "createdAt": "2026-10-09T13:45:00.054Z"
+    },
+    {
+      "id": "diag_job_1791566431520",
+      "workspaceId": "ws_demo_store",
+      "caption": "[DIAGNOSTIC_TEST_JOB] Safe scheduler persistence verification.",
+      "platforms": [
+        "facebook"
+      ],
+      "hashtags": [
+        "#test",
+        "#diagnostic"
+      ],
+      "mediaUrls": [],
+      "scheduledAt": "2026-10-10T17:20:31.520Z",
+      "timezone": "Asia/Dhaka",
+      "status": "scheduled",
+      "createdAt": "2026-10-09T17:20:31.520Z"
+    }
+  ],
+  "scheduledMessages": [],
+  "subscriptionPlans": [
+    {
+      "id": "plan_starter",
+      "name": "Starter",
+      "description": "Perfect for small Facebook stores and emerging entrepreneurs.",
+      "priceBdt": 1499,
+      "priceUsd": 15,
+      "interval": "monthly",
+      "maxChannels": 2,
+      "maxConversationsMonthly": 500,
+      "aiRepliesMonthly": 250,
+      "maxScheduledPosts": 20,
+      "features": [
+        "Central Messaging Inbox",
+        "Facebook & Messenger Integration",
+        "Basic AI Sales Agent",
+        "20 Scheduled Posts/mo",
+        "Single Admin Seat",
+        "Email Support"
+      ],
+      "isActive": true
+    },
+    {
+      "id": "plan_pro",
+      "name": "Growth & Business",
+      "description": "Best for active multi-channel stores scaling sales with AI automation.",
+      "priceBdt": 3499,
+      "priceUsd": 35,
+      "interval": "monthly",
+      "maxChannels": 5,
+      "maxConversationsMonthly": 3000,
+      "aiRepliesMonthly": 1500,
+      "maxScheduledPosts": 100,
+      "features": [
+        "All 5 Channels (FB, Messenger, IG, WhatsApp, Chat)",
+        "High-Speed Gemini AI Sales Agent",
+        "Product Catalog & Direct Checkout",
+        "100 Scheduled Posts/mo",
+        "WhatsApp Scheduled Messaging",
+        "Bengali & English Natural Language",
+        "Up to 5 Team Members",
+        "Priority Support"
+      ],
+      "isActive": true
+    },
+    {
+      "id": "plan_enterprise",
+      "name": "Enterprise Hub",
+      "description": "For established brands, agencies, and high-volume e-commerce operations.",
+      "priceBdt": 7999,
+      "priceUsd": 80,
+      "interval": "monthly",
+      "maxChannels": 10,
+      "maxConversationsMonthly": 15000,
+      "aiRepliesMonthly": 10000,
+      "maxScheduledPosts": 500,
+      "features": [
+        "Unlimited Workspaces & Channels",
+        "Custom Brand Voice & Deep Knowledge Base",
+        "Unlimited Scheduled Posts",
+        "Dedicated Webhook Processing & Sync",
+        "Advanced Analytics & Export",
+        "Unlimited Team Seats",
+        "Dedicated Account Manager & 24/7 SLA"
+      ],
+      "isActive": true
+    }
+  ],
+  "subscriptions": [
+    {
+      "id": "sub_1",
+      "workspaceId": "ws_demo_store",
+      "workspaceName": "Dhaka Fashion Hub",
+      "planId": "plan_pro",
+      "planName": "Growth & Business",
+      "status": "active",
+      "startedAt": "2026-10-09T13:45:00.054Z",
+      "expiresAt": "2026-11-08T13:45:00.054Z",
+      "requestedAt": "2026-10-09T13:45:00.054Z",
+      "paymentMethod": "bKash Merchant",
+      "paymentReference": "TRX987654321",
+      "currentUsage": {
+        "conversationsThisMonth": 12,
+        "aiRepliesThisMonth": 19,
+        "scheduledPostsThisMonth": 3
+      }
+    },
+    {
+      "id": "sub_1791561279008",
+      "workspaceId": "ws_1791561279007",
+      "workspaceName": "My Fashion Shop",
+      "planId": "plan_starter",
+      "planName": "Starter",
+      "status": "active",
+      "startedAt": "2026-10-09T15:54:39.008Z",
+      "expiresAt": "2026-10-23T15:54:39.008Z",
+      "requestedAt": "2026-10-09T15:54:39.008Z",
+      "currentUsage": {
+        "conversationsThisMonth": 0,
+        "aiRepliesThisMonth": 0,
+        "scheduledPostsThisMonth": 0
+      }
+    },
+    {
+      "id": "sub_1791561996846",
+      "workspaceId": "ws_1791561927116",
+      "workspaceName": "iadncs",
+      "planId": "plan_enterprise",
+      "planName": "Enterprise Hub",
+      "status": "pending",
+      "requestedAt": "2026-10-09T16:06:36.846Z",
+      "paymentMethod": "bKash Merchant",
+      "paymentReference": "w312e3qdwe",
+      "currentUsage": {
+        "conversationsThisMonth": 0,
+        "aiRepliesThisMonth": 0,
+        "scheduledPostsThisMonth": 0
+      }
+    },
+    {
+      "id": "sub_1791562230726",
+      "workspaceId": "ws_1791562230725",
+      "workspaceName": "afcasdc",
+      "planId": "plan_starter",
+      "planName": "Starter",
+      "status": "active",
+      "startedAt": "2026-10-09T16:10:30.726Z",
+      "expiresAt": "2026-10-23T16:10:30.726Z",
+      "requestedAt": "2026-10-09T16:10:30.726Z",
+      "currentUsage": {
+        "conversationsThisMonth": 0,
+        "aiRepliesThisMonth": 0,
+        "scheduledPostsThisMonth": 0
+      }
+    },
+    {
+      "id": "sub_1791563585423",
+      "workspaceId": "ws_1791563585423",
+      "workspaceName": "c asd",
+      "planId": "plan_starter",
+      "planName": "Starter",
+      "status": "active",
+      "startedAt": "2026-10-09T16:33:05.423Z",
+      "expiresAt": "2026-10-23T16:33:05.423Z",
+      "requestedAt": "2026-10-09T16:33:05.423Z",
+      "currentUsage": {
+        "conversationsThisMonth": 0,
+        "aiRepliesThisMonth": 0,
+        "scheduledPostsThisMonth": 0
+      }
+    },
+    {
+      "id": "sub_1791567004275",
+      "workspaceId": "ws_1791567004273",
+      "workspaceName": "xsAXDA",
+      "planId": "plan_starter",
+      "planName": "Starter",
+      "status": "active",
+      "startedAt": "2026-10-09T17:30:04.275Z",
+      "expiresAt": "2026-10-23T17:30:04.275Z",
+      "requestedAt": "2026-10-09T17:30:04.275Z",
+      "currentUsage": {
+        "conversationsThisMonth": 0,
+        "aiRepliesThisMonth": 0,
+        "scheduledPostsThisMonth": 0
+      }
+    }
+  ],
+  "auditLogs": [
+    {
+      "id": "audit_ai_test_1791561284187",
+      "userId": "usr_superadmin",
+      "userName": "YEAR INFO Admin",
+      "action": "AI_PROVIDER_TESTED",
+      "details": "Connection test on provider \"prov_gemini\": Failed (0ms)",
+      "timestamp": "2026-10-09T15:54:44.187Z",
+      "status": "failure"
+    },
+    {
+      "id": "log_1",
+      "workspaceId": "ws_demo_store",
+      "userId": "usr_superadmin",
+      "userName": "YEAR INFO Admin",
+      "action": "WORKSPACE_INITIALIZED",
+      "details": "Initial workspace and multi-channel configuration initialized successfully.",
+      "timestamp": "2026-10-09T13:45:00.054Z"
+    }
+  ],
+  "aiProviders": [
+    {
+      "id": "prov_gemini",
+      "name": "Google Gemini (Official @google/genai)",
+      "providerType": "gemini",
+      "model": "gemini-3.8-flash",
+      "apiKeyMasked": "••••••••env",
+      "isConfigured": false,
+      "isEnabled": true,
+      "isDefault": true,
+      "isFallback": false,
+      "lastTestStatus": "failed",
+      "lastTestedAt": "2026-10-09T17:30:16.917Z",
+      "totalRequests": 142,
+      "totalTokens": 58200,
+      "createdAt": "2026-10-09T15:54:18.491Z",
+      "lastError": "No API credential configured. Please provide a valid API key to test connection."
+    },
+    {
+      "id": "prov_openai",
+      "name": "OpenAI (GPT-4o Mini)",
+      "providerType": "openai",
+      "apiEndpoint": "https://api.openai.com/v1",
+      "model": "gpt-4o-mini",
+      "isConfigured": false,
+      "isEnabled": false,
+      "isDefault": false,
+      "isFallback": true,
+      "lastTestStatus": "untested",
+      "totalRequests": 0,
+      "totalTokens": 0,
+      "createdAt": "2026-10-09T15:54:18.491Z"
+    },
+    {
+      "id": "prov_groq",
+      "name": "Groq Cloud (LLaMA 3.3 70B Versatile)",
+      "providerType": "groq",
+      "apiEndpoint": "https://api.groq.com/openai/v1",
+      "model": "llama-3.3-70b-versatile",
+      "isConfigured": false,
+      "isEnabled": false,
+      "isDefault": false,
+      "isFallback": false,
+      "lastTestStatus": "untested",
+      "totalRequests": 0,
+      "totalTokens": 0,
+      "createdAt": "2026-10-09T15:54:18.491Z"
+    }
+  ],
+  "globalIntegrations": [
+    {
+      "id": "integ_gemini",
+      "serviceKey": "gemini",
+      "name": "Google Gemini AI Suite",
+      "purpose": "Central model serving conversational sales intelligence, order drafting & Bengali/English processing.",
+      "status": "needs_verification",
+      "isEnabled": true,
+      "lastTestedAt": "2026-10-09T15:54:18.491Z",
+      "lastTestStatus": "untested",
+      "metadata": {
+        "model": "gemini-3.8-flash",
+        "sdk": "@google/genai"
+      },
+      "updatedAt": "2026-10-09T15:54:18.491Z"
+    },
+    {
+      "id": "integ_meta",
+      "serviceKey": "meta",
+      "name": "Meta Graph Platform (Facebook & Instagram)",
+      "purpose": "Official Graph API v22.0 OAuth connection, Facebook Page posts sync, and Messenger/Instagram webhook delivery.",
+      "status": "configured",
+      "isEnabled": true,
+      "maskedFingerprint": "AppID: ••••••••0562",
+      "lastTestedAt": "2026-10-09T15:54:18.491Z",
+      "lastTestStatus": "untested",
+      "metadata": {
+        "apiVersion": "v22.0",
+        "webhookEndpoint": "/api/webhooks/meta"
+      },
+      "updatedAt": "2026-10-09T15:54:18.491Z"
+    },
+    {
+      "id": "integ_whatsapp",
+      "serviceKey": "whatsapp",
+      "name": "WhatsApp Business Cloud Platform",
+      "purpose": "Official Meta Cloud API for customer transactional alerts, catalog notifications and scheduled broadcasts.",
+      "status": "unconfigured",
+      "isEnabled": true,
+      "lastTestedAt": "2026-10-09T15:54:18.491Z",
+      "lastTestStatus": "untested",
+      "metadata": {
+        "apiVersion": "v22.0",
+        "webhookEndpoint": "/api/webhooks/whatsapp"
+      },
+      "updatedAt": "2026-10-09T15:54:18.491Z"
+    },
+    {
+      "id": "integ_stripe",
+      "serviceKey": "stripe",
+      "name": "Card & Global Payment Gateway",
+      "purpose": "International USD card payment processing for subscription upgrades and enterprise tiers.",
+      "status": "unconfigured",
+      "isEnabled": false,
+      "lastTestedAt": "2026-10-09T15:54:18.491Z",
+      "lastTestStatus": "untested",
+      "metadata": {
+        "mode": "sandbox"
+      },
+      "updatedAt": "2026-10-09T15:54:18.491Z"
+    }
+  ],
+  "websiteBranding": {
+    "siteName": "YEAR INFO AI",
+    "tagline": "One Intelligent Hub for Conversations, Sales & Social Publishing",
+    "landingHeadline": "One Intelligent Hub for Conversations, Sales & Social Publishing",
+    "landingDescription": "Central Messaging System, high-speed Gemini AI Sales Agent, and automated Social Media Publishing for modern businesses.",
+    "supportEmail": "yearinvo@gmail.com",
+    "supportPhone": "+8801700000000",
+    "companyName": "YEAR INFO AI Ltd.",
+    "companyAddress": "House 42, Road 11, Banani, Dhaka-1213, Bangladesh",
+    "tradeLicenseNumber": "TRAD/DNCC/092813/2026",
+    "footerText": "© 2026 YEAR INFO AI. All rights reserved. Engineered for High-Growth Brands.",
+    "socialLinks": {
+      "facebook": "https://facebook.com/yearinfoai",
+      "instagram": "https://instagram.com/yearinfoai",
+      "linkedin": "https://linkedin.com/company/yearinfoai"
+    },
+    "defaultLanguage": "both",
+    "defaultTimezone": "Asia/Dhaka",
+    "defaultTheme": "dark",
+    "showPublicPricing": true,
+    "maintenanceMode": false,
+    "maintenanceNotice": "",
+    "updatedAt": "2026-10-09T15:54:18.491Z"
+  },
+  "domainDeployment": {
+    "canonicalUrl": "https://ais-dev-q3chin66kswwbyeyn5djck-411764206474.asia-east1.run.app",
+    "desiredCustomDomain": "app.yearinfo.ai",
+    "preferredHost": "apex",
+    "verificationToken": "yia-verify-8893-dhaka-2026",
+    "isVerified": true,
+    "sslStatus": "active",
+    "allowedOrigins": [
+      "http://localhost:3000",
+      "https://ais-dev-q3chin66kswwbyeyn5djck-411764206474.asia-east1.run.app",
+      "https://ais-pre-q3chin66kswwbyeyn5djck-411764206474.asia-east1.run.app"
+    ],
+    "dnsRecordsRequired": [
+      {
+        "type": "CNAME",
+        "host": "app",
+        "value": "ais-dev-q3chin66kswwbyeyn5djck-411764206474.asia-east1.run.app",
+        "status": "detected"
+      },
+      {
+        "type": "TXT",
+        "host": "_yia-challenge",
+        "value": "yia-verification=yia-verify-8893-dhaka-2026",
+        "status": "detected"
+      }
+    ],
+    "environment": {
+      "nodeVersion": "v22.23.2",
+      "environmentMode": "development",
+      "port": 3000,
+      "platform": "Google Cloud Run (asia-east1)",
+      "uptimeSeconds": 728
+    },
+    "lastCheckedAt": "2026-10-09T15:54:18.491Z",
+    "updatedAt": "2026-10-09T15:54:18.491Z"
+  },
+  "platformFeatures": {
+    "aiSalesAgent": true,
+    "aiModelSelection": true,
+    "facebookConnection": true,
+    "messengerMessaging": true,
+    "instagramMessaging": true,
+    "facebookPublishing": true,
+    "instagramPublishing": true,
+    "whatsappMessaging": true,
+    "websiteLiveChat": true,
+    "productCatalog": true,
+    "orderManagement": true,
+    "postScheduler": true,
+    "subscriptionBilling": true,
+    "updatedAt": "2026-10-09T15:54:18.492Z"
+  },
+  "paymentRecords": [
+    {
+      "id": "pay_1001",
+      "subscriptionId": "sub_1",
+      "workspaceId": "ws_demo_store",
+      "workspaceName": "Dhaka Fashion Hub",
+      "amountBdt": 2999,
+      "amountUsd": 30,
+      "method": "bkash",
+      "transactionReference": "TRX987654321",
+      "status": "verified",
+      "verifiedAt": "2026-10-04T15:54:18.492Z",
+      "verifiedBy": "usr_superadmin",
+      "createdAt": "2026-10-04T15:54:18.492Z"
+    }
+  ],
+  "adminNotifications": [
+    {
+      "id": "notif_1",
+      "type": "domain_issue",
+      "severity": "info",
+      "title": "Canonical Domain Active",
+      "message": "Application is serving securely with automated SSL/TLS termination on Google Cloud Run.",
+      "read": false,
+      "createdAt": "2026-10-09T15:54:18.492Z"
+    },
+    {
+      "id": "notif_2",
+      "type": "provider_error",
+      "severity": "info",
+      "title": "AI Primary Engine Connected",
+      "message": "Google Gemini (gemini-3.8-flash) is active and serving conversation requests.",
+      "read": true,
+      "createdAt": "2026-10-09T15:54:18.492Z"
+    }
+  ],
+  "systemSettings": {
+    "platformMode": "production",
+    "sessionTimeoutMinutes": 1440,
+    "rateLimitPerMinute": 120,
+    "webhookSecret": "whsec_yia_live_2026",
+    "autoBackupEnabled": true
+  }
+}

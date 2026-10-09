@@ -1,0 +1,7 @@
+{
+  "name": "YEAR INFO AI",
+  "description": "One Intelligent Hub for Conversations, Sales & Social Publishing. Central Messaging System, AI Sales Agent, and Social Media Automation for businesses.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

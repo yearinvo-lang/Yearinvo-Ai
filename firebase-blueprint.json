@@ -1,0 +1,157 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with role and access details",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "maxLength": 150 },
+        "role": { "type": "string", "enum": ["superadmin", "admin", "agent"] },
+        "isSuperAdmin": { "type": "boolean" },
+        "createdAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "name", "email", "role"]
+    },
+    "Workspace": {
+      "title": "Workspace",
+      "description": "Business workspace entity",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 150 },
+        "ownerId": { "type": "string", "maxLength": 128 },
+        "currency": { "type": "string", "maxLength": 10 },
+        "createdAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "name", "ownerId"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Store inventory product item",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "workspaceId": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 200 },
+        "price": { "type": "number" },
+        "description": { "type": "string", "maxLength": 1000 },
+        "imageUrl": { "type": "string", "maxLength": 500 },
+        "category": { "type": "string", "maxLength": 100 },
+        "stock": { "type": "number" },
+        "createdAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "workspaceId", "name", "price"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer purchase order",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "workspaceId": { "type": "string", "maxLength": 128 },
+        "customerId": { "type": "string", "maxLength": 128 },
+        "customerName": { "type": "string", "maxLength": 150 },
+        "customerPhone": { "type": "string", "maxLength": 50 },
+        "totalAmount": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"] },
+        "createdAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "workspaceId", "customerName", "totalAmount", "status"]
+    },
+    "Conversation": {
+      "title": "Conversation",
+      "description": "Multi-channel unified customer conversation thread",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "workspaceId": { "type": "string", "maxLength": 128 },
+        "customerId": { "type": "string", "maxLength": 128 },
+        "customerName": { "type": "string", "maxLength": 150 },
+        "channel": { "type": "string", "enum": ["facebook", "messenger", "instagram", "whatsapp", "livechat"] },
+        "status": { "type": "string", "enum": ["open", "closed", "pending"] },
+        "lastMessageText": { "type": "string", "maxLength": 1000 },
+        "lastMessageAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "workspaceId", "customerName", "channel", "status"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "Individual message in conversation thread",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "conversationId": { "type": "string", "maxLength": 128 },
+        "workspaceId": { "type": "string", "maxLength": 128 },
+        "senderType": { "type": "string", "enum": ["customer", "agent", "ai"] },
+        "senderName": { "type": "string", "maxLength": 100 },
+        "content": { "type": "string", "maxLength": 2000 },
+        "timestamp": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "conversationId", "workspaceId", "senderType", "content"]
+    },
+    "Post": {
+      "title": "Post",
+      "description": "Scheduled social media post",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "workspaceId": { "type": "string", "maxLength": 128 },
+        "caption": { "type": "string", "maxLength": 2000 },
+        "mediaUrl": { "type": "string", "maxLength": 500 },
+        "scheduledTime": { "type": "string", "maxLength": 50 },
+        "status": { "type": "string", "enum": ["draft", "scheduled", "published", "failed"] }
+      },
+      "required": ["id", "workspaceId", "caption", "status"]
+    },
+    "Subscription": {
+      "title": "Subscription",
+      "description": "Workspace subscription record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "workspaceId": { "type": "string", "maxLength": 128 },
+        "workspaceName": { "type": "string", "maxLength": 150 },
+        "planId": { "type": "string", "maxLength": 100 },
+        "status": { "type": "string", "enum": ["pending", "active", "expired", "cancelled", "suspended", "rejected"] },
+        "expiresAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "workspaceId", "planId", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User account profiles"
+    },
+    "/workspaces/{workspaceId}": {
+      "schema": "Workspace",
+      "description": "Business workspaces"
+    },
+    "/workspaces/{workspaceId}/products/{productId}": {
+      "schema": "Product",
+      "description": "Workspace products"
+    },
+    "/workspaces/{workspaceId}/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Workspace customer orders"
+    },
+    "/workspaces/{workspaceId}/conversations/{conversationId}": {
+      "schema": "Conversation",
+      "description": "Workspace unified inbox conversations"
+    },
+    "/workspaces/{workspaceId}/conversations/{conversationId}/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Conversation message history"
+    },
+    "/workspaces/{workspaceId}/posts/{postId}": {
+      "schema": "Post",
+      "description": "Scheduled social posts"
+    },
+    "/subscriptions/{subscriptionId}": {
+      "schema": "Subscription",
+      "description": "Workspace platform subscriptions"
+    }
+  }
+}

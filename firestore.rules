@@ -1,0 +1,231 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ==========================================
+    // 1. GLOBAL SAFETY NET (DEFAULT-DENY)
+    // ==========================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ==========================================
+    // 2. PRIMITIVES & ACCESS HELPERS
+    // ==========================================
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Platform Owner / Super Admin check
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'yearinvo@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isWorkspaceMember(workspaceId) {
+      return isSignedIn() && (
+        isAdmin() ||
+        exists(/databases/$(database)/documents/workspaces/$(workspaceId)/members/$(request.auth.uid)) ||
+        get(/databases/$(database)/documents/workspaces/$(workspaceId)).data.ownerId == request.auth.uid
+      );
+    }
+
+    // ==========================================
+    // 3. ENTITY VALIDATION HELPERS
+    // ==========================================
+
+    function isValidUser(data) {
+      return data.id is string && isValidId(data.id) &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.email is string && data.email.size() > 0 && data.email.size() <= 150 &&
+             data.role in ['superadmin', 'admin', 'agent'] &&
+             (!('isSuperAdmin' in data) || data.isSuperAdmin is bool);
+    }
+
+    function isValidWorkspace(data) {
+      return data.id is string && isValidId(data.id) &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 150 &&
+             data.ownerId is string && isValidId(data.ownerId);
+    }
+
+    function isValidProduct(data) {
+      return data.id is string && isValidId(data.id) &&
+             data.workspaceId is string && isValidId(data.workspaceId) &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 200 &&
+             data.price is number && data.price >= 0 &&
+             (!('description' in data) || (data.description is string && data.description.size() <= 1000)) &&
+             (!('imageUrl' in data) || (data.imageUrl is string && data.imageUrl.size() <= 500)) &&
+             (!('category' in data) || (data.category is string && data.category.size() <= 100)) &&
+             (!('stock' in data) || (data.stock is number && data.stock >= 0));
+    }
+
+    function isValidOrder(data) {
+      return data.id is string && isValidId(data.id) &&
+             data.workspaceId is string && isValidId(data.workspaceId) &&
+             data.customerName is string && data.customerName.size() > 0 && data.customerName.size() <= 150 &&
+             data.totalAmount is number && data.totalAmount >= 0 &&
+             data.status in ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
+    }
+
+    function isValidConversation(data) {
+      return data.id is string && isValidId(data.id) &&
+             data.workspaceId is string && isValidId(data.workspaceId) &&
+             data.customerName is string && data.customerName.size() > 0 && data.customerName.size() <= 150 &&
+             data.channel in ['facebook', 'messenger', 'instagram', 'whatsapp', 'livechat'] &&
+             data.status in ['open', 'closed', 'pending'];
+    }
+
+    function isValidMessage(data) {
+      return data.id is string && isValidId(data.id) &&
+             data.conversationId is string && isValidId(data.conversationId) &&
+             data.workspaceId is string && isValidId(data.workspaceId) &&
+             data.senderType in ['customer', 'agent', 'ai'] &&
+             data.content is string && data.content.size() > 0 && data.content.size() <= 2000;
+    }
+
+    function isValidPost(data) {
+      return data.id is string && isValidId(data.id) &&
+             data.workspaceId is string && isValidId(data.workspaceId) &&
+             data.caption is string && data.caption.size() <= 2000 &&
+             data.status in ['draft', 'scheduled', 'published', 'failed'];
+    }
+
+    function isValidSubscription(data) {
+      return data.id is string && isValidId(data.id) &&
+             data.workspaceId is string && isValidId(data.workspaceId) &&
+             data.planId is string && data.planId.size() <= 100 &&
+             data.status in ['pending', 'active', 'expired', 'cancelled', 'suspended', 'rejected'];
+    }
+
+    // ==========================================
+    // 4. COLLECTION RULES
+    // ==========================================
+
+    // --- USERS ---
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if isOwner(userId) && isValidUser(incoming()) && incoming().role != 'superadmin';
+      allow update: if (isOwner(userId) || isAdmin()) && isValidUser(incoming()) && (
+        isAdmin() ||
+        (incoming().diff(existing()).affectedKeys().hasOnly(['name', 'phone', 'businessName', 'updatedAt']) &&
+         incoming().id == existing().id &&
+         incoming().email == existing().email &&
+         incoming().role == existing().role)
+      );
+      allow delete: if isAdmin();
+    }
+
+    // --- WORKSPACES & SUBCOLLECTIONS ---
+    match /workspaces/{workspaceId} {
+      allow get: if isValidId(workspaceId) && (isWorkspaceMember(workspaceId) || isAdmin());
+      allow list: if isSignedIn() && (resource.data.ownerId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidWorkspace(incoming()) && incoming().ownerId == request.auth.uid;
+      allow update: if (isWorkspaceMember(workspaceId) || isAdmin()) && isValidWorkspace(incoming()) && (
+        isAdmin() ||
+        (incoming().diff(existing()).affectedKeys().hasOnly(['name', 'currency', 'settings', 'updatedAt']) &&
+         incoming().id == existing().id &&
+         incoming().ownerId == existing().ownerId)
+      );
+      allow delete: if isAdmin() || (isSignedIn() && existing().ownerId == request.auth.uid);
+
+      // --- PRODUCTS ---
+      match /products/{productId} {
+        allow get: if isValidId(productId) && (isWorkspaceMember(workspaceId) || isAdmin());
+        allow list: if isValidId(workspaceId) && (isWorkspaceMember(workspaceId) || isAdmin());
+        allow create: if isWorkspaceMember(workspaceId) && isValidProduct(incoming()) && incoming().workspaceId == workspaceId;
+        allow update: if isWorkspaceMember(workspaceId) && isValidProduct(incoming()) &&
+                         incoming().id == existing().id &&
+                         incoming().workspaceId == existing().workspaceId &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['name', 'price', 'description', 'imageUrl', 'category', 'stock', 'updatedAt']);
+        allow delete: if isWorkspaceMember(workspaceId) || isAdmin();
+      }
+
+      // --- ORDERS ---
+      match /orders/{orderId} {
+        allow get: if isValidId(orderId) && (isWorkspaceMember(workspaceId) || isAdmin());
+        allow list: if isValidId(workspaceId) && (isWorkspaceMember(workspaceId) || isAdmin());
+        allow create: if (isWorkspaceMember(workspaceId) || isAdmin()) && isValidOrder(incoming()) && incoming().workspaceId == workspaceId;
+        allow update: if (isWorkspaceMember(workspaceId) || isAdmin()) && isValidOrder(incoming()) &&
+                         incoming().id == existing().id &&
+                         incoming().workspaceId == existing().workspaceId &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['status', 'notes', 'deliveryAddress', 'totalAmount', 'updatedAt']);
+        allow delete: if isAdmin();
+      }
+
+      // --- CONVERSATIONS ---
+      match /conversations/{conversationId} {
+        allow get: if isValidId(conversationId) && (isWorkspaceMember(workspaceId) || isAdmin());
+        allow list: if isValidId(workspaceId) && (isWorkspaceMember(workspaceId) || isAdmin());
+        allow create: if (isWorkspaceMember(workspaceId) || isAdmin()) && isValidConversation(incoming()) && incoming().workspaceId == workspaceId;
+        allow update: if (isWorkspaceMember(workspaceId) || isAdmin()) && isValidConversation(incoming()) &&
+                         incoming().id == existing().id &&
+                         incoming().workspaceId == existing().workspaceId &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['status', 'lastMessageText', 'lastMessageAt', 'unreadCount', 'aiActive', 'assignedTo', 'updatedAt']);
+        allow delete: if isAdmin();
+
+        // --- MESSAGES ---
+        match /messages/{messageId} {
+          allow get: if isValidId(messageId) && (isWorkspaceMember(workspaceId) || isAdmin());
+          allow list: if isValidId(conversationId) && (isWorkspaceMember(workspaceId) || isAdmin());
+          allow create: if (isWorkspaceMember(workspaceId) || isAdmin()) && isValidMessage(incoming()) &&
+                           incoming().workspaceId == workspaceId &&
+                           incoming().conversationId == conversationId;
+          allow update: if false; // Messages are immutable once sent
+          allow delete: if isAdmin();
+        }
+      }
+
+      // --- POSTS ---
+      match /posts/{postId} {
+        allow get: if isValidId(postId) && (isWorkspaceMember(workspaceId) || isAdmin());
+        allow list: if isValidId(workspaceId) && (isWorkspaceMember(workspaceId) || isAdmin());
+        allow create: if isWorkspaceMember(workspaceId) && isValidPost(incoming()) && incoming().workspaceId == workspaceId;
+        allow update: if isWorkspaceMember(workspaceId) && isValidPost(incoming()) &&
+                         incoming().id == existing().id &&
+                         incoming().workspaceId == existing().workspaceId &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['caption', 'mediaUrl', 'scheduledTime', 'status', 'channels', 'updatedAt']);
+        allow delete: if isWorkspaceMember(workspaceId) || isAdmin();
+      }
+    }
+
+    // --- SUBSCRIPTIONS ---
+    match /subscriptions/{subscriptionId} {
+      allow get: if isSignedIn() && (isWorkspaceMember(existing().workspaceId) || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isSignedIn() && isValidSubscription(incoming()) && (isWorkspaceMember(incoming().workspaceId) || isAdmin());
+      allow update: if isAdmin() && isValidSubscription(incoming()) &&
+                       incoming().id == existing().id &&
+                       incoming().workspaceId == existing().workspaceId;
+      allow delete: if isAdmin();
+    }
+
+    // --- SYSTEM DIAGNOSTICS & INTEGRITY TEST COLLECTION ---
+    match /diagnostics_test/{docId} {
+      // Allows authenticated users and platform owners to safely run diagnostic read/write tests
+      allow get, list, create, update, delete: if isSignedIn() || isAdmin();
+    }
+  }
+}
