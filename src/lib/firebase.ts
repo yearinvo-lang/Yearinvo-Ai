@@ -18,7 +18,10 @@ import {
   browserLocalPersistence,
   User as FirebaseUser,
   GoogleAuthProvider,
+  FacebookAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
 } from 'firebase/auth';
 import {
   getFirestore,
@@ -326,14 +329,68 @@ export async function runFirestoreReadWriteDiagnostic(): Promise<{
 // Authentication Helpers (Real Firebase Auth)
 // ========================================================
 
+export function formatFirebaseAuthError(error: any): string {
+  if (!error) return 'Authentication error occurred.';
+  const code = error.code || '';
+  switch (code) {
+    case 'auth/invalid-email':
+      return 'The email address is improperly formatted. Please enter a valid email address.';
+    case 'auth/user-not-found':
+      return 'No account was found with this email address.';
+    case 'auth/wrong-password':
+    case 'auth/invalid-credential':
+    case 'auth/invalid-login-credentials':
+      return 'Invalid email or password. Please verify your credentials and try again.';
+    case 'auth/email-already-in-use':
+      return 'An account already exists with this email address in Firebase Authentication.';
+    case 'auth/weak-password':
+      return 'Password should be at least 6 characters long.';
+    case 'auth/popup-blocked':
+      return 'Authentication popup was blocked by browser. Please enable popups for this site.';
+    case 'auth/popup-closed-by-user':
+      return 'Authentication was cancelled (the popup window was closed before completion).';
+    case 'auth/network-request-failed':
+      return 'Network connection failure. Please check your internet connection.';
+    case 'auth/too-many-requests':
+      return 'Access to this account has been temporarily disabled due to too many failed login attempts. Please reset your password or try again later.';
+    case 'auth/unauthorized-domain':
+      return 'Current domain is not authorized in Firebase Auth settings. Add this domain to Authorized Domains in the Firebase Console.';
+    case 'auth/operation-not-allowed':
+      return 'This sign-in provider is not enabled in Firebase Authentication console.';
+    default:
+      return error.message || 'Authentication failed. Please verify credentials and network.';
+  }
+}
+
 export async function firebaseSignUp(email: string, password: string, displayName?: string) {
   if (!firebaseConfig.apiKey) {
     throw new Error('Firebase apiKey is missing. Please configure VITE_FIREBASE_API_KEY.');
   }
   const userCredential = await createUserWithEmailAndPassword(auth, email, password);
   if (displayName && userCredential.user) {
-    await updateProfile(userCredential.user, { displayName });
+    try {
+      await updateProfile(userCredential.user, { displayName });
+    } catch (e) {
+      console.warn('[Firebase Auth] Failed to set display name:', e);
+    }
   }
+
+  // Sync user profile to Firestore /users/{uid} separately
+  try {
+    const userDocRef = doc(db, 'users', userCredential.user.uid);
+    await setDoc(userDocRef, {
+      id: userCredential.user.uid,
+      name: displayName || email.split('@')[0],
+      email: userCredential.user.email,
+      role: 'admin',
+      isSuperAdmin: email === 'yearinvo@gmail.com',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }, { merge: true });
+  } catch (fsErr) {
+    console.warn('[Firestore] Profile record sync notice:', fsErr);
+  }
+
   // Automatically send email verification
   try {
     await sendEmailVerification(userCredential.user);
@@ -364,7 +421,11 @@ export async function firebaseResetPassword(email: string) {
   if (!firebaseConfig.apiKey) {
     throw new Error('Firebase apiKey is missing. Please configure VITE_FIREBASE_API_KEY.');
   }
-  await sendPasswordResetEmail(auth, email);
+  const trimmed = email.trim();
+  if (!trimmed || !trimmed.includes('@')) {
+    throw new Error('Please enter a valid email address.');
+  }
+  await sendPasswordResetEmail(auth, trimmed);
 }
 
 export async function firebaseSignInWithGoogle() {
@@ -372,7 +433,57 @@ export async function firebaseSignInWithGoogle() {
     throw new Error('Firebase apiKey is missing. Please configure VITE_FIREBASE_API_KEY.');
   }
   const provider = new GoogleAuthProvider();
+  provider.addScope('email');
+  provider.addScope('profile');
   const result = await signInWithPopup(auth, provider);
+
+  // Sync user profile in Firestore
+  if (result.user) {
+    try {
+      const userDocRef = doc(db, 'users', result.user.uid);
+      await setDoc(userDocRef, {
+        id: result.user.uid,
+        name: result.user.displayName || result.user.email?.split('@')[0] || 'Google User',
+        email: result.user.email,
+        avatarUrl: result.user.photoURL || '',
+        role: 'admin',
+        isSuperAdmin: result.user.email === 'yearinvo@gmail.com',
+        updatedAt: new Date().toISOString(),
+      }, { merge: true });
+    } catch (e) {
+      console.warn('[Firestore] Google user profile record notice:', e);
+    }
+  }
+
+  return result.user;
+}
+
+export async function firebaseSignInWithFacebook() {
+  if (!firebaseConfig.apiKey) {
+    throw new Error('Firebase apiKey is missing. Please configure VITE_FIREBASE_API_KEY.');
+  }
+  const provider = new FacebookAuthProvider();
+  provider.addScope('email');
+  provider.addScope('public_profile');
+  const result = await signInWithPopup(auth, provider);
+
+  if (result.user) {
+    try {
+      const userDocRef = doc(db, 'users', result.user.uid);
+      await setDoc(userDocRef, {
+        id: result.user.uid,
+        name: result.user.displayName || result.user.email?.split('@')[0] || 'Facebook User',
+        email: result.user.email,
+        avatarUrl: result.user.photoURL || '',
+        role: 'admin',
+        isSuperAdmin: result.user.email === 'yearinvo@gmail.com',
+        updatedAt: new Date().toISOString(),
+      }, { merge: true });
+    } catch (e) {
+      console.warn('[Firestore] Facebook user profile record notice:', e);
+    }
+  }
+
   return result.user;
 }
 

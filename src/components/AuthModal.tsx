@@ -2,6 +2,15 @@ import React, { useState } from 'react';
 import { X, Lock, Mail, User, Store, Phone, ArrowRight, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { YearInfoLogo } from './YearInfoLogo.tsx';
 import { useAuth } from '../context/AuthContext.tsx';
+import {
+  firebaseSignUp,
+  firebaseSignIn,
+  firebaseResetPassword,
+  firebaseSignInWithGoogle,
+  firebaseSignInWithFacebook,
+  formatFirebaseAuthError,
+  auth as firebaseAuth,
+} from '../lib/firebase.ts';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -29,45 +38,184 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resetSent, setResetSent] = useState(false);
+  const [successInfo, setSuccessInfo] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setSuccessInfo(null);
     setLoading(true);
 
     try {
       if (mode === 'login') {
-        const res = await login(email, password);
+        // 1. Authenticate with Firebase Authentication first
+        try {
+          await firebaseSignIn(email.trim(), password);
+        } catch (fbErr: any) {
+          // If Firebase Auth fails with invalid credentials, report the real message
+          const msg = formatFirebaseAuthError(fbErr);
+          setError(msg);
+          setLoading(false);
+          return;
+        }
+
+        // 2. Sync session with server backend
+        const res = await login(email.trim(), password);
         if (res.success) {
           onSuccess(false);
         } else {
-          setError(res.error || 'Invalid credentials');
+          setError(res.error || 'Login session synchronization failed');
         }
       } else if (mode === 'register') {
-        if (!name || !email || !password) {
-          setError('Please fill in all required fields');
+        const cleanEmail = email.trim();
+        if (!name.trim() || !cleanEmail || !password) {
+          setError('Please fill in all required fields (Name, Email, and Password).');
           setLoading(false);
           return;
         }
-        const res = await register({ name, email, password, businessName, phone });
+
+        if (password.length < 6) {
+          setError('Password must be at least 6 characters long.');
+          setLoading(false);
+          return;
+        }
+
+        // 1. Create real user in Firebase Authentication
+        let fbUser;
+        try {
+          fbUser = await firebaseSignUp(cleanEmail, password, name.trim());
+        } catch (fbErr: any) {
+          const fbMsg = formatFirebaseAuthError(fbErr);
+          setError(fbMsg);
+          setLoading(false);
+          return;
+        }
+
+        // 2. Once Firebase confirms account creation, provision workspace & server profile
+        const res = await register({
+          name: name.trim(),
+          email: cleanEmail,
+          password,
+          businessName: businessName.trim() || undefined,
+          phone: phone.trim() || undefined,
+        });
+
         if (res.success) {
           onSuccess(true);
         } else {
-          setError(res.error || 'Registration failed');
+          // Account exists in Firebase Auth, but backend profile setup reported an error
+          setError(`Firebase account created (${fbUser.uid}), but profile initialization failed: ${res.error}`);
         }
       } else if (mode === 'forgot') {
-        if (!email) {
-          setError('Please enter your email address');
+        const cleanEmail = email.trim();
+        if (!cleanEmail) {
+          setError('Please enter your email address to receive password reset instructions.');
           setLoading(false);
           return;
         }
-        // Real server-side token or instruction
-        setResetSent(true);
+
+        // Real Firebase Authentication sendPasswordResetEmail
+        try {
+          await firebaseResetPassword(cleanEmail);
+          setResetSent(true);
+        } catch (fbErr: any) {
+          const friendlyMsg = formatFirebaseAuthError(fbErr);
+          setError(friendlyMsg);
+        }
       }
     } catch (err: any) {
-      setError(err.message || 'Operation failed');
+      setError(err.message || 'Operation failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Google Login via real Firebase Auth
+  const handleGoogleSignIn = async () => {
+    setError(null);
+    setLoading(true);
+    try {
+      const fbUser = await firebaseSignInWithGoogle();
+      if (!fbUser) {
+        throw new Error('Google Sign-In returned empty user credentials.');
+      }
+
+      // Provision or retrieve user workspace session on server
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: fbUser.displayName || fbUser.email?.split('@')[0] || 'Google User',
+          email: fbUser.email,
+          password: `oauth_google_${fbUser.uid}`,
+          businessName: `${fbUser.displayName || 'Google'}'s Workspace`,
+        }),
+      });
+
+      if (!res.ok) {
+        // If account already exists on backend, log in
+        const loginRes = await login(fbUser.email!, `oauth_google_${fbUser.uid}`);
+        if (loginRes.success) {
+          onSuccess(false);
+          return;
+        }
+      } else {
+        const data = await res.json();
+        localStorage.setItem('yia_token', data.token);
+        onSuccess(true);
+        return;
+      }
+
+      onSuccess(false);
+    } catch (err: any) {
+      setError(formatFirebaseAuthError(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Facebook Login via real Firebase Auth
+  const handleFacebookSignIn = async () => {
+    setError(null);
+    setLoading(true);
+    try {
+      const fbUser = await firebaseSignInWithFacebook();
+      if (!fbUser) {
+        throw new Error('Facebook Sign-In returned empty user credentials.');
+      }
+
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: fbUser.displayName || fbUser.email?.split('@')[0] || 'Facebook User',
+          email: fbUser.email || `fb_${fbUser.uid}@yearinfo.ai`,
+          password: `oauth_facebook_${fbUser.uid}`,
+          businessName: `${fbUser.displayName || 'Facebook'}'s Workspace`,
+        }),
+      });
+
+      if (!res.ok) {
+        const loginRes = await login(
+          fbUser.email || `fb_${fbUser.uid}@yearinfo.ai`,
+          `oauth_facebook_${fbUser.uid}`
+        );
+        if (loginRes.success) {
+          onSuccess(false);
+          return;
+        }
+      } else {
+        const data = await res.json();
+        localStorage.setItem('yia_token', data.token);
+        onSuccess(true);
+        return;
+      }
+
+      onSuccess(false);
+    } catch (err: any) {
+      setError(formatFirebaseAuthError(err));
     } finally {
       setLoading(false);
     }
@@ -108,29 +256,32 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <p className="text-xs text-slate-400 mt-1">
             {mode === 'login' && 'Sign in to access your unified messaging and sales hub.'}
             {mode === 'register' && 'Start managing multi-channel conversations with AI.'}
-            {mode === 'forgot' && 'Enter your email to receive recovery instructions.'}
+            {mode === 'forgot' && 'Enter your email to receive official Firebase recovery instructions.'}
           </p>
         </div>
 
         {error && (
-          <div className="mb-4 flex items-center gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-300">
-            <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
-            <span>{error}</span>
+          <div className="mb-4 flex items-start gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-300">
+            <AlertCircle className="h-4 w-4 shrink-0 text-rose-400 mt-0.5" />
+            <span className="leading-relaxed">{error}</span>
           </div>
         )}
 
         {resetSent ? (
           <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-center">
             <CheckCircle2 className="mx-auto h-8 w-8 text-emerald-400 mb-2" />
-            <div className="text-sm font-bold text-white">Password Recovery Initiated</div>
-            <p className="text-xs text-slate-300 mt-1">
-              Instructions have been generated for {email}. Please contact platform admin or proceed to login.
+            <div className="text-sm font-bold text-white">Password Reset Email Dispatched</div>
+            <p className="text-xs text-slate-300 mt-1.5 leading-relaxed">
+              Firebase Authentication has sent password recovery instructions to <strong className="text-purple-300">{email}</strong>. Please inspect your inbox and spam folder, then follow the reset link.
             </p>
+            <div className="mt-3 text-[11px] text-slate-400 bg-slate-950/80 p-2 rounded-lg border border-slate-800">
+              Sender: noreply@yearinvo-ai.firebaseapp.com
+            </div>
             <button
               onClick={() => { setMode('login'); setResetSent(false); }}
               className="mt-4 rounded-xl bg-slate-800 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-700 transition"
             >
-              Back to Login
+              Back to Sign In
             </button>
           </div>
         ) : (
@@ -204,7 +355,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   {mode === 'login' && (
                     <button
                       type="button"
-                      onClick={() => setMode('forgot')}
+                      onClick={() => { setMode('forgot'); setError(null); }}
                       className="text-[11px] text-purple-400 hover:underline"
                     >
                       Forgot password?
@@ -235,9 +386,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               ) : (
                 <>
                   <span>
-                    {mode === 'login' && 'Sign In'}
-                    {mode === 'register' && 'Create Account'}
-                    {mode === 'forgot' && 'Send Recovery Email'}
+                    {mode === 'login' && 'Sign In with Email'}
+                    {mode === 'register' && 'Create Account in Firebase'}
+                    {mode === 'forgot' && 'Send Firebase Recovery Email'}
                   </span>
                   <ArrowRight className="h-4 w-4" />
                 </>
@@ -246,69 +397,54 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </form>
         )}
 
-        {/* Optional Facebook Login (per requirements, distinct from channel authorization) */}
-        {mode === 'login' && (
-          <div className="mt-3 space-y-2">
+        {/* Real OAuth Providers (Google & Facebook via Firebase Auth) */}
+        {mode !== 'forgot' && (
+          <div className="mt-4 space-y-2">
             <div className="relative flex items-center justify-center my-3">
               <div className="border-t border-slate-800 w-full" />
-              <span className="bg-slate-900 px-2 text-[10px] uppercase font-bold text-slate-500 absolute">or</span>
+              <span className="bg-slate-900 px-2 text-[10px] uppercase font-bold text-slate-500 absolute">or continue with</span>
             </div>
 
-            <button
-              type="button"
-              onClick={async () => {
-                setError(null);
-                try {
-                  const res = await fetch('/api/auth/facebook/url');
-                  const data = await res.json();
-                  if (data.configured && data.url) {
-                    const popup = window.open(data.url, 'fb_login_popup', 'width=600,height=700');
-                    if (!popup) {
-                      setError('Popup blocked. Please allow popups to log in with Facebook.');
-                      return;
-                    }
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={handleGoogleSignIn}
+                disabled={loading}
+                className="flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-800/80 py-2.5 text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-white transition disabled:opacity-50"
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24">
+                  <path
+                    fill="#4285F4"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                  />
+                </svg>
+                <span>Google</span>
+              </button>
 
-                    const handlePopupMsg = async (event: MessageEvent) => {
-                      if (event.data?.type === 'OAUTH_AUTH_SUCCESS') {
-                        window.removeEventListener('message', handlePopupMsg);
-                        if (event.data.error) {
-                          setError(`Facebook Login Error: ${event.data.error}`);
-                          return;
-                        }
-                        // Exchange code with backend
-                        const verifyRes = await fetch('/api/auth/facebook/callback-token', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({
-                            code: event.data.code,
-                            redirectUri: data.redirectUri,
-                          }),
-                        });
-                        const verifyData = await verifyRes.json();
-                        if (verifyRes.ok) {
-                          localStorage.setItem('yia_token', verifyData.token);
-                          onSuccess(false);
-                          window.location.reload();
-                        } else {
-                          setError(verifyData.error || 'Failed to authenticate with Facebook');
-                        }
-                      }
-                    };
-                    window.addEventListener('message', handlePopupMsg);
-                  } else {
-                    setError('Facebook Login is available when META_APP_ID is configured in environment secrets.');
-                  }
-                } catch (e: any) {
-                  setError(e.message || 'Facebook Login failed');
-                }
-              }}
-              className="w-full flex items-center justify-center gap-2 rounded-xl border border-blue-500/30 bg-blue-600/10 py-2.5 text-xs font-semibold text-blue-300 hover:bg-blue-600/20 transition"
-            >
-              <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-              </svg>
-              <span>Continue with Facebook Login</span>
-            </button>
+              <button
+                type="button"
+                onClick={handleFacebookSignIn}
+                disabled={loading}
+                className="flex items-center justify-center gap-2 rounded-xl border border-blue-500/30 bg-blue-600/10 py-2.5 text-xs font-semibold text-blue-300 hover:bg-blue-600/20 transition disabled:opacity-50"
+              >
+                <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
+                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                </svg>
+                <span>Facebook</span>
+              </button>
+            </div>
           </div>
         )}
 
@@ -370,3 +506,4 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     </div>
   );
 };
+
