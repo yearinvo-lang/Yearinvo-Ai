@@ -67,8 +67,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           return;
         }
 
-        // 2. Sync session with server backend
-        const res = await login(cleanEmail, password, fbUser.uid);
+        // 2. Sync session with server backend (or fallback gracefully to client Firebase user session if static hosting has no active backend server)
+        const res = await login(cleanEmail, password, fbUser.uid, fbUser);
         if (res.success) {
           onSuccess(false);
         } else {
@@ -104,6 +104,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           businessName: businessName.trim() || undefined,
           phone: phone.trim() || undefined,
           uid: fbUser.uid,
+          fbUser,
         });
 
         if (res.success) {
@@ -151,12 +152,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         password: `oauth_google_${fbUser.uid}`,
         businessName: `${fbUser.displayName || 'Google'}'s Workspace`,
         uid: fbUser.uid,
+        fbUser,
       });
 
       if (res.success) {
         onSuccess(true);
       } else {
-        const loginRes = await login(fbUser.email!, `oauth_google_${fbUser.uid}`, fbUser.uid);
+        const loginRes = await login(fbUser.email!, `oauth_google_${fbUser.uid}`, fbUser.uid, fbUser);
         if (loginRes.success) {
           onSuccess(false);
         } else {
@@ -187,6 +189,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         password: `oauth_facebook_${fbUser.uid}`,
         businessName: `${fbUser.displayName || 'Facebook'}'s Workspace`,
         uid: fbUser.uid,
+        fbUser,
       });
 
       if (res.success) {
@@ -195,7 +198,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         const loginRes = await login(
           fbUser.email || `fb_${fbUser.uid}@yearinfo.ai`,
           `oauth_facebook_${fbUser.uid}`,
-          fbUser.uid
+          fbUser.uid,
+          fbUser
         );
         if (loginRes.success) {
           onSuccess(false);

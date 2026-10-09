@@ -329,38 +329,60 @@ export async function runFirestoreReadWriteDiagnostic(): Promise<{
 // Authentication Helpers (Real Firebase Auth)
 // ========================================================
 
+// Helper to safely write to Firestore with a timeout so missing DB or offline driver never hangs auth
+async function safeFirestoreSetDoc(docRef: any, data: any, timeoutMs = 3000): Promise<boolean> {
+  try {
+    const writePromise = setDoc(docRef, data, { merge: true });
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Firestore write timeout')), timeoutMs)
+    );
+    await Promise.race([writePromise, timeoutPromise]);
+    return true;
+  } catch (err: any) {
+    console.warn('[Firestore] Profile record sync skipped or timed out:', err?.message || err);
+    return false;
+  }
+}
+
 export function formatFirebaseAuthError(error: any): string {
   if (!error) return 'An error occurred during authentication. Please try again.';
   const code = error.code || '';
+  const rawMsg = error.message || '';
+  const codeSuffix = code ? ` [${code}]` : '';
+
   switch (code) {
     case 'auth/invalid-email':
-      return 'The email address is improperly formatted. Please enter a valid email address.';
+      return `The email address is improperly formatted. Please enter a valid email address.${codeSuffix}`;
     case 'auth/user-not-found':
-      return 'No account was found with this email address.';
+      return `No account was found with this email address.${codeSuffix}`;
     case 'auth/wrong-password':
     case 'auth/invalid-credential':
     case 'auth/invalid-login-credentials':
-      return 'Invalid email or password. Please verify your credentials and try again.';
+      return `Invalid email or password. Please verify your credentials and try again.${codeSuffix}`;
     case 'auth/email-already-in-use':
-      return 'An account already exists with this email address. Please sign in or use a different email.';
+      return `An account already exists with this email address. Please sign in or use a different email.${codeSuffix}`;
     case 'auth/weak-password':
-      return 'Password should be at least 6 characters long.';
+      return `Password should be at least 6 characters long.${codeSuffix}`;
     case 'auth/popup-blocked':
-      return 'The sign-in window was blocked by your browser. Please enable popups for this site and try again.';
+      return `The sign-in popup was blocked by your browser. Please allow popups for this site and try again.${codeSuffix}`;
     case 'auth/popup-closed-by-user':
-      return 'Sign-in was cancelled before completion. Please try again.';
+      return `Sign-in was cancelled before completion. Please try again.${codeSuffix}`;
     case 'auth/network-request-failed':
-      return 'Network connection failure. Please check your internet connection.';
+      return `Network connection failure. Please check your internet connection.${codeSuffix}`;
     case 'auth/too-many-requests':
-      return 'Access has been temporarily disabled due to multiple failed login attempts. Please reset your password or try again later.';
+      return `Access has been temporarily disabled due to multiple failed login attempts. Please reset your password or try again later.${codeSuffix}`;
     case 'auth/unauthorized-domain':
-      return 'This application domain is awaiting OAuth authorization in console settings. Please contact support or use email sign-in.';
+      return `Domain unauthorized: "year-info-ai.vercel.app" must be added to Firebase Console > Authentication > Settings > Authorized Domains.${codeSuffix}`;
     case 'auth/operation-not-allowed':
-      return 'This sign-in method is not enabled for this workspace. Please contact support.';
+      return `This sign-in provider is not enabled in Firebase Authentication Console.${codeSuffix}`;
+    case 'auth/account-exists-with-different-credential':
+      return `An account already exists with the same email address using a different sign-in method.${codeSuffix}`;
     default: {
-      const msg = error.message || 'Authentication failed. Please verify your credentials and network connection.';
-      // Clean any raw internal Firebase mentions from message
-      return msg.replace(/Firebase: /g, '').replace(/Firebase/g, 'YEAR INFO AI Authentication');
+      if (rawMsg.includes('App not active') || rawMsg.includes('Facebook App')) {
+        return `Facebook App is not in Live Mode. The Meta App ID requires Live status in Meta for Developers dashboard, or your account must be added as a Tester.${codeSuffix}`;
+      }
+      const msg = rawMsg.replace(/Firebase: /g, '').replace(/Firebase/g, 'YEAR INFO AI Authentication');
+      return `${msg}${codeSuffix}`;
     }
   }
 }
@@ -378,10 +400,10 @@ export async function firebaseSignUp(email: string, password: string, displayNam
     }
   }
 
-  // Sync user profile to Firestore /users/{uid} separately
-  try {
+  // Attempt Firestore user profile sync safely in background without blocking registration
+  if (userCredential.user) {
     const userDocRef = doc(db, 'users', userCredential.user.uid);
-    await setDoc(userDocRef, {
+    safeFirestoreSetDoc(userDocRef, {
       id: userCredential.user.uid,
       name: displayName || email.split('@')[0],
       email: userCredential.user.email,
@@ -389,16 +411,14 @@ export async function firebaseSignUp(email: string, password: string, displayNam
       isSuperAdmin: email === 'yearinvo@gmail.com',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-    }, { merge: true });
-  } catch (fsErr) {
-    console.warn('[Firestore] Profile record sync notice:', fsErr);
+    }).catch(() => {});
   }
 
   // Automatically send email verification
   try {
     await sendEmailVerification(userCredential.user);
   } catch (e) {
-    console.warn('[Firebase Auth] Verification email send error:', e);
+    console.warn('[Firebase Auth] Verification email send notice:', e);
   }
   return userCredential.user;
 }
@@ -438,24 +458,21 @@ export async function firebaseSignInWithGoogle() {
   const provider = new GoogleAuthProvider();
   provider.addScope('email');
   provider.addScope('profile');
+  provider.setCustomParameters({ prompt: 'select_account' });
   const result = await signInWithPopup(auth, provider);
 
-  // Sync user profile in Firestore
+  // Sync user profile in Firestore safely in background without blocking auth
   if (result.user) {
-    try {
-      const userDocRef = doc(db, 'users', result.user.uid);
-      await setDoc(userDocRef, {
-        id: result.user.uid,
-        name: result.user.displayName || result.user.email?.split('@')[0] || 'Google User',
-        email: result.user.email,
-        avatarUrl: result.user.photoURL || '',
-        role: 'admin',
-        isSuperAdmin: result.user.email === 'yearinvo@gmail.com',
-        updatedAt: new Date().toISOString(),
-      }, { merge: true });
-    } catch (e) {
-      console.warn('[Firestore] Google user profile record notice:', e);
-    }
+    const userDocRef = doc(db, 'users', result.user.uid);
+    safeFirestoreSetDoc(userDocRef, {
+      id: result.user.uid,
+      name: result.user.displayName || result.user.email?.split('@')[0] || 'Google User',
+      email: result.user.email,
+      avatarUrl: result.user.photoURL || '',
+      role: 'admin',
+      isSuperAdmin: result.user.email === 'yearinvo@gmail.com',
+      updatedAt: new Date().toISOString(),
+    }).catch(() => {});
   }
 
   return result.user;
@@ -471,20 +488,16 @@ export async function firebaseSignInWithFacebook() {
   const result = await signInWithPopup(auth, provider);
 
   if (result.user) {
-    try {
-      const userDocRef = doc(db, 'users', result.user.uid);
-      await setDoc(userDocRef, {
-        id: result.user.uid,
-        name: result.user.displayName || result.user.email?.split('@')[0] || 'Facebook User',
-        email: result.user.email,
-        avatarUrl: result.user.photoURL || '',
-        role: 'admin',
-        isSuperAdmin: result.user.email === 'yearinvo@gmail.com',
-        updatedAt: new Date().toISOString(),
-      }, { merge: true });
-    } catch (e) {
-      console.warn('[Firestore] Facebook user profile record notice:', e);
-    }
+    const userDocRef = doc(db, 'users', result.user.uid);
+    safeFirestoreSetDoc(userDocRef, {
+      id: result.user.uid,
+      name: result.user.displayName || result.user.email?.split('@')[0] || 'Facebook User',
+      email: result.user.email,
+      avatarUrl: result.user.photoURL || '',
+      role: 'admin',
+      isSuperAdmin: result.user.email === 'yearinvo@gmail.com',
+      updatedAt: new Date().toISOString(),
+    }).catch(() => {});
   }
 
   return result.user;

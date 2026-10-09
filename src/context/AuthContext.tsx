@@ -9,8 +9,8 @@ interface AuthContextType {
   loading: boolean;
   language: 'en' | 'bn';
   theme: 'dark' | 'light';
-  login: (email: string, password?: string, firebaseUid?: string) => Promise<{ success: boolean; error?: string }>;
-  register: (data: { name: string; email: string; password: string; businessName?: string; phone?: string; uid?: string }) => Promise<{ success: boolean; error?: string }>;
+  login: (email: string, password?: string, firebaseUid?: string, fbUserObj?: any) => Promise<{ success: boolean; error?: string }>;
+  register: (data: { name: string; email: string; password: string; businessName?: string; phone?: string; uid?: string; fbUser?: any }) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   setActiveWorkspace: (ws: Workspace) => void;
   toggleLanguage: () => void;
@@ -80,13 +80,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setActiveWorkspaceState(data.workspaces[0]);
         }
       } else {
+        // Check for cached user before clearing
+        const cachedUser = localStorage.getItem('yia_cached_user');
+        const cachedWs = localStorage.getItem('yia_cached_workspace');
+        if (cachedUser) {
+          try {
+            const u = JSON.parse(cachedUser);
+            setUser(u);
+            const ws = cachedWs ? [JSON.parse(cachedWs)] : [];
+            setWorkspaces(ws);
+            setActiveWorkspaceState(ws[0] || null);
+          } catch {
+            setToken(null);
+            localStorage.removeItem('yia_token');
+          }
+        } else {
+          setToken(null);
+          localStorage.removeItem('yia_token');
+        }
+      }
+    } catch (err) {
+      // If server is 404/down (e.g. on Vercel), preserve cached Firebase authenticated user
+      const cachedUser = localStorage.getItem('yia_cached_user');
+      const cachedWs = localStorage.getItem('yia_cached_workspace');
+      if (cachedUser) {
+        try {
+          const u = JSON.parse(cachedUser);
+          setUser(u);
+          const ws = cachedWs ? [JSON.parse(cachedWs)] : [];
+          setWorkspaces(ws);
+          setActiveWorkspaceState(ws[0] || null);
+        } catch {
+          setToken(null);
+          localStorage.removeItem('yia_token');
+        }
+      } else {
         setToken(null);
         localStorage.removeItem('yia_token');
       }
-    } catch (err) {
-      console.error('Failed to restore session:', err);
-      setToken(null);
-      localStorage.removeItem('yia_token');
     } finally {
       setLoading(false);
     }
@@ -105,46 +136,147 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     autoInit();
   }, []);
 
-  const login = async (email: string, password?: string, firebaseUid?: string) => {
+  const createClientSession = (userData: any, workspaceName?: string) => {
+    const isOwner = userData.email?.toLowerCase() === 'yearinvo@gmail.com';
+    const localUser: User = {
+      id: userData.uid || userData.id || `usr_${Date.now()}`,
+      name: userData.name || userData.displayName || userData.email?.split('@')[0] || 'Business Owner',
+      email: userData.email,
+      businessName: userData.businessName || workspaceName || `${userData.name || 'Store'}'s Workspace`,
+      phone: userData.phone || '',
+      role: isOwner ? 'superadmin' : 'owner',
+      isSuperAdmin: isOwner,
+      status: 'active',
+      avatarUrl: userData.avatarUrl || userData.photoURL || '',
+      createdAt: new Date().toISOString(),
+    };
+
+    const localWorkspace: Workspace = {
+      id: `ws_${localUser.id}`,
+      name: localUser.businessName || `${localUser.name}'s Business`,
+      slug: (localUser.businessName || 'workspace').toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 30),
+      ownerId: localUser.id,
+      businessType: 'Retail & E-commerce',
+      phone: localUser.phone,
+      currency: 'BDT',
+      timezone: 'Asia/Dhaka',
+      language: 'both',
+      createdAt: new Date().toISOString(),
+    };
+
+    const tokenStr = `yia_sess_${localUser.id}_${Date.now()}`;
+    setUser(localUser);
+    setToken(tokenStr);
+    localStorage.setItem('yia_token', tokenStr);
+    localStorage.setItem('yia_cached_user', JSON.stringify(localUser));
+    localStorage.setItem('yia_cached_workspace', JSON.stringify(localWorkspace));
+    setWorkspaces([localWorkspace]);
+    setActiveWorkspaceState(localWorkspace);
+  };
+
+  const login = async (email: string, password?: string, firebaseUid?: string, fbUserObj?: any) => {
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, firebaseUid }),
-      });
-      const data = await parseJsonResponse(res);
-      if (!res.ok || !data || data.error) {
-        return { success: false, error: (data && data.error) || `Login failed (${res.status})` };
+      }).catch(() => null);
+
+      if (res && res.ok) {
+        const data = await parseJsonResponse(res);
+        if (data && data.user) {
+          setUser(data.user);
+          setToken(data.token);
+          localStorage.setItem('yia_token', data.token);
+          localStorage.setItem('yia_cached_user', JSON.stringify(data.user));
+          setWorkspaces(data.workspaces || []);
+          setActiveWorkspaceState(data.activeWorkspace || data.workspaces[0] || null);
+          return { success: true };
+        }
       }
-      setUser(data.user);
-      setToken(data.token);
-      localStorage.setItem('yia_token', data.token);
-      setWorkspaces(data.workspaces || []);
-      setActiveWorkspaceState(data.activeWorkspace || data.workspaces[0] || null);
-      return { success: true };
+
+      // If server is 404 (e.g. static hosting on Vercel) or unreachable, but real Firebase user was authenticated
+      if (fbUserObj || firebaseUid) {
+        createClientSession(
+          fbUserObj || { uid: firebaseUid, email },
+          `${email.split('@')[0]}'s Workspace`
+        );
+        return { success: true };
+      }
+
+      if (res) {
+        const data = await parseJsonResponse(res);
+        return { success: false, error: (data && data.error) || `Login request returned HTTP ${res.status}` };
+      }
+
+      return { success: false, error: 'Could not connect to authentication service.' };
     } catch (err: any) {
+      if (fbUserObj || firebaseUid) {
+        createClientSession(fbUserObj || { uid: firebaseUid, email });
+        return { success: true };
+      }
       return { success: false, error: err.message || 'Login error' };
     }
   };
 
-  const register = async (inputData: { name: string; email: string; password: string; businessName?: string; phone?: string; uid?: string }) => {
+  const register = async (inputData: {
+    name: string;
+    email: string;
+    password: string;
+    businessName?: string;
+    phone?: string;
+    uid?: string;
+    fbUser?: any;
+  }) => {
     try {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(inputData),
-      });
-      const data = await parseJsonResponse(res);
-      if (!res.ok || !data || data.error) {
-        return { success: false, error: (data && data.error) || `Registration failed (${res.status})` };
+      }).catch(() => null);
+
+      if (res && res.ok) {
+        const data = await parseJsonResponse(res);
+        if (data && data.user) {
+          setUser(data.user);
+          setToken(data.token);
+          localStorage.setItem('yia_token', data.token);
+          localStorage.setItem('yia_cached_user', JSON.stringify(data.user));
+          setWorkspaces(data.workspaces || [data.workspace]);
+          setActiveWorkspaceState(data.workspace);
+          return { success: true };
+        }
       }
-      setUser(data.user);
-      setToken(data.token);
-      localStorage.setItem('yia_token', data.token);
-      setWorkspaces(data.workspaces || [data.workspace]);
-      setActiveWorkspaceState(data.workspace);
-      return { success: true };
+
+      // If server endpoint is 404 (static Vercel hosting) or unreachable, but real Firebase user was created
+      if (inputData.fbUser || inputData.uid) {
+        createClientSession({
+          uid: inputData.uid || inputData.fbUser?.uid,
+          name: inputData.name,
+          email: inputData.email,
+          businessName: inputData.businessName,
+          phone: inputData.phone,
+        }, inputData.businessName);
+        return { success: true };
+      }
+
+      if (res) {
+        const data = await parseJsonResponse(res);
+        return { success: false, error: (data && data.error) || `Registration request returned HTTP ${res.status}` };
+      }
+
+      return { success: false, error: 'Could not connect to registration service.' };
     } catch (err: any) {
+      if (inputData.fbUser || inputData.uid) {
+        createClientSession({
+          uid: inputData.uid || inputData.fbUser?.uid,
+          name: inputData.name,
+          email: inputData.email,
+          businessName: inputData.businessName,
+          phone: inputData.phone,
+        }, inputData.businessName);
+        return { success: true };
+      }
       return { success: false, error: err.message || 'Registration error' };
     }
   };
@@ -166,6 +298,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setWorkspaces([]);
     setActiveWorkspaceState(null);
     localStorage.removeItem('yia_token');
+    localStorage.removeItem('yia_cached_user');
+    localStorage.removeItem('yia_cached_workspace');
   };
 
   const setActiveWorkspace = (ws: Workspace) => {
