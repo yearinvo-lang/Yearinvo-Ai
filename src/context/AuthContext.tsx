@@ -318,6 +318,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     document.documentElement.lang = language;
   }, [language]);
 
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+    document.documentElement.classList.toggle('light', theme === 'light');
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
   const toggleLanguage = () => {
     const next = language === 'en' ? 'bn' : 'en';
     setLanguage(next);

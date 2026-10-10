@@ -151,6 +151,7 @@ export interface Product {
   discountPrice?: number;
   stock: number;
   images: string[];
+  imageStoragePath?: string;
   variants: ProductVariant[];
   available: boolean;
   shippingInfo?: string;

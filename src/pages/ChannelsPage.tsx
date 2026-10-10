@@ -726,15 +726,15 @@ export const ChannelsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Top Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-purple-500/20 bg-gradient-to-r from-slate-900 via-purple-950/40 to-slate-900 p-6 shadow-xl">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-slate-200 dark:border-purple-500/20 bg-gradient-to-r from-purple-50 via-white to-purple-50 dark:from-slate-900 dark:via-purple-950/40 dark:to-slate-900 p-6 shadow-xl">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-black text-white">Connected Channels</h1>
-            <span className="rounded-full bg-slate-800 px-2.5 py-0.5 text-xs font-bold text-slate-300 border border-slate-700">
+            <h1 className="text-2xl font-black text-slate-900 dark:text-white">Connected Channels</h1>
+            <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 text-xs font-bold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
               Manual Authorization Only
             </span>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Authorize official Meta, WhatsApp Business, and Website messaging channels. Disconnected by default for security.
           </p>
         </div>
@@ -742,7 +742,7 @@ export const ChannelsPage: React.FC = () => {
         <button
           onClick={loadChannels}
           disabled={loading}
-          className="flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-700 transition"
+          className="flex items-center gap-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition"
         >
           <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
           <span>Refresh Status</span>
@@ -750,12 +750,12 @@ export const ChannelsPage: React.FC = () => {
       </div>
 
       {/* Info Callout */}
-      <div className="rounded-xl border border-purple-500/20 bg-purple-500/5 p-4 flex items-start gap-3 text-xs text-slate-300">
-        <Info className="h-5 w-5 text-purple-400 shrink-0 mt-0.5" />
+      <div className="rounded-xl border border-purple-200 dark:border-purple-500/20 bg-purple-50 dark:bg-purple-500/5 p-4 flex items-start gap-3 text-xs text-slate-700 dark:text-slate-300">
+        <Info className="h-5 w-5 text-purple-600 dark:text-purple-400 shrink-0 mt-0.5" />
         <div className="space-y-1">
-          <div className="font-bold text-white">Strict Authorization Policy</div>
-          <p className="text-slate-400 leading-relaxed">
-            Every channel begins in a <span className="text-slate-200 font-semibold">Not Connected</span> state. No account is linked without your explicit OAuth consent. Connecting an account does NOT automatically publish content or enable AI replies—those remain individually controlled in settings.
+          <div className="font-bold text-slate-900 dark:text-white">Strict Authorization Policy</div>
+          <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+            Every channel begins in a <span className="text-slate-900 dark:text-slate-200 font-semibold">Not Connected</span> state. No account is linked without your explicit OAuth consent. Connecting an account does NOT automatically publish content or enable AI replies—those remain individually controlled in settings.
           </p>
         </div>
       </div>
@@ -772,15 +772,15 @@ export const ChannelsPage: React.FC = () => {
               key={cfg.type}
               className={`rounded-2xl border p-5 shadow-lg flex flex-col justify-between space-y-4 transition ${
                 isConnected
-                  ? 'border-purple-500/40 bg-slate-900/90 ring-1 ring-purple-500/20'
-                  : 'border-slate-800 bg-slate-900/70 hover:border-slate-700'
+                  ? 'border-purple-400 dark:border-purple-500/40 bg-purple-50/40 dark:bg-slate-900/90 ring-1 ring-purple-500/20'
+                  : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/70 hover:border-purple-300 dark:hover:border-slate-700'
               }`}
             >
               <div>
                 {/* Header */}
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <h3 className="font-bold text-base text-white">{cfg.title}</h3>
+                    <h3 className="font-bold text-base text-slate-900 dark:text-white">{cfg.title}</h3>
                     <span className={`inline-block mt-1 rounded-md px-2 py-0.5 text-[10px] font-bold border ${cfg.badgeClass}`}>
                       {cfg.category}
                     </span>
@@ -789,17 +789,17 @@ export const ChannelsPage: React.FC = () => {
                   {/* Status Indicator Badge */}
                   <div>
                     {isConnected ? (
-                      <span className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-bold text-emerald-400 border border-emerald-500/20">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      <span className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                         Connected
                       </span>
                     ) : isReauth ? (
-                      <span className="flex items-center gap-1.5 rounded-full bg-amber-500/10 px-2.5 py-0.5 text-xs font-bold text-amber-400 border border-amber-500/20">
-                        <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                      <span className="flex items-center gap-1.5 rounded-full bg-amber-500/10 px-2.5 py-0.5 text-xs font-bold text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                        <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
                         Reauth Needed
                       </span>
                     ) : (
-                      <span className="rounded-full bg-slate-800 px-2.5 py-0.5 text-xs font-semibold text-slate-400 border border-slate-700">
+                      <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 text-xs font-semibold text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
                         Not Connected
                       </span>
                     )}
@@ -808,19 +808,19 @@ export const ChannelsPage: React.FC = () => {
 
                 {/* Account Details if connected */}
                 {isConnected && ch && (
-                  <div className="mt-3 rounded-xl bg-slate-950/70 border border-slate-800 p-3 space-y-1 text-xs">
-                    <div className="flex items-center justify-between text-slate-300">
-                      <span className="text-slate-400">Account:</span>
-                      <span className="font-bold text-white font-mono truncate max-w-[170px]">{ch.name}</span>
+                  <div className="mt-3 rounded-xl bg-slate-100 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 p-3 space-y-1 text-xs">
+                    <div className="flex items-center justify-between text-slate-700 dark:text-slate-300">
+                      <span className="text-slate-500 dark:text-slate-400">Account:</span>
+                      <span className="font-bold text-slate-900 dark:text-white font-mono truncate max-w-[170px]">{ch.name}</span>
                     </div>
                     {ch.accountId && (
-                      <div className="flex items-center justify-between text-slate-400">
+                      <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
                         <span>ID:</span>
-                        <span className="font-mono text-[11px] text-slate-300 truncate max-w-[170px]">{ch.accountId}</span>
+                        <span className="font-mono text-[11px] text-slate-700 dark:text-slate-300 truncate max-w-[170px]">{ch.accountId}</span>
                       </div>
                     )}
                     {ch.lastSyncAt && (
-                      <div className="flex items-center justify-between text-slate-500 text-[10px] pt-1 border-t border-slate-800/80">
+                      <div className="flex items-center justify-between text-slate-400 dark:text-slate-500 text-[10px] pt-1 border-t border-slate-200 dark:border-slate-800/80">
                         <span>Last Verified:</span>
                         <span>{new Date(ch.lastSyncAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                       </div>
@@ -829,7 +829,7 @@ export const ChannelsPage: React.FC = () => {
                 )}
 
                 {/* Description */}
-                <p className="mt-3 text-xs text-slate-400 leading-relaxed">
+                <p className="mt-3 text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                   {cfg.description}
                 </p>
 
@@ -840,7 +840,7 @@ export const ChannelsPage: React.FC = () => {
                   </span>
                   <div className="flex flex-wrap gap-1">
                     {cfg.permissions.map((p) => (
-                      <span key={p} className="rounded bg-slate-800 px-1.5 py-0.2 text-[9px] font-mono text-slate-400">
+                      <span key={p} className="rounded bg-slate-100 dark:bg-slate-800 px-1.5 py-0.2 text-[9px] font-mono text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
                         {p}
                       </span>
                     ))}
@@ -849,14 +849,14 @@ export const ChannelsPage: React.FC = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="pt-3 border-t border-slate-800 flex items-center justify-between">
+              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
                 {isConnected ? (
                   <div className="flex items-center gap-2 w-full justify-between">
                     <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => handleCheckSync(cfg.type)}
                         disabled={checkingSync === cfg.type}
-                        className="rounded-xl border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-xs text-slate-300 hover:text-white transition flex items-center gap-1"
+                        className="rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-2.5 py-1.5 text-xs text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition flex items-center gap-1"
                         title="Check Connection Health"
                       >
                         <RefreshCw className={`h-3 w-3 ${checkingSync === cfg.type ? 'animate-spin' : ''}`} />
@@ -864,7 +864,7 @@ export const ChannelsPage: React.FC = () => {
                       </button>
                       <button
                         onClick={cfg.onConnect}
-                        className="rounded-xl border border-purple-500/30 px-2.5 py-1.5 text-xs text-purple-300 hover:bg-purple-500/10 transition"
+                        className="rounded-xl border border-purple-500/30 px-2.5 py-1.5 text-xs text-purple-600 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-500/10 transition"
                       >
                         Reconnect
                       </button>
@@ -872,7 +872,7 @@ export const ChannelsPage: React.FC = () => {
 
                     <button
                       onClick={() => handleDisconnect(cfg.type, cfg.title)}
-                      className="rounded-xl border border-rose-500/30 px-2.5 py-1.5 text-xs font-semibold text-rose-400 hover:bg-rose-500/10 transition"
+                      className="rounded-xl border border-rose-500/30 px-2.5 py-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition"
                     >
                       Disconnect
                     </button>
@@ -920,7 +920,7 @@ export const ChannelsPage: React.FC = () => {
       {/* ========================================================================= */}
       {fbModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto">
-          <div className="relative w-full max-w-xl rounded-2xl border border-blue-500/30 bg-slate-900 p-6 shadow-2xl animate-in fade-in zoom-in-95 my-auto max-h-[92dvh] flex flex-col">
+          <div className="relative w-full max-w-xl rounded-2xl border border-slate-200 dark:border-blue-500/30 bg-white dark:bg-slate-900 p-6 shadow-2xl animate-in fade-in zoom-in-95 my-auto max-h-[92dvh] flex flex-col">
             <button
               onClick={() => {
                 setFbModalOpen(false);
@@ -928,21 +928,21 @@ export const ChannelsPage: React.FC = () => {
                 setFbError(null);
                 setFbMetaAppInactiveNotice(false);
               }}
-              className="absolute top-5 right-5 text-slate-400 hover:text-white"
+              className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 dark:hover:text-white"
             >
               <X className="h-5 w-5" />
             </button>
 
             {/* Header */}
             <div className="mb-4 flex items-start gap-3">
-              <div className="p-2.5 rounded-xl bg-blue-600/20 border border-blue-500/30 text-blue-400">
+              <div className="p-2.5 rounded-xl bg-blue-600/10 dark:bg-blue-600/20 border border-blue-500/20 dark:border-blue-500/30 text-blue-600 dark:text-blue-400">
                 <Facebook className="h-6 w-6" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                   Connect {fbModalChannel === 'facebook' ? 'Facebook Pages' : 'Facebook Messenger'}
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   Authorize your Facebook Page to manage wall posts, monitor customer engagement, and enable inbox synchronization.
                 </p>
               </div>
@@ -950,23 +950,23 @@ export const ChannelsPage: React.FC = () => {
 
             {/* Error Message */}
             {fbError && (
-              <div className="mb-4 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-300 flex items-start gap-2">
-                <AlertCircle className="h-4 w-4 text-rose-400 shrink-0 mt-0.5" />
+              <div className="mb-4 rounded-xl border border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 p-3 text-xs text-rose-700 dark:text-rose-300 flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 text-rose-500 dark:text-rose-400 shrink-0 mt-0.5" />
                 <span>{fbError}</span>
               </div>
             )}
 
             {/* Meta "App Not Active" Diagnostic Banner */}
             {fbMetaAppInactiveNotice && (
-              <div className="mb-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200 space-y-1.5">
-                <div className="font-bold flex items-center gap-1.5 text-amber-300">
+              <div className="mb-4 rounded-xl border border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 p-3 text-xs text-amber-800 dark:text-amber-200 space-y-1.5">
+                <div className="font-bold flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
                   <ShieldCheck className="h-4 w-4" />
                   <span>Meta Dashboard Configuration Notice: App in Development Mode</span>
                 </div>
-                <p className="text-[11px] leading-relaxed text-amber-200/90">
-                  Meta OAuth reported <span className="font-semibold text-white">"App not active"</span>. In the Meta Developer Dashboard, your app is currently in Development mode:
+                <p className="text-[11px] leading-relaxed text-amber-800/90 dark:text-amber-200/90">
+                  Meta OAuth reported <span className="font-semibold text-slate-900 dark:text-white">"App not active"</span>. In the Meta Developer Dashboard, your app is currently in Development mode:
                 </p>
-                <ol className="list-decimal list-inside text-[11px] space-y-0.5 text-amber-100/80 font-mono">
+                <ol className="list-decimal list-inside text-[11px] space-y-0.5 text-amber-900 dark:text-amber-100/80 font-mono">
                   <li>Go to developers.facebook.com &gt; Select App &gt; Switch top toggle to <strong>Live</strong>.</li>
                   <li>Or under <strong>App Roles &gt; Roles</strong>, add your personal account as an Administrator, Developer, or Tester.</li>
                   <li>Alternatively, paste your direct User Access Token in <strong>Option 2</strong> below to discover Pages immediately.</li>
@@ -978,20 +978,20 @@ export const ChannelsPage: React.FC = () => {
               {fbAuthStep === 'auth' ? (
                 <div className="space-y-4">
                   {/* Option 1: Official Facebook OAuth */}
-                  <div className="rounded-xl border border-blue-500/30 bg-blue-500/5 p-4 space-y-3">
+                  <div className="rounded-xl border border-blue-200 dark:border-blue-500/30 bg-blue-50/50 dark:bg-blue-500/5 p-4 space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-blue-300 uppercase tracking-wider flex items-center gap-1.5">
-                        <Share2 className="h-3.5 w-3.5 text-blue-400" />
+                      <span className="text-xs font-bold text-blue-700 dark:text-blue-300 uppercase tracking-wider flex items-center gap-1.5">
+                        <Share2 className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                         Option 1: Official Facebook OAuth Login
                       </span>
-                      <span className="text-[10px] text-slate-400 font-mono">Popup Flow</span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">Popup Flow</span>
                     </div>
-                    <p className="text-xs text-slate-300 leading-relaxed">
+                    <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                       Authenticate directly through Meta's secure login window. Discovers and requests access only for the Facebook Pages you manage.
                     </p>
-                    <div className="flex items-center gap-1 text-[10px] text-slate-400">
-                      <span className="font-semibold text-slate-300">Requested Scopes:</span>
-                      <span className="font-mono text-blue-300">pages_show_list, pages_read_engagement, pages_manage_posts{fbModalChannel === 'messenger' ? ', pages_messaging' : ''}</span>
+                    <div className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400">
+                      <span className="font-semibold text-slate-700 dark:text-slate-300">Requested Scopes:</span>
+                      <span className="font-mono text-blue-700 dark:text-blue-300">pages_show_list, pages_read_engagement, pages_manage_posts{fbModalChannel === 'messenger' ? ', pages_messaging' : ''}</span>
                     </div>
                     <button
                       type="button"
@@ -1005,15 +1005,15 @@ export const ChannelsPage: React.FC = () => {
                   </div>
 
                   {/* Option 2: Direct Meta Access Token Verification */}
-                  <div className="rounded-xl border border-slate-800 bg-slate-950 p-4 space-y-3">
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-4 space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                        <Key className="h-3.5 w-3.5 text-purple-400" />
+                      <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                        <Key className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
                         Option 2: Direct Meta Access Token Verification
                       </span>
-                      <span className="text-[10px] text-emerald-400 font-mono">Graph API Direct</span>
+                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono">Graph API Direct</span>
                     </div>
-                    <p className="text-xs text-slate-400 leading-relaxed">
+                    <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                       If your Meta app is currently in Development mode or you generated a token in Meta Graph API Explorer, paste your User Access Token to fetch your authorized Facebook Pages:
                     </p>
                     <div>
@@ -1022,7 +1022,7 @@ export const ChannelsPage: React.FC = () => {
                         value={fbInputToken}
                         onChange={(e) => setFbInputToken(e.target.value)}
                         placeholder="EAABw... (Meta User Access Token with pages_show_list)"
-                        className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-white font-mono focus:border-blue-500 focus:outline-none"
+                        className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-xs text-slate-900 dark:text-white font-mono focus:border-blue-500 focus:outline-none"
                       />
                     </div>
                     <button
@@ -1037,16 +1037,16 @@ export const ChannelsPage: React.FC = () => {
                   </div>
 
                   {/* Reference Redirect URI */}
-                  <div className="rounded-xl bg-slate-950 p-3 text-[11px] text-slate-400 border border-slate-800 space-y-1 font-mono">
-                    <div className="text-blue-300 font-semibold font-sans">Meta Developer Settings Reference:</div>
+                  <div className="rounded-xl bg-slate-50 dark:bg-slate-950 p-3 text-[11px] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 space-y-1 font-mono">
+                    <div className="text-blue-700 dark:text-blue-300 font-semibold font-sans">Meta Developer Settings Reference:</div>
                     <div className="text-slate-500">Valid OAuth Redirect URI:</div>
-                    <div className="text-slate-300 select-all">{metaConfig?.redirectUri || 'https://year-info-ai.vercel.app/auth/meta/callback'}</div>
+                    <div className="text-slate-800 dark:text-slate-300 select-all">{metaConfig?.redirectUri || 'https://year-info-ai.vercel.app/auth/meta/callback'}</div>
                   </div>
                 </div>
               ) : (
                 /* Step 2: Page Selection */
                 <div className="space-y-4">
-                  <div className="text-xs text-slate-300 font-semibold">
+                  <div className="text-xs text-slate-700 dark:text-slate-300 font-semibold">
                     Select which authorized Facebook Page to connect:
                   </div>
 
@@ -1056,8 +1056,8 @@ export const ChannelsPage: React.FC = () => {
                         key={page.id}
                         className={`flex items-start gap-3 rounded-xl border p-3 cursor-pointer transition ${
                           fbSelectedPageId === page.id
-                            ? 'border-blue-500 bg-blue-500/10'
-                            : 'border-slate-800 bg-slate-950 hover:border-slate-700'
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/10'
+                            : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 hover:border-slate-300 dark:hover:border-slate-700'
                         }`}
                       >
                         <input
@@ -1069,12 +1069,12 @@ export const ChannelsPage: React.FC = () => {
                           className="mt-1 text-blue-600 focus:ring-blue-500"
                         />
                         <div className="flex-1">
-                          <div className="text-sm font-bold text-white">{page.name}</div>
-                          <div className="text-xs text-slate-400 font-mono">Page ID: {page.id} • {page.category || 'Business Page'}</div>
+                          <div className="text-sm font-bold text-slate-900 dark:text-white">{page.name}</div>
+                          <div className="text-xs text-slate-500 dark:text-slate-400 font-mono">Page ID: {page.id} • {page.category || 'Business Page'}</div>
                           {page.tasks && (
                             <div className="flex flex-wrap gap-1 mt-1">
                               {page.tasks.map((task: string) => (
-                                <span key={task} className="rounded bg-slate-800 px-1.5 py-0.2 text-[9px] font-mono text-slate-400">
+                                <span key={task} className="rounded bg-slate-200 dark:bg-slate-800 px-1.5 py-0.2 text-[9px] font-mono text-slate-700 dark:text-slate-400">
                                   {task}
                                 </span>
                               ))}
@@ -1085,11 +1085,11 @@ export const ChannelsPage: React.FC = () => {
                     ))}
                   </div>
 
-                  <div className="flex justify-end gap-2 pt-3 border-t border-slate-800">
+                  <div className="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
                     <button
                       type="button"
                       onClick={() => setFbAuthStep('auth')}
-                      className="rounded-xl border border-slate-700 px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800"
+                      className="rounded-xl border border-slate-300 dark:border-slate-700 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
                     >
                       Back
                     </button>
@@ -1115,7 +1115,7 @@ export const ChannelsPage: React.FC = () => {
       {/* ========================================================================= */}
       {igModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto">
-          <div className="relative w-full max-w-xl rounded-2xl border border-pink-500/30 bg-slate-900 p-6 shadow-2xl animate-in fade-in zoom-in-95 my-auto max-h-[92dvh] flex flex-col">
+          <div className="relative w-full max-w-xl rounded-2xl border border-slate-200 dark:border-pink-500/30 bg-white dark:bg-slate-900 p-6 shadow-2xl animate-in fade-in zoom-in-95 my-auto max-h-[92dvh] flex flex-col">
             <button
               onClick={() => {
                 setIgModalOpen(false);
@@ -1124,7 +1124,7 @@ export const ChannelsPage: React.FC = () => {
                 setIgMetaAppInactiveNotice(false);
                 setIgHasScannedWithNoAccounts(false);
               }}
-              className="absolute top-5 right-5 text-slate-400 hover:text-white"
+              className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 dark:hover:text-white"
             >
               <X className="h-5 w-5" />
             </button>
@@ -1135,10 +1135,10 @@ export const ChannelsPage: React.FC = () => {
                 <Instagram className="h-6 w-6" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                   Connect Instagram Professional Account
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   Link an Instagram Business or Creator account to receive Direct messages in Central Inbox and schedule post publishing.
                 </p>
               </div>
@@ -1146,23 +1146,23 @@ export const ChannelsPage: React.FC = () => {
 
             {/* Error Message */}
             {igError && (
-              <div className="mb-4 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-300 flex items-start gap-2">
-                <AlertCircle className="h-4 w-4 text-rose-400 shrink-0 mt-0.5" />
+              <div className="mb-4 rounded-xl border border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 p-3 text-xs text-rose-700 dark:text-rose-300 flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 text-rose-500 dark:text-rose-400 shrink-0 mt-0.5" />
                 <span>{igError}</span>
               </div>
             )}
 
             {/* Meta "App Not Active" Diagnostic Banner */}
             {igMetaAppInactiveNotice && (
-              <div className="mb-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200 space-y-1.5">
-                <div className="font-bold flex items-center gap-1.5 text-amber-300">
+              <div className="mb-4 rounded-xl border border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 p-3 text-xs text-amber-800 dark:text-amber-200 space-y-1.5">
+                <div className="font-bold flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
                   <ShieldCheck className="h-4 w-4" />
                   <span>Meta Dashboard Configuration Notice: App in Development Mode</span>
                 </div>
-                <p className="text-[11px] leading-relaxed text-amber-200/90">
-                  Meta OAuth reported <span className="font-semibold text-white">"App not active"</span>. In the Meta Developer Dashboard:
+                <p className="text-[11px] leading-relaxed text-amber-800/90 dark:text-amber-200/90">
+                  Meta OAuth reported <span className="font-semibold text-slate-900 dark:text-white">"App not active"</span>. In the Meta Developer Dashboard:
                 </p>
-                <ol className="list-decimal list-inside text-[11px] space-y-0.5 text-amber-100/80 font-mono">
+                <ol className="list-decimal list-inside text-[11px] space-y-0.5 text-amber-900 dark:text-amber-100/80 font-mono">
                   <li>Go to developers.facebook.com &gt; Select App &gt; Switch top toggle to <strong>Live</strong>.</li>
                   <li>Or under <strong>App Roles &gt; Roles</strong>, add your account as an Administrator, Developer, or Tester.</li>
                   <li>Under <strong>Use Cases &gt; Customize &gt; Permissions</strong>, verify <code>instagram_basic</code> and <code>instagram_manage_messages</code>.</li>
@@ -1172,18 +1172,18 @@ export const ChannelsPage: React.FC = () => {
             )}
 
             {/* Essential Instagram Pre-requisites Callout Card */}
-            <div className="mb-4 rounded-xl border border-pink-500/20 bg-pink-500/5 p-3.5 space-y-2 text-xs">
-              <div className="font-bold text-pink-300 flex items-center gap-1.5">
-                <Sparkles className="h-4 w-4 text-pink-400" />
+            <div className="mb-4 rounded-xl border border-pink-200 dark:border-pink-500/20 bg-pink-50 dark:bg-pink-500/5 p-3.5 space-y-2 text-xs">
+              <div className="font-bold text-pink-700 dark:text-pink-300 flex items-center gap-1.5">
+                <Sparkles className="h-4 w-4 text-pink-600 dark:text-pink-400" />
                 <span>Instagram Graph API Eligibility Requirements</span>
               </div>
-              <ul className="space-y-1.5 text-[11px] text-slate-300">
+              <ul className="space-y-1.5 text-[11px] text-slate-700 dark:text-slate-300">
                 <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-pink-400 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="h-3.5 w-3.5 text-pink-600 dark:text-pink-400 shrink-0 mt-0.5" />
                   <span><strong>Professional Account Required:</strong> Must be an Instagram <em>Business</em> or <em>Creator</em> account (Personal profiles cannot be linked to Meta Graph API).</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-pink-400 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="h-3.5 w-3.5 text-pink-600 dark:text-pink-400 shrink-0 mt-0.5" />
                   <span><strong>Linked Facebook Page Required:</strong> Your Instagram account must be connected to a Facebook Page where you are an Admin (Instagram App &gt; Settings &gt; Creator/Business tools &gt; Connect a Facebook Page).</span>
                 </li>
               </ul>
@@ -1193,20 +1193,20 @@ export const ChannelsPage: React.FC = () => {
               {igAuthStep === 'auth' ? (
                 <div className="space-y-4">
                   {/* Option 1: Official Instagram via Meta OAuth */}
-                  <div className="rounded-xl border border-pink-500/30 bg-pink-500/5 p-4 space-y-3">
+                  <div className="rounded-xl border border-pink-200 dark:border-pink-500/30 bg-pink-50/50 dark:bg-pink-500/5 p-4 space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-pink-300 uppercase tracking-wider flex items-center gap-1.5">
-                        <Instagram className="h-3.5 w-3.5 text-pink-400" />
+                      <span className="text-xs font-bold text-pink-700 dark:text-pink-300 uppercase tracking-wider flex items-center gap-1.5">
+                        <Instagram className="h-3.5 w-3.5 text-pink-600 dark:text-pink-400" />
                         Option 1: Official Instagram Login via Meta
                       </span>
-                      <span className="text-[10px] text-slate-400 font-mono">Popup Flow</span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">Popup Flow</span>
                     </div>
-                    <p className="text-xs text-slate-300 leading-relaxed">
+                    <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                       Authenticate with your Meta / Instagram account. Automatically queries your linked Facebook Pages to discover all authorized Instagram Professional profiles.
                     </p>
-                    <div className="flex items-center gap-1 text-[10px] text-slate-400">
-                      <span className="font-semibold text-slate-300">Requested Permissions:</span>
-                      <span className="font-mono text-pink-300">instagram_basic, instagram_manage_messages, pages_show_list</span>
+                    <div className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400">
+                      <span className="font-semibold text-slate-700 dark:text-slate-300">Requested Permissions:</span>
+                      <span className="font-mono text-pink-700 dark:text-pink-300">instagram_basic, instagram_manage_messages, pages_show_list</span>
                     </div>
                     <button
                       type="button"
@@ -1220,16 +1220,16 @@ export const ChannelsPage: React.FC = () => {
                   </div>
 
                   {/* Option 2: Direct Token Verification for Instagram */}
-                  <div className="rounded-xl border border-slate-800 bg-slate-950 p-4 space-y-3">
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-4 space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                        <Key className="h-3.5 w-3.5 text-pink-400" />
+                      <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                        <Key className="h-3.5 w-3.5 text-pink-600 dark:text-pink-400" />
                         Option 2: Direct Token Verification for Instagram
                       </span>
-                      <span className="text-[10px] text-pink-400 font-mono">Instagram Graph API</span>
+                      <span className="text-[10px] text-pink-600 dark:text-pink-400 font-mono">Instagram Graph API</span>
                     </div>
-                    <p className="text-xs text-slate-400 leading-relaxed">
-                      Enter a Meta User Access Token generated from Meta Graph API Explorer with <code className="text-pink-300 font-mono">instagram_basic</code>, <code className="text-pink-300 font-mono">pages_show_list</code>, and <code className="text-pink-300 font-mono">instagram_manage_messages</code> permissions:
+                    <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                      Enter a Meta User Access Token generated from Meta Graph API Explorer with <code className="text-pink-700 dark:text-pink-300 font-mono">instagram_basic</code>, <code className="text-pink-700 dark:text-pink-300 font-mono">pages_show_list</code>, and <code className="text-pink-700 dark:text-pink-300 font-mono">instagram_manage_messages</code> permissions:
                     </p>
                     <div>
                       <input
@@ -1237,7 +1237,7 @@ export const ChannelsPage: React.FC = () => {
                         value={igInputToken}
                         onChange={(e) => setIgInputToken(e.target.value)}
                         placeholder="EAA... (Meta Access Token with Instagram scopes)"
-                        className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-white font-mono focus:border-pink-500 focus:outline-none"
+                        className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-xs text-slate-900 dark:text-white font-mono focus:border-pink-500 focus:outline-none"
                       />
                     </div>
                     <button
@@ -1252,10 +1252,10 @@ export const ChannelsPage: React.FC = () => {
                   </div>
 
                   {/* Reference Redirect URI */}
-                  <div className="rounded-xl bg-slate-950 p-3 text-[11px] text-slate-400 border border-slate-800 space-y-1 font-mono">
-                    <div className="text-pink-300 font-semibold font-sans">Meta Developer Settings Reference:</div>
+                  <div className="rounded-xl bg-slate-50 dark:bg-slate-950 p-3 text-[11px] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 space-y-1 font-mono">
+                    <div className="text-pink-700 dark:text-pink-300 font-semibold font-sans">Meta Developer Settings Reference:</div>
                     <div className="text-slate-500">Valid OAuth Redirect URI:</div>
-                    <div className="text-slate-300 select-all">{metaConfig?.redirectUri || 'https://year-info-ai.vercel.app/auth/meta/callback'}</div>
+                    <div className="text-slate-800 dark:text-slate-300 select-all">{metaConfig?.redirectUri || 'https://year-info-ai.vercel.app/auth/meta/callback'}</div>
                   </div>
                 </div>
               ) : (
@@ -1263,9 +1263,9 @@ export const ChannelsPage: React.FC = () => {
                 <div className="space-y-4">
                   {igDiscoveredAccounts.length > 0 ? (
                     <>
-                      <div className="text-xs text-slate-300 font-semibold flex items-center justify-between">
+                      <div className="text-xs text-slate-700 dark:text-slate-300 font-semibold flex items-center justify-between">
                         <span>Select the Instagram Professional Account to link:</span>
-                        <span className="text-pink-400 text-[11px]">{igDiscoveredAccounts.length} Account(s) Found</span>
+                        <span className="text-pink-600 dark:text-pink-400 text-[11px] font-bold">{igDiscoveredAccounts.length} Account(s) Found</span>
                       </div>
 
                       <div className="space-y-2 max-h-60 overflow-y-auto">
@@ -1274,8 +1274,8 @@ export const ChannelsPage: React.FC = () => {
                             key={acc.id}
                             className={`flex items-start gap-3 rounded-xl border p-3 cursor-pointer transition ${
                               igSelectedAccountId === acc.id
-                                ? 'border-pink-500 bg-pink-500/10'
-                                : 'border-slate-800 bg-slate-950 hover:border-slate-700'
+                                ? 'border-pink-500 bg-pink-50 dark:bg-pink-500/10'
+                                : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 hover:border-slate-300 dark:hover:border-slate-700'
                             }`}
                           >
                             <input
@@ -1288,16 +1288,16 @@ export const ChannelsPage: React.FC = () => {
                             />
                             <div className="flex-1">
                               <div className="flex items-center gap-2">
-                                <span className="text-sm font-black text-white">@{acc.username}</span>
-                                <span className="rounded bg-pink-500/20 text-pink-300 px-1.5 py-0.2 text-[10px] font-bold border border-pink-500/30">
+                                <span className="text-sm font-black text-slate-900 dark:text-white">@{acc.username}</span>
+                                <span className="rounded bg-pink-500/10 dark:bg-pink-500/20 text-pink-700 dark:text-pink-300 px-1.5 py-0.2 text-[10px] font-bold border border-pink-500/30">
                                   Professional
                                 </span>
                               </div>
-                              <div className="text-xs text-slate-400 font-mono mt-0.5">
+                              <div className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5">
                                 Instagram ID: {acc.id}
                               </div>
-                              <div className="text-xs text-slate-300 mt-1 flex items-center gap-1">
-                                <Facebook className="h-3 w-3 text-blue-400" />
+                              <div className="text-xs text-slate-700 dark:text-slate-300 mt-1 flex items-center gap-1">
+                                <Facebook className="h-3 w-3 text-blue-500 dark:text-blue-400" />
                                 <span>Linked via Facebook Page: <strong>{acc.linkedPageName}</strong></span>
                               </div>
                             </div>
@@ -1305,11 +1305,11 @@ export const ChannelsPage: React.FC = () => {
                         ))}
                       </div>
 
-                      <div className="flex justify-end gap-2 pt-3 border-t border-slate-800">
+                      <div className="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
                         <button
                           type="button"
                           onClick={() => setIgAuthStep('auth')}
-                          className="rounded-xl border border-slate-700 px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800"
+                          className="rounded-xl border border-slate-300 dark:border-slate-700 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
                         >
                           Back
                         </button>
@@ -1326,20 +1326,20 @@ export const ChannelsPage: React.FC = () => {
                     </>
                   ) : (
                     /* Ineligible / Not Linked Diagnostic View */
-                    <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 space-y-3 text-xs">
-                      <div className="flex items-start gap-2.5 text-amber-300 font-bold">
-                        <AlertCircle className="h-5 w-5 shrink-0 mt-0.5 text-amber-400" />
+                    <div className="rounded-xl border border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 p-4 space-y-3 text-xs">
+                      <div className="flex items-start gap-2.5 text-amber-800 dark:text-amber-300 font-bold">
+                        <AlertCircle className="h-5 w-5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
                         <div>
                           <div>No Linked Instagram Professional Accounts Found</div>
-                          <div className="text-[11px] font-normal text-amber-200/90 mt-0.5">
+                          <div className="text-[11px] font-normal text-amber-800/90 dark:text-amber-200/90 mt-0.5">
                             We verified your Facebook Pages, but none have a connected Instagram Business or Creator account.
                           </div>
                         </div>
                       </div>
 
-                      <div className="bg-slate-950/80 rounded-xl p-3 border border-slate-800 space-y-2 text-slate-300">
-                        <div className="font-semibold text-white text-[11px]">How to link your Instagram Professional account:</div>
-                        <ol className="list-decimal list-inside space-y-1.5 text-[11px] text-slate-400 leading-relaxed font-sans">
+                      <div className="bg-white dark:bg-slate-950/80 rounded-xl p-3 border border-slate-200 dark:border-slate-800 space-y-2 text-slate-700 dark:text-slate-300">
+                        <div className="font-semibold text-slate-900 dark:text-white text-[11px]">How to link your Instagram Professional account:</div>
+                        <ol className="list-decimal list-inside space-y-1.5 text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed font-sans">
                           <li>Open the <strong>Instagram mobile app</strong> &gt; Profile &gt; <strong>Settings and privacy</strong>.</li>
                           <li>Tap <strong>Account type and tools</strong> &gt; <strong>Switch to professional account</strong> (choose Business or Creator).</li>
                           <li>Under <strong>Creator / Business tools and controls</strong>, tap <strong>Connect or create a Facebook Page</strong>.</li>
@@ -1348,11 +1348,11 @@ export const ChannelsPage: React.FC = () => {
                         </ol>
                       </div>
 
-                      <div className="flex justify-end gap-2 pt-2 border-t border-amber-500/20">
+                      <div className="flex justify-end gap-2 pt-2 border-t border-amber-200 dark:border-amber-500/20">
                         <button
                           type="button"
                           onClick={() => setIgAuthStep('auth')}
-                          className="rounded-xl border border-slate-700 px-3.5 py-1.5 text-xs text-slate-300 hover:bg-slate-800"
+                          className="rounded-xl border border-slate-300 dark:border-slate-700 px-3.5 py-1.5 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
                         >
                           Back to Token Entry
                         </button>

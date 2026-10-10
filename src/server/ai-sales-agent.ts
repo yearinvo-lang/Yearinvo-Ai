@@ -1,6 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
 import { db } from './db.ts';
-import { AIProviderConfig } from '../types/index.ts';
+import type { AIProviderConfig } from '../types/index.ts';
 
 interface GenerateResponseInput {
   workspaceId: string;

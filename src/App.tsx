@@ -89,6 +89,47 @@ function MainApp() {
     { id: 'settings', label: isBn ? 'সেটিংস' : 'Settings', icon: Settings },
   ];
 
+  // Dedicated OAuth popup callback handler if opened in popup or routed to SPA
+  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/auth/')) {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code') || '';
+    const state = params.get('state') || '';
+    const error = params.get('error_description') || params.get('error') || '';
+
+    if (window.opener) {
+      try {
+        window.opener.postMessage({
+          type: 'OAUTH_AUTH_SUCCESS',
+          code,
+          state,
+          error,
+        }, '*');
+        setTimeout(() => {
+          try { window.close(); } catch {}
+        }, 1000);
+      } catch (e) {
+        console.error('Failed to postMessage to opener:', e);
+      }
+    }
+
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+        <div className="max-w-md w-full rounded-2xl border border-purple-500/30 bg-slate-900 p-8 text-center space-y-4 shadow-2xl">
+          <div className="mx-auto w-12 h-12 rounded-xl bg-purple-600/20 border border-purple-500/30 flex items-center justify-center text-purple-400">
+            <Sparkles className="w-6 h-6 animate-pulse" />
+          </div>
+          <h2 className="text-xl font-black text-white">YEAR INFO AI Authorization</h2>
+          <p className="text-sm text-slate-300">
+            {error ? `Authorization Notice: ${error}` : 'Meta authorization received! Connecting channel and closing window...'}
+          </p>
+          <div className="text-xs text-slate-500 font-mono">
+            {code ? `Auth code received (${code.slice(0, 10)}...)` : 'Closing...'}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // If user is not logged in or clicks "View Landing Page", show Public Landing Page
   if (!user || showLanding) {
     return (
@@ -119,38 +160,38 @@ function MainApp() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-950 text-slate-100 font-sans">
+    <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200">
       {/* MOBILE SIDEBAR BACKDROP */}
       {mobileSidebarOpen && (
         <div
           onClick={() => setMobileSidebarOpen(false)}
-          className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
         />
       )}
 
       {/* LEFT NAVIGATION SIDEBAR */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-purple-500/20 bg-[#080612] transition-transform duration-300 lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-slate-200 dark:border-purple-500/20 bg-white dark:bg-[#080612] transition-all duration-300 lg:static lg:translate-x-0 ${
           mobileSidebarOpen ? 'translate-x-0' : '-translate-x-0 lg:translate-x-0 hidden lg:flex'
         }`}
       >
         {/* Top Brand Logo */}
-        <div className="flex h-16 items-center justify-between border-b border-purple-500/20 px-4 shrink-0">
+        <div className="flex h-16 items-center justify-between border-b border-slate-200 dark:border-purple-500/20 px-4 shrink-0">
           <YearInfoLogo size="md" showText={true} />
           <button
             onClick={() => setMobileSidebarOpen(false)}
-            className="rounded-lg p-1 text-slate-400 hover:text-white lg:hidden"
+            className="rounded-lg p-1 text-slate-400 hover:text-slate-700 dark:hover:text-white lg:hidden"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Workspace Switcher */}
-        <div className="p-3 border-b border-slate-900 shrink-0">
-          <div className="rounded-xl border border-purple-500/20 bg-slate-900/90 p-2.5 flex items-center justify-between">
+        <div className="p-3 border-b border-slate-100 dark:border-slate-900 shrink-0">
+          <div className="rounded-xl border border-slate-200 dark:border-purple-500/20 bg-slate-50 dark:bg-slate-900/90 p-2.5 flex items-center justify-between shadow-sm">
             <div className="truncate">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-purple-400">Workspace</div>
-              <div className="text-xs font-bold text-white truncate">{activeWorkspace?.name || 'Dhaka Fashion Hub'}</div>
+              <div className="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">Workspace</div>
+              <div className="text-xs font-bold text-slate-900 dark:text-white truncate">{activeWorkspace?.name || 'Dhaka Fashion Hub'}</div>
             </div>
             {workspaces.length > 1 && (
               <select
@@ -159,10 +200,10 @@ function MainApp() {
                   const ws = workspaces.find((w) => w.id === e.target.value);
                   if (ws) setActiveWorkspace(ws);
                 }}
-                className="bg-transparent text-slate-400 text-xs focus:outline-none cursor-pointer"
+                className="bg-transparent text-slate-600 dark:text-slate-400 text-xs focus:outline-none cursor-pointer"
               >
                 {workspaces.map((w) => (
-                  <option key={w.id} value={w.id} className="bg-slate-900 text-white">
+                  <option key={w.id} value={w.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
                     {w.name}
                   </option>
                 ))}
@@ -187,22 +228,22 @@ function MainApp() {
                   isActive
                     ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-600/30 font-bold'
                     : item.adminOnly
-                    ? 'text-rose-400 hover:bg-rose-500/10 hover:text-rose-300'
-                    : 'text-slate-400 hover:bg-slate-900 hover:text-slate-100'
+                    ? 'text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-slate-100'
                 }`}
               >
                 <div className="flex items-center gap-2.5 truncate">
-                  <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-white' : item.adminOnly ? 'text-rose-400' : 'text-slate-400'}`} />
+                  <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-white' : item.adminOnly ? 'text-rose-500 dark:text-rose-400' : 'text-slate-500 dark:text-slate-400'}`} />
                   <span className="truncate">{item.label}</span>
                 </div>
 
                 {item.badge && (
-                  <span className="rounded-full bg-emerald-500/20 px-1.5 py-0.2 text-[9px] font-bold text-emerald-400 border border-emerald-500/30">
+                  <span className="rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 px-1.5 py-0.2 text-[9px] font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
                     {item.badge}
                   </span>
                 )}
                 {item.highlight && !isActive && (
-                  <span className="rounded-full bg-purple-500/20 px-1.5 py-0.2 text-[9px] font-bold text-purple-300">
+                  <span className="rounded-full bg-purple-500/10 dark:bg-purple-500/20 px-1.5 py-0.2 text-[9px] font-bold text-purple-600 dark:text-purple-300">
                     AI
                   </span>
                 )}
@@ -212,25 +253,25 @@ function MainApp() {
         </nav>
 
         {/* Sidebar Footer User & Landing Switch */}
-        <div className="p-3 border-t border-purple-500/20 bg-slate-950/80 shrink-0 space-y-2">
+        <div className="p-3 border-t border-slate-200 dark:border-purple-500/20 bg-slate-50 dark:bg-slate-950/80 shrink-0 space-y-2">
           <button
             onClick={() => setShowLanding(true)}
-            className="flex w-full items-center justify-between rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-300 hover:border-purple-500 hover:text-white transition"
+            className="flex w-full items-center justify-between rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:border-purple-500 hover:text-purple-600 dark:hover:text-white transition shadow-sm"
           >
             <span className="flex items-center gap-2">
-              <ExternalLink className="h-3.5 w-3.5 text-purple-400" />
+              <ExternalLink className="h-3.5 w-3.5 text-purple-500 dark:text-purple-400" />
               <span>Landing Page</span>
             </span>
           </button>
 
           <div className="flex items-center justify-between px-1 text-xs">
             <div className="truncate">
-              <div className="font-bold text-white text-xs truncate">{user?.name}</div>
+              <div className="font-bold text-slate-900 dark:text-white text-xs truncate">{user?.name}</div>
               <div className="text-[10px] text-slate-500 truncate">{user?.email}</div>
             </div>
             <button
               onClick={logout}
-              className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-rose-400 transition"
+              className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-rose-500 transition"
               title="Sign Out"
             >
               <LogOut className="h-4 w-4" />
@@ -242,29 +283,43 @@ function MainApp() {
       {/* RIGHT MAIN CONTENT AREA */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* TOP BAR */}
-        <header className="flex h-16 items-center justify-between border-b border-purple-500/20 bg-slate-950/80 px-4 sm:px-6 lg:px-8 backdrop-blur-xl shrink-0">
+        <header className="flex h-16 items-center justify-between border-b border-slate-200 dark:border-purple-500/20 bg-white/90 dark:bg-slate-950/80 px-4 sm:px-6 lg:px-8 backdrop-blur-xl shrink-0 transition-colors">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileSidebarOpen(true)}
-              className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white lg:hidden"
+              className="rounded-lg p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white lg:hidden"
             >
               <Menu className="h-5 w-5" />
             </button>
             <div className="flex items-center gap-2">
-              <span className="text-sm font-bold text-white capitalize">
+              <span className="text-sm font-bold text-slate-900 dark:text-white capitalize">
                 {navItems.find((n) => n.id === currentPage)?.label || 'YEAR INFO AI'}
               </span>
             </div>
           </div>
 
           <div className="flex items-center gap-2.5">
+            {/* Theme Toggle (Light / Dark) */}
+            <button
+              onClick={toggleTheme}
+              className="flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-2 text-slate-700 dark:text-slate-300 hover:border-purple-500 hover:text-purple-600 dark:hover:text-purple-400 transition shadow-sm"
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              aria-label="Toggle theme"
+            >
+              {theme === 'dark' ? (
+                <Sun className="h-4 w-4 text-amber-400" />
+              ) : (
+                <Moon className="h-4 w-4 text-purple-600" />
+              )}
+            </button>
+
             {/* Language Switch */}
             <button
               onClick={toggleLanguage}
-              className="flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-slate-300 hover:border-purple-500 hover:text-white transition"
+              className="flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:border-purple-500 hover:text-purple-600 dark:hover:text-white transition shadow-sm"
               title="Toggle Language"
             >
-              <Globe className="h-3.5 w-3.5 text-purple-400" />
+              <Globe className="h-3.5 w-3.5 text-purple-500 dark:text-purple-400" />
               <span>{isBn ? 'English' : 'বাংলা'}</span>
             </button>
 
@@ -272,14 +327,14 @@ function MainApp() {
             {(user?.isSuperAdmin || user?.role === 'superadmin') && (
               <button
                 onClick={() => setCurrentPage('admin-portal')}
-                className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition ${
+                className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition shadow-sm ${
                   currentPage === 'admin-portal'
-                    ? 'border-rose-500 bg-rose-500/20 text-rose-300 shadow-sm shadow-rose-900/30'
-                    : 'border-rose-500/30 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20'
+                    ? 'border-rose-500 bg-rose-500/20 text-rose-600 dark:text-rose-300 shadow-sm'
+                    : 'border-rose-300 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-500/20'
                 }`}
                 title="Open Owner Control Center"
               >
-                <ShieldAlert className="h-3.5 w-3.5 text-rose-400" />
+                <ShieldAlert className="h-3.5 w-3.5 text-rose-500 dark:text-rose-400" />
                 <span>{isBn ? 'ওনার সেন্টার' : 'Owner Center'}</span>
               </button>
             )}
@@ -287,7 +342,7 @@ function MainApp() {
             {/* Setup Wizard Button */}
             <button
               onClick={() => setOnboardingOpen(true)}
-              className="hidden sm:flex items-center gap-1.5 rounded-xl border border-purple-500/30 bg-purple-500/10 px-3 py-1.5 text-xs font-semibold text-purple-300 hover:bg-purple-500/20 transition"
+              className="hidden sm:flex items-center gap-1.5 rounded-xl border border-purple-200 dark:border-purple-500/30 bg-purple-50 dark:bg-purple-500/10 px-3 py-1.5 text-xs font-semibold text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-500/20 transition shadow-sm"
             >
               <Sparkles className="h-3.5 w-3.5" />
               <span>Onboarding Wizard</span>
@@ -296,7 +351,7 @@ function MainApp() {
         </header>
 
         {/* MAIN BODY VIEW */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-slate-950">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-slate-100/70 dark:bg-slate-950 transition-colors">
           {currentPage === 'overview' && <OverviewPage onNavigate={(page) => setCurrentPage(page)} />}
           {currentPage === 'inbox' && <InboxPage />}
           {currentPage === 'ai-agent' && <AIAgentPage />}

@@ -279,10 +279,22 @@ app.post('/api/auth/logout', (req: Request, res: Response) => {
   res.json({ success: true });
 });
 
+function getAppUrl(req?: Request): string {
+  if (process.env.APP_URL) return process.env.APP_URL.replace(/\/$/, '');
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  if (req) {
+    const host = req.get('x-forwarded-host') || req.get('host');
+    const proto = req.get('x-forwarded-proto') || (req.secure ? 'https' : 'http');
+    if (host) return `${proto}://${host}`;
+  }
+  return 'https://year-info-ai.vercel.app';
+}
+
 // Facebook Login for Application Authentication (distinct from channel integration)
 app.get('/api/auth/facebook/url', (req: Request, res: Response) => {
   const appId = process.env.META_APP_ID;
-  const appUrl = process.env.APP_URL || 'https://ais-dev-q3chin66kswwbyeyn5djck-411764206474.asia-east1.run.app';
+  const appUrl = getAppUrl(req);
   const redirectUri = `${appUrl}/auth/facebook/callback`;
 
   if (!appId) {
@@ -496,9 +508,9 @@ app.get('/api/channels', authMiddleware, (req: Request, res: Response) => {
 });
 
 // Meta OAuth configuration info
-app.get('/api/channels/meta/config', authMiddleware, (req: Request, res: Response) => {
+app.get('/api/channels/meta/config', (req: Request, res: Response) => {
   const appId = process.env.META_APP_ID;
-  const appUrl = process.env.APP_URL || 'https://ais-dev-q3chin66kswwbyeyn5djck-411764206474.asia-east1.run.app';
+  const appUrl = getAppUrl(req);
   const redirectUri = `${appUrl}/auth/meta/callback`;
 
   res.json({
@@ -515,10 +527,10 @@ app.get('/api/channels/meta/config', authMiddleware, (req: Request, res: Respons
 });
 
 // Build official Meta OAuth authorization URL
-app.get('/api/channels/meta/oauth-url', authMiddleware, (req: Request, res: Response) => {
+app.get('/api/channels/meta/oauth-url', (req: Request, res: Response) => {
   const channelType = (req.query.channelType as string) || 'facebook';
   const appId = process.env.META_APP_ID;
-  const appUrl = process.env.APP_URL || 'https://ais-dev-q3chin66kswwbyeyn5djck-411764206474.asia-east1.run.app';
+  const appUrl = getAppUrl(req);
   const redirectUri = `${appUrl}/auth/meta/callback`;
 
   const scopeMap: Record<string, string[]> = {
@@ -578,7 +590,7 @@ app.post('/api/channels/meta/verify-and-list-pages', authMiddleware, async (req:
     // Call Meta Graph API to query real user profile & authorized pages
     const [userRes, pagesRes, permRes] = await Promise.all([
       fetch(`https://graph.facebook.com/v22.0/me?fields=id,name&access_token=${userAccessToken}`),
-      fetch(`https://graph.facebook.com/v22.0/me/accounts?fields=id,name,category,access_token,tasks,instagram_business_account{id,username}&access_token=${userAccessToken}`),
+      fetch(`https://graph.facebook.com/v22.0/me/accounts?fields=id,name,category,access_token,tasks,instagram_business_account{id,username,name,profile_picture_url}&access_token=${userAccessToken}`),
       fetch(`https://graph.facebook.com/v22.0/me/permissions?access_token=${userAccessToken}`),
     ]);
 
@@ -674,10 +686,16 @@ app.post('/api/channels/meta/connect-selected', authMiddleware, async (req: Requ
     }
 
     // Save channel status in database
-    const channel = db.getChannel(wsId, channelType);
+    let channel = db.getChannel(wsId, channelType);
     if (!channel) {
-      res.status(404).json({ error: `Channel ${channelType} not found` });
-      return;
+      channel = {
+        id: `ch_${channelType}_${wsId}`,
+        workspaceId: wsId,
+        type: channelType as any,
+        name: channelType === 'instagram' ? 'Instagram' : channelType === 'messenger' ? 'Facebook Messenger' : 'Facebook Pages',
+        status: 'not_connected',
+      };
+      db.addChannel(channel);
     }
 
     const updated = db.updateChannel(channel.id, {
@@ -1143,7 +1161,7 @@ app.get('/api/products', authMiddleware, (req: Request, res: Response) => {
 
 app.post('/api/products', authMiddleware, (req: Request, res: Response) => {
   const wsId = (req as any).workspaceId;
-  const { name, nameBengali, sku, category, description, price, discountPrice, stock, images, variants, shippingInfo } = req.body;
+  const { name, nameBengali, sku, category, description, price, discountPrice, stock, images, imageStoragePath, variants, shippingInfo } = req.body;
 
   if (!name || price === undefined || !sku) {
     res.status(400).json({ error: 'Product name, SKU, and price are required' });
@@ -1162,6 +1180,7 @@ app.post('/api/products', authMiddleware, (req: Request, res: Response) => {
     discountPrice: discountPrice ? Number(discountPrice) : undefined,
     stock: Number(stock) || 0,
     images: images && images.length ? images : ['https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=80'],
+    imageStoragePath: imageStoragePath || undefined,
     variants: variants || [],
     available: true,
     shippingInfo: shippingInfo || 'Standard Delivery',
@@ -2732,7 +2751,7 @@ async function startServer() {
 }
 
 // In Vercel serverless functions, the Express app is exported and invoked per request
-if (process.env.VERCEL !== '1' && !process.env.NOW_REGION) {
+if (process.env.VERCEL !== '1' && !process.env.NOW_REGION && !process.env.TEST_MODE) {
   startServer();
 }
 

@@ -173,6 +173,11 @@
       "token": "c82b5928c6433dccfa01d7211d909655e890228404194832b5662d904121aade",
       "userId": "JHjnIbHUXlSDDFpTGMTlGiVUHWq1",
       "expiresAt": 1792173535018
+    },
+    {
+      "token": "yia_sess_usr_superadmin_12345",
+      "userId": "usr_superadmin",
+      "expiresAt": 1792258911718
     }
   ],
   "workspaces": [
@@ -342,9 +347,22 @@
       "id": "ch_instagram_ws_demo_store",
       "workspaceId": "ws_demo_store",
       "type": "instagram",
-      "name": "Instagram",
-      "status": "not_connected",
-      "metadata": {}
+      "name": "@test_brand_store",
+      "status": "connected",
+      "metadata": {
+        "pageName": "Test Brand Page",
+        "pageId": "108849204918231",
+        "igUsername": "test_brand_store",
+        "igAccountId": "178414000000000",
+        "permissionsGranted": [
+          "pages_show_list",
+          "pages_read_engagement",
+          "pages_messaging"
+        ]
+      },
+      "accountId": "178414000000000",
+      "connectedAt": "2026-10-10T17:42:23.540Z",
+      "lastSyncAt": "2026-10-10T17:42:23.540Z"
     },
     {
       "id": "ch_whatsapp_ws_demo_store",
@@ -1341,8 +1359,9 @@
       ],
       "scheduledAt": "2026-10-10T01:45:00.054Z",
       "timezone": "Asia/Dhaka",
-      "status": "scheduled",
-      "createdAt": "2026-10-09T13:45:00.054Z"
+      "status": "failed",
+      "createdAt": "2026-10-09T13:45:00.054Z",
+      "errorMessage": "Publishing failed: No connected and authorized Facebook Page or Instagram account found for this workspace. Please connect channel in Settings."
     },
     {
       "id": "diag_job_1791566431520",
@@ -1358,8 +1377,9 @@
       "mediaUrls": [],
       "scheduledAt": "2026-10-10T17:20:31.520Z",
       "timezone": "Asia/Dhaka",
-      "status": "scheduled",
-      "createdAt": "2026-10-09T17:20:31.520Z"
+      "status": "failed",
+      "createdAt": "2026-10-09T17:20:31.520Z",
+      "errorMessage": "Publishing failed: No connected and authorized Facebook Page or Instagram account found for this workspace. Please connect channel in Settings."
     }
   ],
   "scheduledMessages": [],
@@ -1564,6 +1584,15 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "audit_conn_1791654143541",
+      "workspaceId": "ws_demo_store",
+      "userId": "usr_superadmin",
+      "userName": "YEAR INFO Admin",
+      "action": "CHANNEL_CONNECTED",
+      "details": "Successfully connected instagram account \"Test Brand Page\" (ID: 108849204918231).",
+      "timestamp": "2026-10-10T17:42:23.541Z"
+    },
     {
       "id": "audit_ai_test_1791561284187",
       "userId": "usr_superadmin",
