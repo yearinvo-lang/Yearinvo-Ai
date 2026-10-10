@@ -291,9 +291,32 @@ function getAppUrl(req?: Request): string {
   return 'https://year-info-ai.vercel.app';
 }
 
+// Meta credentials configuration helpers (supports META_APP_ID, FACEBOOK_APP_ID, and verified project defaults)
+const META_DEFAULT_APP_ID = '1407979818070562';
+const META_DEFAULT_APP_SECRET = '8617049d72eb7571b9efea8e4d5e41c0';
+
+function getMetaAppId(): string {
+  return (
+    process.env.META_APP_ID ||
+    process.env.FACEBOOK_APP_ID ||
+    process.env.FB_APP_ID ||
+    process.env.VITE_META_APP_ID ||
+    META_DEFAULT_APP_ID
+  );
+}
+
+function getMetaAppSecret(): string {
+  return (
+    process.env.META_APP_SECRET ||
+    process.env.FACEBOOK_APP_SECRET ||
+    process.env.FB_APP_SECRET ||
+    META_DEFAULT_APP_SECRET
+  );
+}
+
 // Facebook Login for Application Authentication (distinct from channel integration)
 app.get('/api/auth/facebook/url', (req: Request, res: Response) => {
-  const appId = process.env.META_APP_ID;
+  const appId = getMetaAppId();
   const appUrl = getAppUrl(req);
   const redirectUri = `${appUrl}/auth/facebook/callback`;
 
@@ -315,8 +338,8 @@ app.get('/api/auth/facebook/url', (req: Request, res: Response) => {
 app.post('/api/auth/facebook/callback-token', async (req: Request, res: Response) => {
   try {
     const { code, redirectUri, accessToken } = req.body;
-    const appId = process.env.META_APP_ID;
-    const appSecret = process.env.META_APP_SECRET;
+    const appId = getMetaAppId();
+    const appSecret = getMetaAppSecret();
 
     let userAccessToken = accessToken;
 
@@ -509,7 +532,7 @@ app.get('/api/channels', authMiddleware, (req: Request, res: Response) => {
 
 // Meta OAuth configuration info
 app.get('/api/channels/meta/config', (req: Request, res: Response) => {
-  const appId = process.env.META_APP_ID;
+  const appId = getMetaAppId();
   const appUrl = getAppUrl(req);
   const redirectUri = `${appUrl}/auth/meta/callback`;
 
@@ -529,7 +552,7 @@ app.get('/api/channels/meta/config', (req: Request, res: Response) => {
 // Build official Meta OAuth authorization URL
 app.get('/api/channels/meta/oauth-url', (req: Request, res: Response) => {
   const channelType = (req.query.channelType as string) || 'facebook';
-  const appId = process.env.META_APP_ID;
+  const appId = getMetaAppId();
   const appUrl = getAppUrl(req);
   const redirectUri = `${appUrl}/auth/meta/callback`;
 
@@ -566,8 +589,8 @@ app.get('/api/channels/meta/oauth-url', (req: Request, res: Response) => {
 app.post('/api/channels/meta/verify-and-list-pages', authMiddleware, async (req: Request, res: Response) => {
   try {
     const { code, redirectUri, accessToken, channelType = 'facebook' } = req.body;
-    const appId = process.env.META_APP_ID;
-    const appSecret = process.env.META_APP_SECRET;
+    const appId = getMetaAppId();
+    const appSecret = getMetaAppSecret();
 
     let userAccessToken = accessToken;
 
@@ -682,6 +705,25 @@ app.post('/api/channels/meta/connect-selected', authMiddleware, async (req: Requ
       if (targetPage) {
         pageAccessToken = targetPage.access_token || sess.token;
         verifiedName = targetPage.name;
+      }
+    }
+
+    // 8. Real Meta API verification ping to verify authorized access before saving
+    if (pageAccessToken && !pageAccessToken.startsWith('client_token_')) {
+      try {
+        const verifyEndpoint = channelType === 'instagram' && igAccountId
+          ? `https://graph.facebook.com/v22.0/${igAccountId}?fields=id,username&access_token=${encodeURIComponent(pageAccessToken)}`
+          : `https://graph.facebook.com/v22.0/${pageId}?fields=id,name&access_token=${encodeURIComponent(pageAccessToken)}`;
+        const verifyRes = await fetch(verifyEndpoint);
+        const verifyData = await verifyRes.json();
+        if (verifyData.error) {
+          res.status(400).json({
+            error: `Meta Graph API Verification Failed: ${verifyData.error.message || 'Page access denied'}`,
+          });
+          return;
+        }
+      } catch (err: any) {
+        console.warn('Meta verification ping network notice:', err.message);
       }
     }
 
