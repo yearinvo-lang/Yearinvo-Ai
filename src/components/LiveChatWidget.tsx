@@ -49,7 +49,8 @@ export const LiveChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId = 'ws_de
         }),
       });
 
-      const data = await res.json();
+      const isJson = res.headers.get('content-type')?.includes('application/json');
+      const data = isJson ? await res.json().catch(() => ({})) : {};
       if (data.aiReply) {
         setMessages((prev) => [
           ...prev,

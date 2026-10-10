@@ -32,8 +32,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterApp
 
   useEffect(() => {
     fetch('/api/public/branding')
-      .then((res) => res.json())
-      .then((data) => setBranding(data))
+      .then((res) => {
+        if (res.ok && res.headers.get('content-type')?.includes('application/json')) {
+          return res.json();
+        }
+        return null;
+      })
+      .then((data) => {
+        if (data) setBranding(data);
+      })
       .catch((err) => console.log('Using default branding:', err));
   }, []);
 

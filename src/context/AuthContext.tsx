@@ -37,10 +37,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const parseJsonResponse = async (res: Response) => {
     const contentType = res.headers.get('content-type') || '';
     if (contentType.includes('application/json')) {
-      return await res.json().catch(() => null);
+      const json = await res.json().catch(() => null);
+      if (json) return json;
     }
     const rawText = await res.text().catch(() => '');
-    return { error: rawText.slice(0, 150) || `Server responded with status ${res.status}` };
+    if (res.status === 404 || rawText.includes('NOT_FOUND') || rawText.includes('could not be found')) {
+      return { error: 'Requested service route is not reachable (HTTP 404). Please ensure the backend endpoint is deployed.' };
+    }
+    if (rawText.startsWith('<!doctype') || rawText.startsWith('<html')) {
+      return { error: `Server returned an HTML page instead of API response (HTTP ${res.status}).` };
+    }
+    const cleanMsg = rawText.trim().slice(0, 150);
+    return { error: cleanMsg || `Server responded with status ${res.status}` };
   };
 
   const apiRequest = async (url: string, options: RequestInit = {}) => {

@@ -20,8 +20,10 @@ const isProduction = process.env.NODE_ENV === 'production';
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Start background worker
-backgroundScheduler.start();
+// Start background worker in non-serverless runtime
+if (process.env.VERCEL !== '1' && !process.env.NOW_REGION) {
+  backgroundScheduler.start();
+}
 
 // Authentication Middleware
 function authMiddleware(req: Request, res: Response, next: NextFunction): void {
@@ -623,14 +625,23 @@ app.post('/api/channels/meta/verify-and-list-pages', authMiddleware, async (req:
         ? {
             id: p.instagram_business_account.id,
             username: p.instagram_business_account.username,
+            name: p.instagram_business_account.name || p.instagram_business_account.username,
+            profilePictureUrl: p.instagram_business_account.profile_picture_url || '',
+            linkedPageId: p.id,
+            linkedPageName: p.name,
           }
         : null,
     }));
+
+    const instagramAccounts = sanitizedPages
+      .filter((p: any) => p.instagramAccount)
+      .map((p: any) => p.instagramAccount);
 
     res.json({
       success: true,
       user: { id: userData.id, name: userData.name },
       pages: sanitizedPages,
+      instagramAccounts,
       grantedPermissions,
       tokenSessionId,
     });
@@ -2720,4 +2731,10 @@ async function startServer() {
   });
 }
 
-startServer();
+// In Vercel serverless functions, the Express app is exported and invoked per request
+if (process.env.VERCEL !== '1' && !process.env.NOW_REGION) {
+  startServer();
+}
+
+export default app;
+
