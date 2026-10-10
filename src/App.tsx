@@ -125,6 +125,16 @@ function MainApp() {
           <div className="text-xs text-slate-500 font-mono">
             {code ? `Auth code received (${code.slice(0, 10)}...)` : 'Closing...'}
           </div>
+          {!window.opener && (
+            <div className="pt-2">
+              <a
+                href="/"
+                className="inline-block px-4 py-2 text-xs font-semibold rounded-xl bg-purple-600 text-white hover:bg-purple-500 transition"
+              >
+                Return to YEAR INFO AI
+              </a>
+            </div>
+          )}
         </div>
       </div>
     );

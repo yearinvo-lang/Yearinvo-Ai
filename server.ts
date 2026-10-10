@@ -603,6 +603,19 @@ app.post('/api/channels/meta/verify-and-list-pages', authMiddleware, async (req:
         return;
       }
       userAccessToken = tokenData.access_token;
+
+      // Exchange short-lived token for 60-day long-lived token
+      try {
+        const longLivedRes = await fetch(
+          `https://graph.facebook.com/v22.0/oauth/access_token?grant_type=fb_exchange_token&client_id=${appId}&client_secret=${appSecret}&fb_exchange_token=${encodeURIComponent(userAccessToken)}`
+        );
+        const longLivedData = await longLivedRes.json();
+        if (longLivedData.access_token) {
+          userAccessToken = longLivedData.access_token;
+        }
+      } catch (err: any) {
+        console.warn('Long-lived token exchange fallback:', err.message);
+      }
     }
 
     if (!userAccessToken) {

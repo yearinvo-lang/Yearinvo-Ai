@@ -150,11 +150,13 @@ export const ChannelsPage: React.FC = () => {
           return;
         }
 
+        let popupTimer: any = null;
         const handlePopupMsg = async (event: MessageEvent) => {
           if (event.data?.type === 'OAUTH_AUTH_SUCCESS') {
             window.removeEventListener('message', handlePopupMsg);
+            if (popupTimer) clearInterval(popupTimer);
             if (event.data.error) {
-              if (event.data.error.toLowerCase().includes('app not active')) {
+              if (event.data.error.toLowerCase().includes('app not active') || event.data.error.toLowerCase().includes('permissions error')) {
                 setFbMetaAppInactiveNotice(true);
               }
               setFbError(`Meta Authorization Notice: ${event.data.error}`);
@@ -164,6 +166,14 @@ export const ChannelsPage: React.FC = () => {
             await verifyFacebookCode(event.data.code, res.redirectUri, channelType);
           }
         };
+
+        popupTimer = setInterval(() => {
+          if (popup.closed) {
+            clearInterval(popupTimer);
+            window.removeEventListener('message', handlePopupMsg);
+            setFbLoading(false);
+          }
+        }, 800);
 
         window.addEventListener('message', handlePopupMsg);
       } else {
@@ -330,11 +340,13 @@ export const ChannelsPage: React.FC = () => {
           return;
         }
 
+        let popupTimer: any = null;
         const handlePopupMsg = async (event: MessageEvent) => {
           if (event.data?.type === 'OAUTH_AUTH_SUCCESS') {
             window.removeEventListener('message', handlePopupMsg);
+            if (popupTimer) clearInterval(popupTimer);
             if (event.data.error) {
-              if (event.data.error.toLowerCase().includes('app not active')) {
+              if (event.data.error.toLowerCase().includes('app not active') || event.data.error.toLowerCase().includes('permissions error')) {
                 setIgMetaAppInactiveNotice(true);
               }
               setIgError(`Instagram Meta Authorization Notice: ${event.data.error}`);
@@ -344,6 +356,14 @@ export const ChannelsPage: React.FC = () => {
             await verifyInstagramCode(event.data.code, res.redirectUri);
           }
         };
+
+        popupTimer = setInterval(() => {
+          if (popup.closed) {
+            clearInterval(popupTimer);
+            window.removeEventListener('message', handlePopupMsg);
+            setIgLoading(false);
+          }
+        }, 800);
 
         window.addEventListener('message', handlePopupMsg);
       } else {
@@ -958,19 +978,52 @@ export const ChannelsPage: React.FC = () => {
 
             {/* Meta "App Not Active" Diagnostic Banner */}
             {fbMetaAppInactiveNotice && (
-              <div className="mb-4 rounded-xl border border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 p-3 text-xs text-amber-800 dark:text-amber-200 space-y-1.5">
-                <div className="font-bold flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
-                  <ShieldCheck className="h-4 w-4" />
-                  <span>Meta Dashboard Configuration Notice: App in Development Mode</span>
+              <div className="mb-4 rounded-xl border border-amber-500/40 bg-amber-50 dark:bg-amber-950/30 p-4 text-xs text-amber-900 dark:text-amber-200 space-y-2.5 shadow-sm">
+                <div className="font-bold flex items-center justify-between text-amber-800 dark:text-amber-300">
+                  <div className="flex items-center gap-1.5">
+                    <ShieldCheck className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                    <span>Meta Dashboard Action Required: App in Development Mode</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setFbMetaAppInactiveNotice(false)}
+                    className="text-amber-600 dark:text-amber-400 hover:text-amber-800 text-[11px]"
+                  >
+                    Dismiss
+                  </button>
                 </div>
-                <p className="text-[11px] leading-relaxed text-amber-800/90 dark:text-amber-200/90">
-                  Meta OAuth reported <span className="font-semibold text-slate-900 dark:text-white">"App not active"</span>. In the Meta Developer Dashboard, your app is currently in Development mode:
+                <p className="text-[11px] leading-relaxed text-slate-700 dark:text-slate-300">
+                  Meta OAuth displays <span className="font-bold text-rose-600 dark:text-rose-400">"App not active. This app is not accessible right now."</span> because Meta App <code className="px-1 py-0.5 rounded bg-amber-100 dark:bg-amber-900/50 font-mono font-bold text-amber-900 dark:text-amber-200">1407979818070562</code> is currently in <strong>Development Mode</strong>. In Development Mode, only registered App Roles (Admins, Developers, Testers) can log in.
                 </p>
-                <ol className="list-decimal list-inside text-[11px] space-y-0.5 text-amber-900 dark:text-amber-100/80 font-mono">
-                  <li>Go to developers.facebook.com &gt; Select App &gt; Switch top toggle to <strong>Live</strong>.</li>
-                  <li>Or under <strong>App Roles &gt; Roles</strong>, add your personal account as an Administrator, Developer, or Tester.</li>
-                  <li>Alternatively, paste your direct User Access Token in <strong>Option 2</strong> below to discover Pages immediately.</li>
-                </ol>
+                <div className="rounded-lg bg-white/80 dark:bg-slate-900/80 p-2.5 border border-amber-200 dark:border-amber-800/50 space-y-1.5 text-[11px]">
+                  <div className="font-semibold text-slate-900 dark:text-white">To resolve this in Meta for Developers:</div>
+                  <ol className="list-decimal list-inside space-y-1 text-slate-700 dark:text-slate-300">
+                    <li>
+                      <strong>Option A (Immediate testing):</strong> Open{' '}
+                      <a
+                        href="https://developers.facebook.com/apps/1407979818070562/roles/roles/"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-blue-600 dark:text-blue-400 underline font-semibold inline-flex items-center gap-0.5"
+                      >
+                        Meta App Roles <ExternalLink className="h-2.5 w-2.5 inline" />
+                      </a>{' '}
+                      and click <em>Add Developers</em> or <em>Add Testers</em> with your personal Facebook account.
+                    </li>
+                    <li>
+                      <strong>Option B (Live Mode for all users):</strong> In{' '}
+                      <a
+                        href="https://developers.facebook.com/apps/1407979818070562/settings/basic/"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-blue-600 dark:text-blue-400 underline font-semibold inline-flex items-center gap-0.5"
+                      >
+                        Basic Settings <ExternalLink className="h-2.5 w-2.5 inline" />
+                      </a>
+                      , ensure Privacy Policy URL is set to <code>https://year-info-ai.vercel.app</code>, then switch the top toggle from <strong>Development</strong> to <strong>Live</strong>.
+                    </li>
+                  </ol>
+                </div>
               </div>
             )}
 
@@ -1002,6 +1055,18 @@ export const ChannelsPage: React.FC = () => {
                       <Facebook className="h-4 w-4" />
                       <span>{fbLoading ? 'Waiting for Meta Authorization...' : 'Continue with Facebook'}</span>
                     </button>
+                    {!fbMetaAppInactiveNotice && (
+                      <div className="text-center pt-1">
+                        <button
+                          type="button"
+                          onClick={() => setFbMetaAppInactiveNotice(true)}
+                          className="text-[11px] text-amber-600 dark:text-amber-400 hover:underline inline-flex items-center gap-1 font-medium"
+                        >
+                          <Info className="h-3 w-3" />
+                          Seeing "App not active" on Meta? View Dashboard instructions
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Option 2: Direct Meta Access Token Verification */}
