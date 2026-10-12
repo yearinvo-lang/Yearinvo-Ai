@@ -691,8 +691,8 @@
           "externalId": "fb_user_tanvir"
         }
       ],
-      "totalOrders": 1,
-      "totalSpent": 2220,
+      "totalOrders": 2,
+      "totalSpent": 4440,
       "tags": [
         "VIP",
         "Panjabi Buyer"
@@ -714,8 +714,8 @@
           "username": "nusrat_j"
         }
       ],
-      "totalOrders": 0,
-      "totalSpent": 0,
+      "totalOrders": 1,
+      "totalSpent": 5310,
       "tags": [
         "Inquiry"
       ],
@@ -733,8 +733,8 @@
           "externalId": "guest_visitor_kamrul"
         }
       ],
-      "totalOrders": 0,
-      "totalSpent": 0,
+      "totalOrders": 1,
+      "totalSpent": 1320,
       "tags": [
         "Live Visitor"
       ],
@@ -1020,7 +1020,7 @@
       "description": "100% fine cotton traditional embroidery Panjabi, perfect for festive and casual wear.",
       "price": 2450,
       "discountPrice": 2150,
-      "stock": 35,
+      "stock": 34,
       "images": [
         "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=600&auto=format&fit=crop&q=80"
       ],
@@ -1036,7 +1036,7 @@
           "id": "v_2",
           "name": "Size 42 (L)",
           "price": 2150,
-          "stock": 15,
+          "stock": 14,
           "sku": "PANJABI-NV-42"
         },
         {
@@ -1061,7 +1061,7 @@
       "description": "Authentic 84-count Dhakai Jamdani woven with golden zari motifs on soft crimson cotton silk base.",
       "price": 5200,
       "discountPrice": 4750,
-      "stock": 14,
+      "stock": 13,
       "images": [
         "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&auto=format&fit=crop&q=80"
       ],
@@ -1080,7 +1080,7 @@
       "description": "Top-grain cowhide leather with 8 card slots, currency divider and RFID protection.",
       "price": 1250,
       "discountPrice": 990,
-      "stock": 50,
+      "stock": 49,
       "images": [
         "https://images.unsplash.com/photo-1627123424574-724758594e93?w=600&auto=format&fit=crop&q=80"
       ],
@@ -1091,6 +1091,98 @@
     }
   ],
   "orders": [
+    {
+      "id": "ord_today_3_1791821532552",
+      "orderNumber": "YIA-2026-203",
+      "workspaceId": "ws_demo_store",
+      "customerId": "cust_3",
+      "customerName": "Kamrul Hasan",
+      "customerPhone": "01911223344",
+      "deliveryAddress": "Mirpur DOHS, Road 9, Dhaka",
+      "items": [
+        {
+          "productId": "prod_3",
+          "productName": "Pure Leather Bifold Wallet",
+          "sku": "WALLET-LTHR-01",
+          "unitPrice": 1250,
+          "quantity": 1,
+          "subtotal": 1250
+        }
+      ],
+      "subtotal": 1250,
+      "deliveryCharge": 70,
+      "discount": 0,
+      "total": 1320,
+      "status": "pending",
+      "paymentStatus": "pending",
+      "paymentMethod": "cash_on_delivery",
+      "aiAssisted": true,
+      "notes": "Customer inquired via WhatsApp. Awaiting final confirmation.",
+      "createdAt": "2026-10-12T15:27:12.552Z",
+      "updatedAt": "2026-10-12T15:27:12.552Z"
+    },
+    {
+      "id": "ord_today_2_1791821532552",
+      "orderNumber": "YIA-2026-202",
+      "workspaceId": "ws_demo_store",
+      "customerId": "cust_2",
+      "customerName": "Nusrat Jahan",
+      "customerPhone": "01855667788",
+      "deliveryAddress": "Flat 5B, Green Road, Dhanmondi, Dhaka",
+      "items": [
+        {
+          "productId": "prod_2",
+          "productName": "Handloom Jamdani Saree - Crimson Gold",
+          "sku": "JAMDANI-CG-01",
+          "unitPrice": 5200,
+          "quantity": 1,
+          "subtotal": 5200
+        }
+      ],
+      "subtotal": 5200,
+      "deliveryCharge": 110,
+      "discount": 0,
+      "total": 5310,
+      "status": "confirmed",
+      "paymentStatus": "paid",
+      "paymentMethod": "bkash",
+      "aiAssisted": true,
+      "notes": "Paid via bKash. Packaging in progress for dispatch.",
+      "createdAt": "2026-10-12T13:12:12.552Z",
+      "updatedAt": "2026-10-12T14:12:12.552Z"
+    },
+    {
+      "id": "ord_today_1_1791821532552",
+      "orderNumber": "YIA-2026-201",
+      "workspaceId": "ws_demo_store",
+      "customerId": "cust_1",
+      "customerName": "Tanvir Hossain",
+      "customerPhone": "01712998877",
+      "deliveryAddress": "House 12, Road 4, Dhanmondi, Dhaka",
+      "items": [
+        {
+          "productId": "prod_1",
+          "productName": "Premium Cotton Panjabi - Royal Navy",
+          "sku": "PANJABI-NV-42",
+          "variantId": "v_2",
+          "variantName": "Size 42 (L)",
+          "unitPrice": 2150,
+          "quantity": 1,
+          "subtotal": 2150
+        }
+      ],
+      "subtotal": 2150,
+      "deliveryCharge": 70,
+      "discount": 0,
+      "total": 2220,
+      "status": "delivered",
+      "paymentStatus": "paid",
+      "paymentMethod": "cash_on_delivery",
+      "aiAssisted": true,
+      "notes": "Delivered successfully this morning. Customer satisfied.",
+      "createdAt": "2026-10-12T11:12:12.552Z",
+      "updatedAt": "2026-10-12T15:12:12.552Z"
+    },
     {
       "id": "ord_1001",
       "orderNumber": "YIA-2026-1001",
@@ -1816,6 +1908,15 @@
     }
   ],
   "adminNotifications": [
+    {
+      "id": "notif_email_1791821560653",
+      "type": "voice_report_sent",
+      "severity": "info",
+      "title": "Sales Report Emailed to yearinvo@gmail.com",
+      "message": "Today's sales report (Revenue: ৳8850, Orders: 3, Delivered: 1, Pending: 1) was dispatched to yearinvo@gmail.com.",
+      "read": false,
+      "createdAt": "2026-10-12T16:12:40.653Z"
+    },
     {
       "id": "notif_1",
       "type": "domain_issue",

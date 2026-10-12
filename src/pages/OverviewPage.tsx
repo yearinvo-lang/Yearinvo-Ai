@@ -14,6 +14,7 @@ import {
   CheckCircle,
   AlertCircle,
   ExternalLink,
+  Mic,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.tsx';
 
@@ -83,6 +84,13 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigate }) => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            onClick={() => onNavigate('voice-assistant')}
+            className="flex items-center gap-1.5 rounded-xl border border-purple-500/40 bg-purple-900/40 px-3.5 py-2 text-xs font-bold text-purple-200 hover:bg-purple-800/50 hover:text-white transition shadow-sm"
+          >
+            <Mic className="h-3.5 w-3.5 text-purple-400 animate-pulse" />
+            <span>{isBn ? '🎙️ ভয়েস অ্যাসিস্ট্যান্ট' : '🎙️ Voice Assistant'}</span>
+          </button>
           <button
             onClick={() => onNavigate('inbox')}
             className="flex items-center gap-1.5 rounded-xl bg-purple-600 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-purple-600/30 hover:bg-purple-500 transition"

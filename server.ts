@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 import { db } from './src/server/db.ts';
 import { processCustomerMessageWithAI, testAIProviderConnection, testPlaygroundAIResponse } from './src/server/ai-sales-agent.ts';
 import { backgroundScheduler } from './src/server/worker.ts';
+import { getTodaySalesMetrics, processVoiceQuery, sendSalesReportEmail, ensureTodayOrders } from './src/server/voice-assistant.ts';
 
 dotenv.config();
 
@@ -1351,6 +1352,77 @@ app.put('/api/orders/:id/status', authMiddleware, (req: Request, res: Response) 
     ...(paymentStatus ? { paymentStatus } : {}),
   });
   res.json(updated);
+});
+
+// ==========================================
+// 7.1 VOICE SALES ASSISTANT & EMAIL REPORTS
+// ==========================================
+
+// Get real-time sales metrics for today
+app.get('/api/voice-assistant/today-stats', authMiddleware, (req: Request, res: Response) => {
+  try {
+    const wsId = (req as any).workspaceId;
+    const stats = getTodaySalesMetrics(wsId);
+    res.json(stats);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to calculate today sales stats' });
+  }
+});
+
+// Process voice or text query about today's sales
+app.post('/api/voice-assistant/query', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const wsId = (req as any).workspaceId;
+    const { query, language = 'bn' } = req.body;
+    if (!query || typeof query !== 'string') {
+      res.status(400).json({ error: 'Query string is required' });
+      return;
+    }
+    const result = await processVoiceQuery(wsId, query, language);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to process voice query' });
+  }
+});
+
+// Send Sales Report to Email
+app.post('/api/voice-assistant/send-email', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const wsId = (req as any).workspaceId;
+    const { recipientEmail, customSubject, customNote } = req.body;
+
+    if (!recipientEmail || typeof recipientEmail !== 'string' || !recipientEmail.includes('@')) {
+      res.status(400).json({ error: 'A valid recipient email address is required' });
+      return;
+    }
+
+    const metrics = getTodaySalesMetrics(wsId);
+    const user = (req as any).user;
+    const ws = db.getWorkspace(wsId);
+
+    const emailResult = await sendSalesReportEmail(recipientEmail.trim(), metrics, {
+      customSubject,
+      customNote,
+      senderName: user?.name,
+      workspaceName: ws?.name,
+    });
+
+    res.json(emailResult);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to email sales report' });
+  }
+});
+
+// Seed or refresh today's orders
+app.post('/api/voice-assistant/seed-today-orders', authMiddleware, (req: Request, res: Response) => {
+  try {
+    const wsId = (req as any).workspaceId;
+    ensureTodayOrders(wsId);
+    const stats = getTodaySalesMetrics(wsId);
+    res.json({ success: true, message: 'Today demo orders initialized', stats });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to seed today orders' });
+  }
 });
 
 // ==========================================

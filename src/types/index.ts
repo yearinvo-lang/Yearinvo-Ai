@@ -439,7 +439,7 @@ export interface PlatformFeatureFlags {
 
 export interface AdminNotification {
   id: string;
-  type: 'api_failure' | 'provider_error' | 'sub_expiring' | 'post_failure' | 'webhook_failure' | 'domain_issue' | 'usage_spike';
+  type: 'api_failure' | 'provider_error' | 'sub_expiring' | 'post_failure' | 'webhook_failure' | 'domain_issue' | 'usage_spike' | 'voice_report_sent';
   severity: 'info' | 'warning' | 'error';
   title: string;
   message: string;

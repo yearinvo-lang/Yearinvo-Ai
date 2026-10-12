@@ -21,6 +21,7 @@ import {
   X,
   ExternalLink,
   Sparkles,
+  Mic,
 } from 'lucide-react';
 import { AuthProvider, useAuth } from './context/AuthContext.tsx';
 import { YearInfoLogo } from './components/YearInfoLogo.tsx';
@@ -28,6 +29,7 @@ import { LandingPage } from './pages/LandingPage.tsx';
 import { AuthModal } from './components/AuthModal.tsx';
 import { OnboardingModal } from './components/OnboardingModal.tsx';
 import { LiveChatWidget } from './components/LiveChatWidget.tsx';
+import { VoiceAssistantModal } from './components/VoiceAssistantModal.tsx';
 
 // Authenticated Pages
 import { OverviewPage } from './pages/OverviewPage.tsx';
@@ -66,12 +68,14 @@ function MainApp() {
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
   const [onboardingOpen, setOnboardingOpen] = useState<boolean>(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(false);
+  const [voiceAssistantOpen, setVoiceAssistantOpen] = useState<boolean>(false);
 
   const isBn = language === 'bn';
 
   // Navigation items per Master Plan Section 19
   const navItems = [
     { id: 'overview', label: isBn ? 'ওভারভিউ' : 'Overview', icon: LayoutDashboard },
+    { id: 'voice-assistant', label: isBn ? 'ভয়েস অ্যাসিস্ট্যান্ট' : 'Voice Assistant', icon: Mic, highlight: true, badge: 'Voice' },
     { id: 'inbox', label: isBn ? 'সেন্ট্রাল ইনবক্স' : 'Central Inbox', icon: MessageSquare, badge: 'Live' },
     { id: 'ai-agent', label: isBn ? 'এআই সেলস এজেন্ট' : 'AI Sales Agent', icon: Bot, highlight: true },
     { id: 'customers', label: isBn ? 'কাস্টমারস' : 'Customers', icon: Users },
@@ -231,7 +235,11 @@ function MainApp() {
               <button
                 key={item.id}
                 onClick={() => {
-                  setCurrentPage(item.id);
+                  if (item.id === 'voice-assistant') {
+                    setVoiceAssistantOpen(true);
+                  } else {
+                    setCurrentPage(item.id);
+                  }
                   setMobileSidebarOpen(false);
                 }}
                 className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 transition duration-200 ${
@@ -309,6 +317,19 @@ function MainApp() {
           </div>
 
           <div className="flex items-center gap-2.5">
+            {/* Voice Assistant Header Trigger Button */}
+            <button
+              onClick={() => setVoiceAssistantOpen(true)}
+              className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-3 py-1.5 text-xs font-bold text-white shadow-md shadow-purple-600/30 hover:brightness-110 transition active:scale-95"
+              title="Open Voice Assistant"
+            >
+              <div className="relative flex items-center justify-center">
+                <Mic className="h-3.5 w-3.5" />
+                <span className="absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              </div>
+              <span className="hidden sm:inline">{isBn ? 'ভয়েস অ্যাসিস্ট্যান্ট' : 'Voice Assistant'}</span>
+            </button>
+
             {/* Theme Toggle (Light / Dark) */}
             <button
               onClick={toggleTheme}
@@ -384,6 +405,12 @@ function MainApp() {
         isOpen={onboardingOpen}
         onClose={() => setOnboardingOpen(false)}
         onComplete={() => setOnboardingOpen(false)}
+      />
+
+      {/* Voice Assistant Modal */}
+      <VoiceAssistantModal
+        isOpen={voiceAssistantOpen}
+        onClose={() => setVoiceAssistantOpen(false)}
       />
 
       {/* Floating embeddable website live chat widget */}
