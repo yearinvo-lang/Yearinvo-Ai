@@ -203,6 +203,37 @@ export const SettingsPage: React.FC = () => {
           </div>
         </div>
 
+        {/* Legal & Compliance Section */}
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 p-6 space-y-3 shadow-sm transition-colors">
+          <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+            <Shield className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+            Legal & Data Compliance
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Review official platform policies, user data rights, and terms of service.
+          </p>
+          <div className="flex flex-wrap gap-3 pt-1">
+            <a
+              href="/privacy-policy"
+              className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-400 hover:border-purple-300 dark:hover:border-purple-500/40 transition"
+            >
+              Privacy Policy →
+            </a>
+            <a
+              href="/terms-of-service"
+              className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-400 hover:border-purple-300 dark:hover:border-purple-500/40 transition"
+            >
+              Terms of Service →
+            </a>
+            <a
+              href="/data-deletion"
+              className="rounded-xl border border-rose-200 dark:border-rose-500/30 bg-rose-50/50 dark:bg-rose-500/10 px-3.5 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-500/20 transition"
+            >
+              User Data Deletion Request →
+            </a>
+          </div>
+        </div>
+
         <div className="flex items-center justify-between pt-2">
           {success && (
             <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">

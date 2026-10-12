@@ -348,7 +348,7 @@
       "workspaceId": "ws_demo_store",
       "type": "instagram",
       "name": "@test_brand_store",
-      "status": "connected",
+      "status": "not_connected",
       "metadata": {
         "pageName": "Test Brand Page",
         "pageId": "108849204918231",
@@ -359,10 +359,7 @@
           "pages_read_engagement",
           "pages_messaging"
         ]
-      },
-      "accountId": "178414000000000",
-      "connectedAt": "2026-10-10T17:42:23.540Z",
-      "lastSyncAt": "2026-10-10T17:42:23.540Z"
+      }
     },
     {
       "id": "ch_whatsapp_ws_demo_store",

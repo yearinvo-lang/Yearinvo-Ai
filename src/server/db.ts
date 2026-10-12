@@ -879,6 +879,10 @@ class DatabaseStore {
     return this.data.workspaces.find((w) => w.id === workspaceId);
   }
 
+  public getAllWorkspaces(): Workspace[] {
+    return [...this.data.workspaces];
+  }
+
   public createWorkspace(ws: Workspace): Workspace {
     this.data.workspaces.push(ws);
     this.data.workspaceMembers.push({ workspaceId: ws.id, userId: ws.ownerId, role: 'owner' });

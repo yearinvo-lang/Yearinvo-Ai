@@ -419,7 +419,9 @@ export const ProductsPage: React.FC = () => {
       ) : filteredProducts.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 bg-white/50 dark:bg-slate-900/40 p-12 text-center transition-colors">
           <Package className="mx-auto h-12 w-12 text-slate-400 dark:text-slate-600 mb-3" />
-          <h3 className="text-sm font-bold text-slate-800 dark:text-white">No products found</h3>
+          <h3 className="text-sm font-bold text-slate-800 dark:text-white">
+            {search || categoryFilter !== 'all' ? 'No products found' : 'No products added.'}
+          </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
             {search || categoryFilter !== 'all'
               ? 'No products match your search filters.'

@@ -336,7 +336,14 @@ export const InboxPage: React.FC = () => {
             ) : conversations.length === 0 ? (
               <div className="p-8 text-center text-xs text-slate-500">
                 <MessageSquare className="mx-auto h-6 w-6 text-slate-600 mb-2" />
-                No conversations found matching filters.
+                <p className="font-semibold text-slate-400">
+                  {searchQuery || statusFilter !== 'all' || channelFilter !== 'all'
+                    ? 'No conversations found matching filters.'
+                    : 'No conversations yet.'}
+                </p>
+                <p className="text-[11px] text-slate-600 mt-1">
+                  Customer inquiries from connected channels will appear here.
+                </p>
               </div>
             ) : (
               conversations.map((c) => {

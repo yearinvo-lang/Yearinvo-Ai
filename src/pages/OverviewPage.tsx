@@ -218,13 +218,13 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigate }) => {
           {channels.length === 0 ? (
             <div className="rounded-xl border border-dashed border-slate-800 p-8 text-center">
               <Share2 className="mx-auto h-8 w-8 text-slate-600 mb-2" />
-              <p className="text-sm font-semibold text-slate-300">No channels connected yet</p>
-              <p className="text-xs text-slate-500 mt-1">Connect your Facebook page, Messenger, Instagram, or WhatsApp to start receiving customer messages.</p>
+              <p className="text-sm font-semibold text-slate-300">No connected channels.</p>
+              <p className="text-xs text-slate-500 mt-1">Connect your Facebook, Messenger, Instagram, or WhatsApp to start receiving customer messages.</p>
               <button
                 onClick={() => onNavigate('channels')}
                 className="mt-4 rounded-xl bg-purple-600 px-4 py-2 text-xs font-bold text-white hover:bg-purple-500 transition"
               >
-                Connect First Channel
+                Connect Channel
               </button>
             </div>
           ) : (

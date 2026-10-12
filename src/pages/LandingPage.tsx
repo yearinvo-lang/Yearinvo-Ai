@@ -560,9 +560,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterApp
               <span className="text-slate-500">Contact: yearinvo@gmail.com</span>
             </div>
           </div>
-          <div className="mt-8 border-t border-slate-900 pt-6 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500">
+          <div className="mt-8 border-t border-slate-900 pt-6 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 gap-3">
             <div>© {new Date().getFullYear()} YEAR INFO AI. All rights reserved.</div>
-            <div className="mt-2 sm:mt-0">Central Messaging System • AI Sales Agent • Social Media Automation</div>
+            <div className="flex flex-wrap items-center gap-4 text-slate-400">
+              <a href="/privacy-policy" className="hover:text-purple-400 transition underline-offset-2 hover:underline">
+                Privacy Policy
+              </a>
+              <span>•</span>
+              <a href="/terms-of-service" className="hover:text-purple-400 transition underline-offset-2 hover:underline">
+                Terms of Service
+              </a>
+              <span>•</span>
+              <a href="/data-deletion" className="hover:text-purple-400 transition underline-offset-2 hover:underline">
+                User Data Deletion
+              </a>
+            </div>
+            <div className="mt-2 sm:mt-0 text-slate-600">Central Messaging • AI Sales • Social Automation</div>
           </div>
         </div>
       </footer>

@@ -55,12 +55,12 @@ export const AnalyticsPage: React.FC = () => {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-black text-white">Analytics & Performance Reports</h1>
-            <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-xs font-bold text-emerald-400 border border-emerald-500/30">
-              100% Real DB Data
+            <span className="rounded-full bg-purple-500/20 px-2.5 py-0.5 text-xs font-bold text-purple-300 border border-purple-500/30">
+              Live Overview
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Verified performance metrics calculated directly from database records without simulated numbers.
+            Performance metrics, sales revenue, and conversation trends for your business.
           </p>
         </div>
 

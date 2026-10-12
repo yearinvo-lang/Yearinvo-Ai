@@ -46,6 +46,9 @@ import { TeamPage } from './pages/TeamPage.tsx';
 import { SubscriptionPage } from './pages/SubscriptionPage.tsx';
 import { AdminPortalPage } from './pages/AdminPortalPage.tsx';
 import { SettingsPage } from './pages/SettingsPage.tsx';
+import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage.tsx';
+import { DataDeletionPage } from './pages/DataDeletionPage.tsx';
+import { TermsOfServicePage } from './pages/TermsOfServicePage.tsx';
 
 function MainApp() {
   const {
@@ -92,6 +95,20 @@ function MainApp() {
       : []),
     { id: 'settings', label: isBn ? 'সেটিংস' : 'Settings', icon: Settings },
   ];
+
+  // Public legal routes accessible directly by URL
+  if (typeof window !== 'undefined') {
+    const pathname = window.location.pathname;
+    if (pathname === '/privacy-policy') {
+      return <PrivacyPolicyPage />;
+    }
+    if (pathname === '/data-deletion') {
+      return <DataDeletionPage />;
+    }
+    if (pathname === '/terms-of-service') {
+      return <TermsOfServicePage />;
+    }
+  }
 
   // Dedicated OAuth popup callback handler if opened in popup or routed to SPA
   if (typeof window !== 'undefined' && window.location.pathname.startsWith('/auth/')) {

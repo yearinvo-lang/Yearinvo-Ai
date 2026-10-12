@@ -207,7 +207,9 @@ export const OrdersPage: React.FC = () => {
         ) : filteredOrders.length === 0 ? (
           <div className="p-12 text-center">
             <ShoppingBag className="mx-auto h-10 w-10 text-slate-600 mb-2" />
-            <div className="text-sm font-bold text-white">No orders matching criteria</div>
+            <div className="text-sm font-bold text-white">
+              {search || statusFilter !== 'all' ? 'No orders matching criteria' : 'No orders yet.'}
+            </div>
             <p className="text-xs text-slate-400 mt-1">Orders converted through chat or manually entered will be listed here.</p>
           </div>
         ) : (

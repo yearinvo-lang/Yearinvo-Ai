@@ -73,7 +73,15 @@ export const CustomersPage: React.FC = () => {
         {loading ? (
           <div className="p-12 text-center text-xs text-slate-500">Loading customer records...</div>
         ) : filtered.length === 0 ? (
-          <div className="p-12 text-center text-slate-500 text-xs">No customer records found.</div>
+          <div className="p-12 text-center text-slate-500 text-xs">
+            <Users className="mx-auto h-8 w-8 text-slate-600 mb-2" />
+            <div className="text-sm font-bold text-slate-400">
+              {search ? 'No customer records found matching search.' : 'No customers yet.'}
+            </div>
+            <p className="text-[11px] text-slate-600 mt-1">
+              Customer profiles will be created automatically when inquiries arrive through connected channels.
+            </p>
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
