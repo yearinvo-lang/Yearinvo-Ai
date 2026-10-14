@@ -12,19 +12,28 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.tsx';
 
+const DEFAULT_METRICS = {
+  conversations: { total: 0, unread: 0, open: 0, resolved: 0, aiHandled: 0 },
+  orders: { total: 0, confirmed: 0, totalRevenue: 0, aiAssistedRevenue: 0 },
+  publishing: { total: 0, published: 0, scheduled: 0, failed: 0 },
+  ai: { totalCalls: 0, totalTokens: 0, estimatedCostUsd: 0 },
+  channels: [],
+};
+
 export const AnalyticsPage: React.FC = () => {
   const { activeWorkspace, apiRequest } = useAuth();
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<any>(DEFAULT_METRICS);
+  const [loading, setLoading] = useState(false);
 
   const loadData = async () => {
-    if (!activeWorkspace) return;
     setLoading(true);
     try {
       const res = await apiRequest('/api/analytics');
-      setData(res);
-    } catch (e) {
-      console.error('Failed to load analytics:', e);
+      if (res && !res.error) {
+        setData(res);
+      }
+    } catch (e: any) {
+      console.warn('Notice loading analytics:', e?.message || e);
     } finally {
       setLoading(false);
     }
@@ -33,15 +42,6 @@ export const AnalyticsPage: React.FC = () => {
   useEffect(() => {
     loadData();
   }, [activeWorkspace?.id]);
-
-  if (loading && !data) {
-    return (
-      <div className="flex h-96 items-center justify-center text-xs text-purple-400">
-        <RefreshCw className="h-5 w-5 animate-spin mr-2" />
-        Calculating verified metrics...
-      </div>
-    );
-  }
 
   const conv = data?.conversations || {};
   const ord = data?.orders || {};

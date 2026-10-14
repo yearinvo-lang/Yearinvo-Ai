@@ -72,7 +72,6 @@ export const ChannelsPage: React.FC = () => {
   const [copiedSnippet, setCopiedSnippet] = useState(false);
 
   const loadChannels = async () => {
-    if (!activeWorkspace) return;
     setLoading(true);
     try {
       const [channelsData, configData] = await Promise.all([
@@ -82,20 +81,21 @@ export const ChannelsPage: React.FC = () => {
       if (channelsData && Array.isArray(channelsData)) {
         setChannels(channelsData);
       } else {
+        const wsId = activeWorkspace?.id || 'ws_default';
         const defaultChannels: Channel[] = [
-          { id: 'ch_fb', workspaceId: activeWorkspace.id, type: 'facebook', name: 'Facebook', status: 'not_connected' },
-          { id: 'ch_ms', workspaceId: activeWorkspace.id, type: 'messenger', name: 'Messenger', status: 'not_connected' },
-          { id: 'ch_ig', workspaceId: activeWorkspace.id, type: 'instagram', name: 'Instagram', status: 'not_connected' },
-          { id: 'ch_wa', workspaceId: activeWorkspace.id, type: 'whatsapp', name: 'WhatsApp Business', status: 'not_connected' },
-          { id: 'ch_lc', workspaceId: activeWorkspace.id, type: 'livechat', name: 'Website Live Chat', status: 'not_connected' },
+          { id: 'ch_fb', workspaceId: wsId, type: 'facebook', name: 'Facebook', status: 'not_connected' },
+          { id: 'ch_ms', workspaceId: wsId, type: 'messenger', name: 'Messenger', status: 'not_connected' },
+          { id: 'ch_ig', workspaceId: wsId, type: 'instagram', name: 'Instagram', status: 'not_connected' },
+          { id: 'ch_wa', workspaceId: wsId, type: 'whatsapp', name: 'WhatsApp Business', status: 'not_connected' },
+          { id: 'ch_lc', workspaceId: wsId, type: 'livechat', name: 'Website Live Chat', status: 'not_connected' },
         ];
         setChannels(defaultChannels);
       }
       if (configData) {
         setMetaConfig(configData);
       }
-    } catch (e) {
-      console.error('Failed to load channels:', e);
+    } catch (e: any) {
+      console.warn('Notice loading channels:', e?.message || e);
     } finally {
       setLoading(false);
     }

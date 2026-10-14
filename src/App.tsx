@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   LayoutDashboard,
   MessageSquare,
@@ -96,18 +96,52 @@ function MainApp() {
     { id: 'settings', label: isBn ? 'সেটিংস' : 'Settings', icon: Settings },
   ];
 
-  // Public legal routes accessible directly by URL
-  if (typeof window !== 'undefined') {
-    const pathname = window.location.pathname;
-    if (pathname === '/privacy-policy') {
-      return <PrivacyPolicyPage />;
-    }
-    if (pathname === '/data-deletion') {
-      return <DataDeletionPage />;
-    }
-    if (pathname === '/terms-of-service') {
-      return <TermsOfServicePage />;
-    }
+  // Public legal routes state & reactive history listener
+  const [currentPath, setCurrentPath] = useState<string>(() =>
+    typeof window !== 'undefined' ? window.location.pathname : '/'
+  );
+
+  useEffect(() => {
+    const handlePopState = () => {
+      if (typeof window !== 'undefined') {
+        setCurrentPath(window.location.pathname);
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+
+    const handleLinkClick = (e: MouseEvent) => {
+      const target = (e.target as HTMLElement).closest('a');
+      if (!target) return;
+      const href = target.getAttribute('href');
+      if (
+        href &&
+        (href === '/' ||
+          href === '/privacy-policy' ||
+          href === '/data-deletion' ||
+          href === '/terms-of-service')
+      ) {
+        e.preventDefault();
+        window.history.pushState({}, '', href);
+        setCurrentPath(href);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    };
+
+    document.addEventListener('click', handleLinkClick);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      document.removeEventListener('click', handleLinkClick);
+    };
+  }, []);
+
+  if (currentPath === '/privacy-policy') {
+    return <PrivacyPolicyPage />;
+  }
+  if (currentPath === '/data-deletion') {
+    return <DataDeletionPage />;
+  }
+  if (currentPath === '/terms-of-service') {
+    return <TermsOfServicePage />;
   }
 
   // Dedicated OAuth popup callback handler if opened in popup or routed to SPA

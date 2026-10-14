@@ -44,20 +44,21 @@ export const OrdersPage: React.FC = () => {
   const isBn = language === 'bn';
 
   const loadData = async () => {
-    if (!activeWorkspace) return;
     setLoading(true);
     try {
       const [oData, pData] = await Promise.all([
-        apiRequest('/api/orders'),
-        apiRequest('/api/products'),
+        apiRequest('/api/orders').catch(() => []),
+        apiRequest('/api/products').catch(() => []),
       ]);
-      setOrders(oData);
-      setProducts(pData);
-      if (pData.length > 0) {
-        setSelectedProductId(pData[0].id);
+      if (Array.isArray(oData)) setOrders(oData);
+      if (Array.isArray(pData)) {
+        setProducts(pData);
+        if (pData.length > 0) {
+          setSelectedProductId(pData[0].id);
+        }
       }
-    } catch (e) {
-      console.error('Failed to load orders:', e);
+    } catch (e: any) {
+      console.warn('Notice loading orders:', e?.message || e);
     } finally {
       setLoading(false);
     }

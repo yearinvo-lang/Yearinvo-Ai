@@ -36,13 +36,14 @@ export const WhatsAppPage: React.FC = () => {
   const isBn = language === 'bn';
 
   const loadMessages = async () => {
-    if (!activeWorkspace) return;
     setLoading(true);
     try {
       const data = await apiRequest('/api/whatsapp/scheduled');
-      setMessages(data);
-    } catch (e) {
-      console.error('Failed to load WhatsApp messages:', e);
+      if (Array.isArray(data)) {
+        setMessages(data);
+      }
+    } catch (e: any) {
+      console.warn('Notice loading WhatsApp messages:', e?.message || e);
     } finally {
       setLoading(false);
     }

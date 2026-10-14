@@ -22,21 +22,30 @@ interface OverviewPageProps {
   onNavigate: (page: string) => void;
 }
 
+const DEFAULT_ANALYTICS = {
+  conversations: { total: 0, unread: 0, open: 0, resolved: 0, aiHandled: 0 },
+  orders: { total: 0, confirmed: 0, totalRevenue: 0, aiAssistedRevenue: 0 },
+  publishing: { total: 0, published: 0, scheduled: 0, failed: 0 },
+  ai: { totalCalls: 0, totalTokens: 0, estimatedCostUsd: 0 },
+  channels: [],
+};
+
 export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigate }) => {
   const { activeWorkspace, apiRequest, language } = useAuth();
-  const [analytics, setAnalytics] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [analytics, setAnalytics] = useState<any>(DEFAULT_ANALYTICS);
+  const [loading, setLoading] = useState(false);
 
   const isBn = language === 'bn';
 
   const loadData = async () => {
-    if (!activeWorkspace) return;
     setLoading(true);
     try {
       const data = await apiRequest('/api/analytics');
-      setAnalytics(data);
-    } catch (e) {
-      console.error('Failed to load analytics:', e);
+      if (data && !data.error) {
+        setAnalytics(data);
+      }
+    } catch (e: any) {
+      console.warn('Notice loading analytics:', e?.message || e);
     } finally {
       setLoading(false);
     }
@@ -45,17 +54,6 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigate }) => {
   useEffect(() => {
     loadData();
   }, [activeWorkspace?.id]);
-
-  if (loading && !analytics) {
-    return (
-      <div className="flex h-96 items-center justify-center">
-        <div className="flex items-center gap-3 text-purple-400">
-          <RefreshCw className="h-5 w-5 animate-spin" />
-          <span className="text-sm font-semibold">Loading live workspace data...</span>
-        </div>
-      </div>
-    );
-  }
 
   const conv = analytics?.conversations || { total: 0, unread: 0, open: 0, resolved: 0, aiHandled: 0 };
   const ord = analytics?.orders || { total: 0, confirmed: 0, totalRevenue: 0, aiAssistedRevenue: 0 };
@@ -110,7 +108,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigate }) => {
             className="rounded-xl border border-slate-700 bg-slate-800 p-2 text-slate-300 hover:text-white transition"
             title="Refresh Data"
           >
-            <RefreshCw className="h-4 w-4" />
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin text-purple-400' : ''}`} />
           </button>
         </div>
       </div>

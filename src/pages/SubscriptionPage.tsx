@@ -26,17 +26,18 @@ export const SubscriptionPage: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
 
   const loadData = async () => {
-    if (!activeWorkspace) return;
     setLoading(true);
     try {
       const data = await apiRequest('/api/subscription/current');
-      setSubscription(data.subscription);
-      setPlans(data.plans || []);
-      if (data.plans && data.plans.length > 0) {
-        setSelectedPlanId(data.plans[1]?.id || data.plans[0].id);
+      if (data) {
+        setSubscription(data.subscription);
+        setPlans(data.plans || []);
+        if (data.plans && data.plans.length > 0) {
+          setSelectedPlanId(data.plans[1]?.id || data.plans[0].id);
+        }
       }
-    } catch (e) {
-      console.error('Failed to load subscription:', e);
+    } catch (e: any) {
+      console.warn('Notice loading subscription:', e?.message || e);
     } finally {
       setLoading(false);
     }

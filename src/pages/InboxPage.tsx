@@ -60,7 +60,6 @@ export const InboxPage: React.FC = () => {
   const isBn = language === 'bn';
 
   const loadConversations = async (autoSelectFirst = false) => {
-    if (!activeWorkspace) return;
     try {
       const q = new URLSearchParams();
       if (statusFilter !== 'all') q.set('status', statusFilter);
@@ -68,13 +67,14 @@ export const InboxPage: React.FC = () => {
       if (searchQuery.trim()) q.set('search', searchQuery.trim());
 
       const data = await apiRequest(`/api/conversations?${q.toString()}`);
-      setConversations(data);
-
-      if (autoSelectFirst && data.length > 0 && !selectedConvId) {
-        setSelectedConvId(data[0].id);
+      if (Array.isArray(data)) {
+        setConversations(data);
+        if (autoSelectFirst && data.length > 0 && !selectedConvId) {
+          setSelectedConvId(data[0].id);
+        }
       }
-    } catch (e) {
-      console.error('Failed to load conversations:', e);
+    } catch (e: any) {
+      console.warn('Notice loading conversations:', e?.message || e);
     } finally {
       setLoadingList(false);
     }

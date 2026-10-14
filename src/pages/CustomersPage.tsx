@@ -19,13 +19,14 @@ export const CustomersPage: React.FC = () => {
   const [search, setSearch] = useState('');
 
   const loadCustomers = async () => {
-    if (!activeWorkspace) return;
     setLoading(true);
     try {
       const data = await apiRequest('/api/customers');
-      setCustomers(data);
-    } catch (e) {
-      console.error('Failed to load customers:', e);
+      if (Array.isArray(data)) {
+        setCustomers(data);
+      }
+    } catch (e: any) {
+      console.warn('Notice loading customers:', e?.message || e);
     } finally {
       setLoading(false);
     }

@@ -44,18 +44,17 @@ export const AIAgentPage: React.FC = () => {
   const isBn = language === 'bn';
 
   const loadData = async () => {
-    if (!activeWorkspace) return;
     try {
       const [sData, kData, uData] = await Promise.all([
-        apiRequest('/api/ai/settings'),
-        apiRequest('/api/ai/knowledge'),
-        apiRequest('/api/ai/usage'),
+        apiRequest('/api/ai/settings').catch(() => null),
+        apiRequest('/api/ai/knowledge').catch(() => []),
+        apiRequest('/api/ai/usage').catch(() => []),
       ]);
-      setSettings(sData);
-      setKnowledgeItems(kData);
-      setUsageRecords(uData);
-    } catch (e) {
-      console.error('Failed to load AI data:', e);
+      if (sData) setSettings(sData);
+      if (Array.isArray(kData)) setKnowledgeItems(kData);
+      if (Array.isArray(uData)) setUsageRecords(uData);
+    } catch (e: any) {
+      console.warn('Notice loading AI data:', e?.message || e);
     }
   };
 

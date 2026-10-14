@@ -42,13 +42,14 @@ export const SchedulerPage: React.FC = () => {
   const isBn = language === 'bn';
 
   const loadPosts = async () => {
-    if (!activeWorkspace) return;
     setLoading(true);
     try {
       const data = await apiRequest('/api/posts');
-      setPosts(data);
-    } catch (e) {
-      console.error('Failed to load posts:', e);
+      if (Array.isArray(data)) {
+        setPosts(data);
+      }
+    } catch (e: any) {
+      console.warn('Notice loading posts:', e?.message || e);
     } finally {
       setLoading(false);
     }

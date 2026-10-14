@@ -62,7 +62,6 @@ export const ProductsPage: React.FC = () => {
   const getStorageKey = () => `yia_products_${activeWorkspace?.id || 'default'}`;
 
   const loadProducts = async () => {
-    if (!activeWorkspace) return;
     setLoading(true);
     try {
       // 1. Try to fetch from backend API
@@ -81,8 +80,8 @@ export const ProductsPage: React.FC = () => {
           }
         }
       }
-    } catch (e) {
-      console.error('Failed to load products:', e);
+    } catch (e: any) {
+      console.warn('Notice loading products:', e?.message || e);
       const cached = localStorage.getItem(getStorageKey());
       if (cached) {
         try {

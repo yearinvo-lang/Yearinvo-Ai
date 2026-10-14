@@ -22,9 +22,30 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
-  const [activeWorkspace, setActiveWorkspaceState] = useState<Workspace | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    try {
+      const cached = localStorage.getItem('yia_cached_user');
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [workspaces, setWorkspaces] = useState<Workspace[]>(() => {
+    try {
+      const cached = localStorage.getItem('yia_cached_workspace');
+      return cached ? [JSON.parse(cached)] : [];
+    } catch {
+      return [];
+    }
+  });
+  const [activeWorkspace, setActiveWorkspaceState] = useState<Workspace | null>(() => {
+    try {
+      const cached = localStorage.getItem('yia_cached_workspace');
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  });
   const [token, setToken] = useState<string | null>(localStorage.getItem('yia_token'));
   const [loading, setLoading] = useState<boolean>(true);
   const [language, setLanguage] = useState<'en' | 'bn'>(() => {
@@ -73,58 +94,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const refreshUserData = async () => {
-    if (!token) {
-      setLoading(false);
-      return;
-    }
+    const savedToken = localStorage.getItem('yia_token');
+    const cachedUser = localStorage.getItem('yia_cached_user');
+    const cachedWs = localStorage.getItem('yia_cached_workspace');
+
     try {
       const data = await apiRequest('/api/auth/me');
       if (data && data.user) {
         setUser(data.user);
-        setWorkspaces(data.workspaces || []);
-        if (data.activeWorkspace) {
-          setActiveWorkspaceState(data.activeWorkspace);
-        } else if (data.workspaces && data.workspaces.length > 0) {
-          setActiveWorkspaceState(data.workspaces[0]);
+        localStorage.setItem('yia_cached_user', JSON.stringify(data.user));
+        const wsList = data.workspaces || [];
+        setWorkspaces(wsList);
+        const resolvedWs = data.activeWorkspace || wsList[0] || null;
+        if (resolvedWs) {
+          setActiveWorkspaceState(resolvedWs);
+          localStorage.setItem('yia_cached_workspace', JSON.stringify(resolvedWs));
         }
-      } else {
-        // Check for cached user before clearing
-        const cachedUser = localStorage.getItem('yia_cached_user');
-        const cachedWs = localStorage.getItem('yia_cached_workspace');
-        if (cachedUser) {
-          try {
-            const u = JSON.parse(cachedUser);
-            setUser(u);
-            const ws = cachedWs ? [JSON.parse(cachedWs)] : [];
-            setWorkspaces(ws);
-            setActiveWorkspaceState(ws[0] || null);
-          } catch {
-            setToken(null);
-            localStorage.removeItem('yia_token');
-          }
-        } else {
-          setToken(null);
-          localStorage.removeItem('yia_token');
-        }
+      } else if (cachedUser) {
+        const u = JSON.parse(cachedUser);
+        setUser(u);
+        const ws = cachedWs ? [JSON.parse(cachedWs)] : [];
+        setWorkspaces(ws);
+        if (ws[0]) setActiveWorkspaceState(ws[0]);
       }
     } catch (err) {
-      // If server is 404/down (e.g. on Vercel), preserve cached Firebase authenticated user
-      const cachedUser = localStorage.getItem('yia_cached_user');
-      const cachedWs = localStorage.getItem('yia_cached_workspace');
       if (cachedUser) {
         try {
           const u = JSON.parse(cachedUser);
           setUser(u);
           const ws = cachedWs ? [JSON.parse(cachedWs)] : [];
           setWorkspaces(ws);
-          setActiveWorkspaceState(ws[0] || null);
-        } catch {
-          setToken(null);
-          localStorage.removeItem('yia_token');
-        }
-      } else {
-        setToken(null);
-        localStorage.removeItem('yia_token');
+          if (ws[0]) setActiveWorkspaceState(ws[0]);
+          if (!savedToken) {
+            const fallbackToken = `yia_sess_${u.id}_${Date.now()}`;
+            setToken(fallbackToken);
+            localStorage.setItem('yia_token', fallbackToken);
+          }
+        } catch {}
       }
     } finally {
       setLoading(false);
