@@ -332,27 +332,25 @@ function getAppUrl(req?: Request): string {
   return 'https://year-info-ai.vercel.app';
 }
 
-// Meta credentials configuration helpers (supports META_APP_ID, FACEBOOK_APP_ID, and verified project defaults)
-const META_DEFAULT_APP_ID = '1407979818070562';
-const META_DEFAULT_APP_SECRET = '8617049d72eb7571b9efea8e4d5e41c0';
+// Meta credentials configuration helpers
+// Intended configured Meta App ID per Google AI Studio Secrets: 2335067553910912
+const META_CONFIGURED_APP_ID = '2335067553910912';
 
 function getMetaAppId(): string {
-  return (
+  const envId =
     process.env.META_APP_ID ||
     process.env.FACEBOOK_APP_ID ||
     process.env.FB_APP_ID ||
-    process.env.VITE_META_APP_ID ||
-    META_DEFAULT_APP_ID
-  );
+    process.env.VITE_META_APP_ID;
+  return (envId && envId.trim()) || META_CONFIGURED_APP_ID;
 }
 
 function getMetaAppSecret(): string {
-  return (
+  const envSecret =
     process.env.META_APP_SECRET ||
     process.env.FACEBOOK_APP_SECRET ||
-    process.env.FB_APP_SECRET ||
-    META_DEFAULT_APP_SECRET
-  );
+    process.env.FB_APP_SECRET;
+  return (envSecret && envSecret.trim()) || '';
 }
 
 // Facebook Login for Application Authentication (distinct from channel integration)
@@ -634,6 +632,13 @@ app.post('/api/channels/meta/verify-and-list-pages', authMiddleware, async (req:
     const appSecret = getMetaAppSecret();
 
     let userAccessToken = accessToken;
+
+    if (code && !userAccessToken && !appSecret) {
+      res.status(400).json({
+        error: 'META_APP_SECRET is not configured in backend environment variables. Please add META_APP_SECRET in deployment settings to exchange authorization code for tokens.',
+      });
+      return;
+    }
 
     if (code && appId && appSecret) {
       const tokenUrl = `https://graph.facebook.com/v22.0/oauth/access_token?client_id=${appId}&client_secret=${appSecret}&redirect_uri=${encodeURIComponent(redirectUri)}&code=${code}`;
@@ -2230,7 +2235,7 @@ app.post('/api/admin/integrations/:id/test', authMiddleware, superAdminMiddlewar
   }
 
   if (integ.serviceKey === 'meta') {
-    const appId = process.env.META_APP_ID;
+    const appId = getMetaAppId();
     if (!appId) {
       res.json({
         success: false,
