@@ -479,35 +479,175 @@ app.get(['/auth/meta/callback', '/auth/meta/callback/', '/auth/facebook/callback
     <!DOCTYPE html>
     <html>
       <head>
-        <title>YEAR INFO AI Authorization</title>
+        <meta charset="utf-8" />
+        <title>YEAR INFO AI — Meta Authorization</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <style>
-          body { font-family: sans-serif; background: #090714; color: #fff; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
-          .card { padding: 30px; border-radius: 16px; background: #131024; border: 1px solid #7c3aed40; max-width: 400px; }
-          h2 { margin-top: 0; color: #c084fc; }
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #030712;
+            color: #f9fafb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+          }
+          .card {
+            padding: 32px;
+            border-radius: 20px;
+            background: #0f172a;
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            max-width: 440px;
+            width: 100%;
+            text-align: center;
+          }
+          .icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: rgba(168, 85, 247, 0.15);
+            border: 1px solid rgba(168, 85, 247, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 24px;
+          }
+          h2 {
+            margin: 0 0 10px;
+            font-size: 20px;
+            font-weight: 800;
+            color: #ffffff;
+          }
+          .status-text {
+            font-size: 13px;
+            line-height: 1.6;
+            margin: 0 0 16px;
+            color: #94a3b8;
+          }
+          .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 14px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 16px;
+          }
+          .badge-success { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+          .badge-error { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+          .badge-warning { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+          .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 12px;
+            background: #9333ea;
+            color: #fff;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+          }
+          .btn:hover { background: #7e22ce; }
+          .code-preview {
+            font-family: monospace;
+            font-size: 11px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 8px 12px;
+            border-radius: 8px;
+            color: #cbd5e1;
+            margin: 12px 0;
+            word-break: break-all;
+          }
         </style>
       </head>
       <body>
         <div class="card">
+          <div class="icon">⚡</div>
           <h2>YEAR INFO AI</h2>
-          <p>${error ? 'Authorization was denied or failed.' : 'Authorization received. Finalizing verification...'}</p>
-          <script>
-            try {
-              if (window.opener) {
-                window.opener.postMessage({
-                  type: 'OAUTH_AUTH_SUCCESS',
-                  code: ${JSON.stringify(code || '')},
-                  state: ${JSON.stringify(state || '')},
-                  error: ${JSON.stringify(error_description || error || '')}
-                }, '*');
-                setTimeout(() => window.close(), 1200);
-              } else {
-                window.location.href = '/';
-              }
-            } catch (e) {
-              console.error(e);
-            }
-          </script>
+          <div id="status-container">
+            <p class="status-text">Verifying Meta authorization...</p>
+          </div>
+          <div id="actions"></div>
         </div>
+        <script>
+          (function() {
+            var serverCode = ${JSON.stringify(code || '')};
+            var serverState = ${JSON.stringify(state || '')};
+            var serverError = ${JSON.stringify(error_description || error || '')};
+
+            var urlParams = new URLSearchParams(window.location.search);
+            var hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+
+            var finalCode = urlParams.get('code') || hashParams.get('code') || serverCode;
+            var finalState = urlParams.get('state') || hashParams.get('state') || serverState;
+            var finalError = urlParams.get('error_description') || urlParams.get('error') || hashParams.get('error_description') || hashParams.get('error') || serverError;
+
+            var container = document.getElementById('status-container');
+            var actions = document.getElementById('actions');
+
+            if (finalError) {
+              container.innerHTML = '<div class="badge badge-error">✕ Authorization Notice</div>' +
+                '<p class="status-text">' + finalError + '</p>';
+              if (window.opener) {
+                try {
+                  window.opener.postMessage({
+                    type: 'OAUTH_AUTH_SUCCESS',
+                    code: '',
+                    state: finalState,
+                    error: finalError
+                  }, '*');
+                } catch(e) {}
+                actions.innerHTML = '<button class="btn" onclick="window.close()">Close Window</button>';
+              } else {
+                actions.innerHTML = '<a href="/channels" class="btn">Return to Channels</a>';
+              }
+            } else if (finalCode) {
+              container.innerHTML = '<div class="badge badge-success">✓ Authorization Received</div>' +
+                '<p class="status-text">Meta code confirmed. Verifying authorized Facebook Pages...</p>' +
+                '<div class="code-preview">Auth code: ' + finalCode.substring(0, 16) + '...</div>';
+
+              if (window.opener) {
+                try {
+                  window.opener.postMessage({
+                    type: 'OAUTH_AUTH_SUCCESS',
+                    code: finalCode,
+                    state: finalState,
+                    error: ''
+                  }, '*');
+                  setTimeout(function() {
+                    try { window.close(); } catch(e) {}
+                  }, 1200);
+                } catch(e) {
+                  console.error('postMessage error:', e);
+                }
+              } else {
+                actions.innerHTML = '<a href="/channels" class="btn">Proceed to YEAR INFO AI</a>';
+              }
+            } else {
+              container.innerHTML = '<div class="badge badge-warning">⚠ No Authorization Data</div>' +
+                '<p class="status-text">No authorization code was found in the callback URL. If you closed or cancelled the Meta dialog, please try again.</p>';
+              if (window.opener) {
+                try {
+                  window.opener.postMessage({
+                    type: 'OAUTH_AUTH_SUCCESS',
+                    code: '',
+                    state: finalState,
+                    error: 'No authorization code or parameters returned from Meta in callback.'
+                  }, '*');
+                } catch(e) {}
+                actions.innerHTML = '<button class="btn" onclick="window.close()">Close Window</button>';
+              } else {
+                actions.innerHTML = '<a href="/channels" class="btn">Return to Channels</a>';
+              }
+            }
+          })();
+        </script>
       </body>
     </html>
   `);
@@ -580,6 +720,54 @@ app.get('/api/channels', authMiddleware, (req: Request, res: Response) => {
   res.json(channels);
 });
 
+// Stateless HMAC-signed OAuth state helpers for CSRF protection & serverless resilience
+function generateOAuthState(channelType: string): string {
+  const timestamp = Date.now();
+  const random = crypto.randomBytes(8).toString('hex');
+  const payload = `${channelType}:${timestamp}:${random}`;
+  const secret = getMetaAppSecret() || 'yia_oauth_state_hmac_secret_2026';
+  const sig = crypto.createHmac('sha256', secret).update(payload).digest('hex').slice(0, 16);
+  const b64 = Buffer.from(payload).toString('base64url');
+  return `meta_${b64}_${sig}`;
+}
+
+function validateOAuthState(state: string, expectedChannel?: string): { valid: boolean; channelType?: string; error?: string } {
+  if (!state) {
+    return { valid: false, error: 'Missing OAuth state parameter' };
+  }
+  // Backward compatibility with legacy timestamped tokens
+  if (state.startsWith('meta_ch_')) {
+    return { valid: true, channelType: expectedChannel };
+  }
+  if (!state.startsWith('meta_')) {
+    return { valid: false, error: 'Invalid OAuth state token prefix' };
+  }
+  const parts = state.slice(5).split('_');
+  if (parts.length < 2) {
+    return { valid: false, error: 'Malformed OAuth state structure' };
+  }
+  const [b64, sig] = parts;
+  try {
+    const payload = Buffer.from(b64, 'base64url').toString('utf8');
+    const [channelType, timestampStr] = payload.split(':');
+    const timestamp = parseInt(timestampStr, 10);
+    if (isNaN(timestamp) || Date.now() - timestamp > 20 * 60 * 1000) {
+      return { valid: false, error: 'OAuth state token has expired (exceeded 20 minutes)' };
+    }
+    const secret = getMetaAppSecret() || 'yia_oauth_state_hmac_secret_2026';
+    const expectedSig = crypto.createHmac('sha256', secret).update(payload).digest('hex').slice(0, 16);
+    if (sig !== expectedSig) {
+      return { valid: false, error: 'Invalid OAuth state signature (potential CSRF attempt)' };
+    }
+    if (expectedChannel && channelType !== expectedChannel) {
+      return { valid: false, channelType, error: `Channel mismatch: expected ${expectedChannel}, received ${channelType}` };
+    }
+    return { valid: true, channelType };
+  } catch {
+    return { valid: false, error: 'Failed to verify OAuth state payload' };
+  }
+}
+
 // Meta OAuth configuration info
 app.get('/api/channels/meta/config', (req: Request, res: Response) => {
   const appId = getMetaAppId();
@@ -592,9 +780,10 @@ app.get('/api/channels/meta/config', (req: Request, res: Response) => {
     appUrl,
     redirectUri,
     scopes: {
-      facebook: ['pages_show_list', 'pages_read_engagement', 'pages_manage_posts'],
+      facebook: ['pages_show_list'],
+      facebookWithPublishing: ['pages_show_list', 'pages_read_engagement', 'pages_manage_posts'],
       messenger: ['pages_show_list', 'pages_messaging'],
-      instagram: ['instagram_basic', 'instagram_manage_messages', 'pages_show_list'],
+      instagram: ['pages_show_list', 'instagram_basic', 'instagram_manage_messages'],
     },
   });
 });
@@ -602,35 +791,35 @@ app.get('/api/channels/meta/config', (req: Request, res: Response) => {
 // Build official Meta OAuth authorization URL
 app.get('/api/channels/meta/oauth-url', (req: Request, res: Response) => {
   const channelType = (req.query.channelType as string) || 'facebook';
+  const includePublishing = req.query.includePublishing === 'true';
   const appId = getMetaAppId();
   const appUrl = getAppUrl(req);
   const redirectUri = `${appUrl}/auth/meta/callback`;
 
-  // Standardized Meta Graph API scopes strictly matching channel capabilities
-  const scopeMap: Record<string, string[]> = {
-    facebook: ['pages_show_list', 'pages_read_engagement', 'pages_manage_posts'],
-    messenger: ['pages_show_list', 'pages_messaging'],
-    instagram: ['instagram_basic', 'instagram_manage_messages', 'pages_show_list'],
-  };
+  // Standardized Meta Graph API scopes strictly matching channel capabilities & avoiding invalid scopes
+  let scopes: string[] = ['pages_show_list'];
 
-  const scopes = scopeMap[channelType] || scopeMap.facebook;
-
-  // Cryptographically secure state token for CSRF protection
-  const randomSuffix = crypto.randomBytes(16).toString('hex');
-  const state = `meta_ch_${channelType}_${randomSuffix}_${Date.now()}`;
-  pendingOAuthStates.set(state, { channelType, createdAt: Date.now() });
-
-  // Clean old state tokens (> 15 minutes)
-  for (const [k, v] of pendingOAuthStates.entries()) {
-    if (Date.now() - v.createdAt > 900000) pendingOAuthStates.delete(k);
+  if (channelType === 'facebook') {
+    // By default, pages_show_list is the primary supported permission that retrieves authorized Pages
+    // pages_read_engagement and pages_manage_posts require Meta App Review / Advanced Access use-cases
+    scopes = includePublishing
+      ? ['pages_show_list', 'pages_read_engagement', 'pages_manage_posts']
+      : ['pages_show_list'];
+  } else if (channelType === 'messenger') {
+    scopes = ['pages_show_list', 'pages_messaging'];
+  } else if (channelType === 'instagram') {
+    scopes = ['pages_show_list', 'instagram_basic', 'instagram_manage_messages'];
   }
+
+  // Stateless HMAC signed state token for CSRF protection and serverless resilience
+  const state = generateOAuthState(channelType);
 
   if (!appId) {
     res.json({
       configured: false,
       redirectUri,
       requiredScopes: scopes,
-      message: 'META_APP_ID is not configured in environment variables. You can provide your Meta App ID or User Access Token directly to connect.',
+      message: 'META_APP_ID is not configured in environment variables.',
     });
     return;
   }
@@ -642,6 +831,7 @@ app.get('/api/channels/meta/oauth-url', (req: Request, res: Response) => {
     url,
     redirectUri,
     state,
+    scopes,
   });
 });
 
@@ -652,67 +842,94 @@ app.post('/api/channels/meta/verify-and-list-pages', authMiddleware, async (req:
     const appId = getMetaAppId();
     const appSecret = getMetaAppSecret();
 
-    // Consume pending state token
-    if (state && pendingOAuthStates.has(state)) {
-      pendingOAuthStates.delete(state);
+    // 1. Validate state parameter if provided
+    if (state) {
+      const stateCheck = validateOAuthState(state, channelType);
+      if (!stateCheck.valid) {
+        res.status(400).json({ error: `OAuth Security Notice: ${stateCheck.error}` });
+        return;
+      }
     }
 
-    let userAccessToken = accessToken;
-
-    if (code && !userAccessToken && !appSecret) {
+    // 2. Validate input parameters
+    if (!code && !accessToken) {
       res.status(400).json({
-        error: 'META_APP_SECRET is not configured in backend environment variables. Please add META_APP_SECRET in deployment settings to exchange authorization code for tokens.',
+        error: 'No authorization code or user access token was received. Please ensure the Meta authorization dialog was completed and not cancelled.',
       });
       return;
     }
 
-    if (code && appId && appSecret) {
-      const tokenUrl = `https://graph.facebook.com/v22.0/oauth/access_token?client_id=${appId}&client_secret=${appSecret}&redirect_uri=${encodeURIComponent(redirectUri)}&code=${code}`;
-      const tokenRes = await fetch(tokenUrl);
-      const tokenData = await tokenRes.json();
-      if (tokenData.error) {
-        res.status(400).json({ error: `Meta OAuth Error: ${tokenData.error.message || 'Token exchange failed'}` });
+    let userAccessToken = accessToken;
+
+    // 3. Authorization code exchange
+    if (code && !userAccessToken) {
+      if (!appSecret) {
+        res.status(400).json({
+          error: 'META_APP_SECRET is not configured in backend environment variables. Please add META_APP_SECRET in deployment settings to exchange authorization code for tokens.',
+        });
         return;
       }
+
+      const effectiveRedirectUri = redirectUri || `${getAppUrl(req)}/auth/meta/callback`;
+      const tokenUrl = `https://graph.facebook.com/v22.0/oauth/access_token?client_id=${appId}&client_secret=${encodeURIComponent(appSecret)}&redirect_uri=${encodeURIComponent(effectiveRedirectUri)}&code=${encodeURIComponent(code)}`;
+
+      const tokenRes = await fetch(tokenUrl);
+      const tokenData = await tokenRes.json().catch(() => null);
+
+      if (!tokenRes.ok || !tokenData || tokenData.error) {
+        const errorMsg = tokenData?.error?.message || `Token exchange failed (HTTP ${tokenRes.status})`;
+        res.status(400).json({
+          error: `Meta Token Exchange Error: ${errorMsg}`,
+        });
+        return;
+      }
+
       userAccessToken = tokenData.access_token;
+      if (!userAccessToken) {
+        res.status(400).json({
+          error: 'Meta did not return an access_token in the token exchange response.',
+        });
+        return;
+      }
 
       // Exchange short-lived token for 60-day long-lived token
       try {
-        const longLivedRes = await fetch(
-          `https://graph.facebook.com/v22.0/oauth/access_token?grant_type=fb_exchange_token&client_id=${appId}&client_secret=${appSecret}&fb_exchange_token=${encodeURIComponent(userAccessToken)}`
-        );
-        const longLivedData = await longLivedRes.json();
-        if (longLivedData.access_token) {
+        const longLivedUrl = `https://graph.facebook.com/v22.0/oauth/access_token?grant_type=fb_exchange_token&client_id=${appId}&client_secret=${encodeURIComponent(appSecret)}&fb_exchange_token=${encodeURIComponent(userAccessToken)}`;
+        const longLivedRes = await fetch(longLivedUrl);
+        const longLivedData = await longLivedRes.json().catch(() => null);
+        if (longLivedData?.access_token) {
           userAccessToken = longLivedData.access_token;
         }
       } catch (err: any) {
-        console.warn('Long-lived token exchange fallback:', err.message);
+        console.warn('Long-lived token exchange notice:', err.message);
       }
     }
 
     if (!userAccessToken) {
-      res.status(400).json({ error: 'Please provide either a valid authorization code or a Meta user access token.' });
+      res.status(400).json({
+        error: 'Failed to obtain a valid Meta access token from the provided authorization code.',
+      });
       return;
     }
 
-    // Call Meta Graph API to query real user profile & authorized pages
+    // 4. Query real user profile, pages, and permissions from Meta Graph API v22.0
     const [userRes, pagesRes, permRes] = await Promise.all([
-      fetch(`https://graph.facebook.com/v22.0/me?fields=id,name&access_token=${userAccessToken}`),
-      fetch(`https://graph.facebook.com/v22.0/me/accounts?fields=id,name,category,access_token,tasks,instagram_business_account{id,username,name,profile_picture_url}&access_token=${userAccessToken}`),
-      fetch(`https://graph.facebook.com/v22.0/me/permissions?access_token=${userAccessToken}`),
+      fetch(`https://graph.facebook.com/v22.0/me?fields=id,name&access_token=${encodeURIComponent(userAccessToken)}`),
+      fetch(`https://graph.facebook.com/v22.0/me/accounts?fields=id,name,category,access_token,tasks,instagram_business_account{id,username,name,profile_picture_url}&access_token=${encodeURIComponent(userAccessToken)}`),
+      fetch(`https://graph.facebook.com/v22.0/me/permissions?access_token=${encodeURIComponent(userAccessToken)}`),
     ]);
 
-    const userData = await userRes.json();
-    const pagesData = await pagesRes.json();
-    const permData = await permRes.json();
+    const userData = await userRes.json().catch(() => ({}));
+    const pagesData = await pagesRes.json().catch(() => ({}));
+    const permData = await permRes.json().catch(() => ({}));
 
     if (userData.error) {
-      res.status(400).json({ error: `Meta API Error: ${userData.error.message}` });
+      res.status(400).json({ error: `Meta User Profile Error: ${userData.error.message}` });
       return;
     }
 
     if (pagesData.error) {
-      res.status(400).json({ error: `Meta Graph API Error: ${pagesData.error.message}` });
+      res.status(400).json({ error: `Meta Pages Query Error: ${pagesData.error.message}` });
       return;
     }
 
@@ -721,16 +938,25 @@ app.post('/api/channels/meta/verify-and-list-pages', authMiddleware, async (req:
       .filter((p: any) => p.status === 'granted')
       .map((p: any) => p.permission);
 
-    // Store in temporary session for selection
-    const tokenSessionId = `meta_sess_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-    metaTokenSessions.set(tokenSessionId, {
+    if (pages.length === 0) {
+      res.status(400).json({
+        error: `No Facebook Pages found for ${userData.name || 'this account'}. Ensure your Facebook account is an Admin or Editor of at least one Facebook Page and that you granted permission in the Meta dialog.`,
+      });
+      return;
+    }
+
+    // 5. Store in temporary session for selection (both memory Map and persistent db store)
+    const tokenSessionId = `meta_sess_${Date.now()}_${crypto.randomBytes(8).toString('hex')}`;
+    const sessionPayload = {
       token: userAccessToken,
       pages,
       user: userData,
       createdAt: Date.now(),
-    });
+    };
+    metaTokenSessions.set(tokenSessionId, sessionPayload);
+    db.setMetaSession(tokenSessionId, sessionPayload);
 
-    // Clean old sessions
+    // Clean old memory sessions
     for (const [k, v] of metaTokenSessions.entries()) {
       if (Date.now() - v.createdAt > 900000) metaTokenSessions.delete(k);
     }
@@ -784,16 +1010,24 @@ app.post('/api/channels/meta/connect-selected', authMiddleware, async (req: Requ
     let pageAccessToken = manualToken;
     let verifiedName = pageName;
 
-    if (tokenSessionId && metaTokenSessions.has(tokenSessionId)) {
-      const sess = metaTokenSessions.get(tokenSessionId)!;
-      const targetPage = sess.pages.find((p: any) => p.id === pageId);
+    // Retrieve from memory or persistent db store
+    const sessionData = metaTokenSessions.get(tokenSessionId) || db.getMetaSession(tokenSessionId);
+    if (sessionData && sessionData.pages) {
+      const targetPage = sessionData.pages.find((p: any) => p.id === pageId);
       if (targetPage) {
-        pageAccessToken = targetPage.access_token || sess.token;
-        verifiedName = targetPage.name;
+        pageAccessToken = targetPage.access_token || sessionData.token;
+        verifiedName = targetPage.name || pageName;
       }
     }
 
-    // 8. Real Meta API verification ping to verify authorized access before saving
+    if (!pageAccessToken) {
+      res.status(400).json({
+        error: 'Unable to retrieve access token for the selected Page. The authorization session may have expired. Please re-authorize.',
+      });
+      return;
+    }
+
+    // Real Meta Graph API verification ping to verify authorized access before saving
     if (pageAccessToken && !pageAccessToken.startsWith('client_token_')) {
       try {
         const verifyEndpoint = channelType === 'instagram' && igAccountId
@@ -803,12 +1037,18 @@ app.post('/api/channels/meta/connect-selected', authMiddleware, async (req: Requ
         const verifyData = await verifyRes.json();
         if (verifyData.error) {
           res.status(400).json({
-            error: `Meta Graph API Verification Failed: ${verifyData.error.message || 'Page access denied'}`,
+            error: `Meta Graph API Verification Failed: ${verifyData.error.message || 'Page access denied by Meta'}`,
           });
           return;
         }
+        if (verifyData.name) {
+          verifiedName = verifyData.name;
+        }
       } catch (err: any) {
-        console.warn('Meta verification ping network notice:', err.message);
+        res.status(400).json({
+          error: `Network error verifying Page with Meta Graph API: ${err.message}`,
+        });
+        return;
       }
     }
 

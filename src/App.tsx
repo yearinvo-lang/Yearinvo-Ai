@@ -147,21 +147,38 @@ function MainApp() {
   // Dedicated OAuth popup callback handler if opened in popup or routed to SPA
   if (typeof window !== 'undefined' && window.location.pathname.startsWith('/auth/')) {
     const params = new URLSearchParams(window.location.search);
-    const code = params.get('code') || '';
-    const state = params.get('state') || '';
-    const error = params.get('error_description') || params.get('error') || '';
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    const code = params.get('code') || hashParams.get('code') || '';
+    const state = params.get('state') || hashParams.get('state') || '';
+    const error = params.get('error_description') || params.get('error') || hashParams.get('error_description') || hashParams.get('error') || '';
 
     if (window.opener) {
       try {
-        window.opener.postMessage({
-          type: 'OAUTH_AUTH_SUCCESS',
-          code,
-          state,
-          error,
-        }, '*');
-        setTimeout(() => {
-          try { window.close(); } catch {}
-        }, 1000);
+        if (code) {
+          window.opener.postMessage({
+            type: 'OAUTH_AUTH_SUCCESS',
+            code,
+            state,
+            error: '',
+          }, '*');
+          setTimeout(() => {
+            try { window.close(); } catch {}
+          }, 1200);
+        } else if (error) {
+          window.opener.postMessage({
+            type: 'OAUTH_AUTH_SUCCESS',
+            code: '',
+            state,
+            error,
+          }, '*');
+        } else {
+          window.opener.postMessage({
+            type: 'OAUTH_AUTH_SUCCESS',
+            code: '',
+            state,
+            error: 'No authorization code or parameters returned from Meta in callback.',
+          }, '*');
+        }
       } catch (e) {
         console.error('Failed to postMessage to opener:', e);
       }
@@ -175,10 +192,14 @@ function MainApp() {
           </div>
           <h2 className="text-xl font-black text-white">YEAR INFO AI Authorization</h2>
           <p className="text-sm text-slate-300">
-            {error ? `Authorization Notice: ${error}` : 'Meta authorization received! Connecting channel and closing window...'}
+            {error
+              ? `Authorization Notice: ${error}`
+              : code
+              ? 'Meta authorization received! Connecting channel and closing window...'
+              : 'No authorization code detected. Please ensure popups and cookies are enabled.'}
           </p>
           <div className="text-xs text-slate-500 font-mono">
-            {code ? `Auth code received (${code.slice(0, 10)}...)` : 'Closing...'}
+            {code ? `Auth code received (${code.slice(0, 10)}...)` : 'Window ready to close'}
           </div>
           {!window.opener && (
             <div className="pt-2">

@@ -1049,6 +1049,30 @@ class DatabaseStore {
     delete this.secureCredentials[key];
   }
 
+  // Temporary Meta authorization sessions for serverless consistency
+  private metaSessions: Record<string, any> = {};
+
+  public setMetaSession(sessionId: string, sessionData: any) {
+    this.metaSessions[sessionId] = {
+      ...sessionData,
+      createdAt: Date.now(),
+    };
+    const now = Date.now();
+    for (const [k, v] of Object.entries(this.metaSessions)) {
+      if (now - (v.createdAt || 0) > 30 * 60 * 1000) {
+        delete this.metaSessions[k];
+      }
+    }
+  }
+
+  public getMetaSession(sessionId: string): any {
+    return this.metaSessions[sessionId] || null;
+  }
+
+  public deleteMetaSession(sessionId: string) {
+    delete this.metaSessions[sessionId];
+  }
+
   public addChannel(channel: Channel) {
     this.data.channels.push(channel);
     this.persist();

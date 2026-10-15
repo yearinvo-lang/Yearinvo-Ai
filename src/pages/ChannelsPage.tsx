@@ -43,6 +43,7 @@ export const ChannelsPage: React.FC = () => {
   const [fbVerifiedPages, setFbVerifiedPages] = useState<any[]>([]);
   const [fbSelectedPageId, setFbSelectedPageId] = useState<string>('');
   const [fbTokenSessionId, setFbTokenSessionId] = useState<string>('');
+  const [fbIncludePublishing, setFbIncludePublishing] = useState<boolean>(false);
 
   // ==========================================
   // INSTAGRAM MODAL STATE
@@ -113,7 +114,8 @@ export const ChannelsPage: React.FC = () => {
     setFbLoading(true);
 
     try {
-      const res = await apiRequest(`/api/channels/meta/oauth-url?channelType=${channelType}`).catch(() => null);
+      const queryParam = channelType === 'facebook' && fbIncludePublishing ? '&includePublishing=true' : '';
+      const res = await apiRequest(`/api/channels/meta/oauth-url?channelType=${channelType}${queryParam}`).catch(() => null);
       if (res && res.configured && res.url) {
         const popup = window.open(res.url, 'facebook_oauth_popup', 'width=650,height=750');
         if (!popup) {
@@ -676,6 +678,59 @@ export const ChannelsPage: React.FC = () => {
 
             {fbAuthStep === 'auth' ? (
               <div className="space-y-4 pt-1">
+                {fbModalChannel === 'facebook' && (
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 p-3.5 space-y-2.5">
+                    <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                      Permissions requested for this connection:
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      <span className="inline-flex items-center gap-1 rounded-md bg-purple-500/10 px-2 py-0.5 text-[11px] font-mono font-medium text-purple-600 dark:text-purple-400 border border-purple-500/20">
+                        pages_show_list
+                      </span>
+                      {fbIncludePublishing && (
+                        <>
+                          <span className="inline-flex items-center gap-1 rounded-md bg-blue-500/10 px-2 py-0.5 text-[11px] font-mono font-medium text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                            pages_manage_posts
+                          </span>
+                          <span className="inline-flex items-center gap-1 rounded-md bg-blue-500/10 px-2 py-0.5 text-[11px] font-mono font-medium text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                            pages_read_engagement
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    <label className="flex items-start gap-2 pt-1 text-[11px] text-slate-600 dark:text-slate-400 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={fbIncludePublishing}
+                        onChange={(e) => setFbIncludePublishing(e.target.checked)}
+                        className="mt-0.5 rounded border-slate-300 dark:border-slate-700 text-purple-600 focus:ring-purple-500"
+                      />
+                      <span>
+                        Request Post Publishing permissions (<code className="font-mono text-[10px]">pages_manage_posts</code>).
+                        <span className="block text-[10px] text-slate-400 mt-0.5">
+                          Only check if &apos;Publish content&apos; use case is added in your Meta Developer Dashboard.
+                        </span>
+                      </span>
+                    </label>
+                  </div>
+                )}
+
+                {fbModalChannel === 'messenger' && (
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 p-3.5 space-y-1.5">
+                    <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                      Permissions requested for Messenger:
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      <span className="inline-flex items-center gap-1 rounded-md bg-sky-500/10 px-2 py-0.5 text-[11px] font-mono font-medium text-sky-600 dark:text-sky-400 border border-sky-500/20">
+                        pages_show_list
+                      </span>
+                      <span className="inline-flex items-center gap-1 rounded-md bg-sky-500/10 px-2 py-0.5 text-[11px] font-mono font-medium text-sky-600 dark:text-sky-400 border border-sky-500/20">
+                        pages_messaging
+                      </span>
+                    </div>
+                  </div>
+                )}
+
                 <button
                   type="button"
                   onClick={() => handleStartFacebookOAuth(fbModalChannel)}
@@ -694,6 +749,10 @@ export const ChannelsPage: React.FC = () => {
                     </>
                   )}
                 </button>
+
+                <p className="text-[10px] text-center text-slate-400">
+                  Testing in Meta Development Mode requires the authorizing Facebook account to be an Admin, Developer, or accepted Tester under App Roles in developers.facebook.com.
+                </p>
               </div>
             ) : (
               <div className="space-y-4 pt-1">
