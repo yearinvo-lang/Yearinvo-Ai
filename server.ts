@@ -322,13 +322,17 @@ app.post('/api/auth/logout', (req: Request, res: Response) => {
 
 function getAppUrl(req?: Request): string {
   if (process.env.APP_URL) return process.env.APP_URL.replace(/\/$/, '');
-  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
   if (req) {
     const host = req.get('x-forwarded-host') || req.get('host');
     const proto = req.get('x-forwarded-proto') || (req.secure ? 'https' : 'http');
-    if (host) return `${proto}://${host}`;
+    if (host) {
+      if (host.includes('vercel.app')) {
+        return 'https://year-info-ai.vercel.app';
+      }
+      return `${proto}://${host}`;
+    }
   }
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
   return 'https://year-info-ai.vercel.app';
 }
 
@@ -563,6 +567,13 @@ app.put('/api/workspaces/:id', authMiddleware, (req: Request, res: Response) => 
 // Temporary server-only store for authorized Meta token sessions (auto-expires in 15 mins)
 const metaTokenSessions: Map<string, { token: string; pages: any[]; user: any; createdAt: number }> = new Map();
 
+// Secure in-memory store for pending OAuth states to prevent CSRF attacks
+interface PendingOAuthState {
+  channelType: string;
+  createdAt: number;
+}
+const pendingOAuthStates: Map<string, PendingOAuthState> = new Map();
+
 app.get('/api/channels', authMiddleware, (req: Request, res: Response) => {
   const wsId = (req as any).workspaceId;
   const channels = db.getChannels(wsId);
@@ -582,8 +593,8 @@ app.get('/api/channels/meta/config', (req: Request, res: Response) => {
     redirectUri,
     scopes: {
       facebook: ['pages_show_list', 'pages_read_engagement', 'pages_manage_posts'],
-      messenger: ['pages_messaging', 'pages_show_list'],
-      instagram: ['instagram_basic', 'instagram_manage_messages', 'instagram_content_publish', 'pages_show_list'],
+      messenger: ['pages_show_list', 'pages_messaging'],
+      instagram: ['instagram_basic', 'instagram_manage_messages', 'pages_show_list'],
     },
   });
 });
@@ -595,14 +606,24 @@ app.get('/api/channels/meta/oauth-url', (req: Request, res: Response) => {
   const appUrl = getAppUrl(req);
   const redirectUri = `${appUrl}/auth/meta/callback`;
 
+  // Standardized Meta Graph API scopes strictly matching channel capabilities
   const scopeMap: Record<string, string[]> = {
     facebook: ['pages_show_list', 'pages_read_engagement', 'pages_manage_posts'],
-    messenger: ['pages_messaging', 'pages_show_list'],
-    instagram: ['instagram_basic', 'instagram_manage_messages', 'instagram_content_publish', 'pages_show_list'],
+    messenger: ['pages_show_list', 'pages_messaging'],
+    instagram: ['instagram_basic', 'instagram_manage_messages', 'pages_show_list'],
   };
 
   const scopes = scopeMap[channelType] || scopeMap.facebook;
-  const state = `meta_ch_${channelType}_${Date.now()}`;
+
+  // Cryptographically secure state token for CSRF protection
+  const randomSuffix = crypto.randomBytes(16).toString('hex');
+  const state = `meta_ch_${channelType}_${randomSuffix}_${Date.now()}`;
+  pendingOAuthStates.set(state, { channelType, createdAt: Date.now() });
+
+  // Clean old state tokens (> 15 minutes)
+  for (const [k, v] of pendingOAuthStates.entries()) {
+    if (Date.now() - v.createdAt > 900000) pendingOAuthStates.delete(k);
+  }
 
   if (!appId) {
     res.json({
@@ -614,7 +635,7 @@ app.get('/api/channels/meta/oauth-url', (req: Request, res: Response) => {
     return;
   }
 
-  const url = `https://www.facebook.com/v22.0/dialog/oauth?client_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes.join(','))}&state=${state}&response_type=code`;
+  const url = `https://www.facebook.com/v22.0/dialog/oauth?client_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes.join(','))}&state=${encodeURIComponent(state)}&response_type=code`;
 
   res.json({
     configured: true,
@@ -627,9 +648,14 @@ app.get('/api/channels/meta/oauth-url', (req: Request, res: Response) => {
 // Verify Meta authorization code or access token, and fetch user's real Facebook Pages & linked Instagram accounts
 app.post('/api/channels/meta/verify-and-list-pages', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { code, redirectUri, accessToken, channelType = 'facebook' } = req.body;
+    const { code, redirectUri, accessToken, channelType = 'facebook', state } = req.body;
     const appId = getMetaAppId();
     const appSecret = getMetaAppSecret();
+
+    // Consume pending state token
+    if (state && pendingOAuthStates.has(state)) {
+      pendingOAuthStates.delete(state);
+    }
 
     let userAccessToken = accessToken;
 
@@ -822,6 +848,22 @@ app.post('/api/channels/meta/connect-selected', authMiddleware, async (req: Requ
         pageId,
         connectedAt: Date.now(),
       });
+
+      // Subscribe page to application webhooks for real-time messaging
+      if (channelType === 'messenger' || channelType === 'facebook') {
+        try {
+          const subRes = await fetch(
+            `https://graph.facebook.com/v22.0/${pageId}/subscribed_apps?subscribed_fields=messages,messaging_postbacks,message_deliveries,message_reads&access_token=${encodeURIComponent(pageAccessToken)}`,
+            { method: 'POST' }
+          );
+          const subData = await subRes.json();
+          if (subData.success) {
+            console.log(`Subscribed page ${pageId} to app webhooks for ${channelType}`);
+          }
+        } catch (subErr: any) {
+          console.warn('Notice subscribing page to webhooks:', subErr.message);
+        }
+      }
     }
 
     db.logAudit({

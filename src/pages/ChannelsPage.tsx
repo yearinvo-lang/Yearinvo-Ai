@@ -128,11 +128,23 @@ export const ChannelsPage: React.FC = () => {
             window.removeEventListener('message', handlePopupMsg);
             if (popupTimer) clearInterval(popupTimer);
             if (event.data.error) {
-              setFbError(`Authorization notice: ${event.data.error}`);
+              const errMsg = event.data.error;
+              const isDenied = errMsg.includes('denied') || errMsg.includes('cancel');
+              setFbError(isDenied ? 'Authorization was cancelled by user.' : `Authorization notice: ${errMsg}`);
               setFbLoading(false);
               return;
             }
-            await verifyFacebookCode(event.data.code, res.redirectUri, channelType);
+            if (res.state && event.data.state && event.data.state !== res.state) {
+              setFbError('Security validation failed: OAuth state mismatch.');
+              setFbLoading(false);
+              return;
+            }
+            if (!event.data.code) {
+              setFbError('No authorization code was received from Meta.');
+              setFbLoading(false);
+              return;
+            }
+            await verifyFacebookCode(event.data.code, res.redirectUri, channelType, event.data.state || res.state);
           }
         };
 
@@ -155,13 +167,13 @@ export const ChannelsPage: React.FC = () => {
     }
   };
 
-  const verifyFacebookCode = async (code: string, redirectUri: string, channelType: string) => {
+  const verifyFacebookCode = async (code: string, redirectUri: string, channelType: string, state?: string) => {
     setFbLoading(true);
     setFbError(null);
     try {
       const res = await apiRequest('/api/channels/meta/verify-and-list-pages', {
         method: 'POST',
-        body: JSON.stringify({ code, redirectUri, channelType }),
+        body: JSON.stringify({ code, redirectUri, channelType, state }),
       });
 
       if (res && res.pages && res.pages.length > 0) {
@@ -237,6 +249,11 @@ export const ChannelsPage: React.FC = () => {
             if (popupTimer) clearInterval(popupTimer);
             if (event.data.error) {
               setIgError(`Authorization notice: ${event.data.error}`);
+              setIgLoading(false);
+              return;
+            }
+            if (!event.data.code) {
+              setIgError('No authorization code was received from Meta.');
               setIgLoading(false);
               return;
             }
