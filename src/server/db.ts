@@ -837,17 +837,19 @@ class DatabaseStore {
     let session = this.data.sessions.find((s) => s.token === token);
     if (!session && token.startsWith('yia_sess_')) {
       const parts = token.split('_');
-      const userId = parts.slice(2, parts.length - 1).join('_') || parts[2] || 'usr_superadmin';
-      const matchedUser = this.data.users.find((u) => u.id === userId) || this.data.users[0];
-      if (matchedUser) {
-        session = {
-          token,
-          userId: matchedUser.id,
-          expiresAt: Date.now() + 86400000 * 7,
-        };
-        this.data.sessions.push(session);
-        this.persist();
-        return session;
+      const userId = parts.slice(2, parts.length - 1).join('_') || parts[2];
+      if (userId) {
+        const matchedUser = this.data.users.find((u) => u.id === userId);
+        if (matchedUser) {
+          session = {
+            token,
+            userId: matchedUser.id,
+            expiresAt: Date.now() + 86400000 * 7,
+          };
+          this.data.sessions.push(session);
+          this.persist();
+          return session;
+        }
       }
     }
     if (!session) return null;

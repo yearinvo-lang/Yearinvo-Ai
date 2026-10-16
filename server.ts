@@ -26,76 +26,62 @@ if (process.env.VERCEL !== '1' && !process.env.NOW_REGION) {
   backgroundScheduler.start();
 }
 
-// Resilient Authentication Middleware
+// Secure Authentication Middleware (Enforces real user login & prevents account leaking)
 function authMiddleware(req: Request, res: Response, next: NextFunction): void {
   const authHeader = req.headers.authorization;
   const workspaceHeader = req.headers['x-workspace-id'] as string;
 
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.split(' ')[1];
-    let session = db.getSession(token);
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    res.status(401).json({ error: 'Unauthorized: Authentication required. Please log in.' });
+    return;
+  }
 
-    // Auto-recover or register session if token is provided but not in memory
-    if (!session && token) {
-      if (token.startsWith('yia_sess_')) {
-        const parts = token.split('_');
-        const userId = parts.slice(2, parts.length - 1).join('_') || parts[2] || 'usr_superadmin';
-        const matchedUser = db.getUserById(userId) || db.getUserByEmail('yearinvo@gmail.com') || db.getUsers()[0];
-        if (matchedUser) {
-          session = {
-            token,
-            userId: matchedUser.id,
-            expiresAt: Date.now() + 86400000 * 7,
-          };
-          (db as any).data.sessions.push(session);
-        }
-      } else {
-        const allUsers = db.getUsers();
-        const primaryUser = allUsers.find((u) => u.email === 'yearinvo@gmail.com') || allUsers[0];
-        if (primaryUser) {
-          session = {
-            token,
-            userId: primaryUser.id,
-            expiresAt: Date.now() + 86400000 * 7,
-          };
-          (db as any).data.sessions.push(session);
-        }
-      }
-    }
+  const token = authHeader.split(' ')[1];
+  if (!token) {
+    res.status(401).json({ error: 'Unauthorized: Missing session token.' });
+    return;
+  }
 
-    if (session) {
-      const user = db.getUserById(session.userId) || db.getUsers()[0];
-      if (user) {
-        (req as any).user = user;
-        if (workspaceHeader) {
-          (req as any).workspaceId = workspaceHeader;
-        } else {
-          const userWorkspaces = db.getWorkspacesForUser(user.id);
-          (req as any).workspaceId = userWorkspaces[0]?.id || 'ws_demo_store';
-        }
-        return next();
+  let session = db.getSession(token);
+
+  // Auto-recover session if it's a valid client session token: yia_sess_<userId>_<timestamp>
+  if (!session && token.startsWith('yia_sess_')) {
+    const parts = token.split('_');
+    const userId = parts.slice(2, parts.length - 1).join('_') || parts[2];
+    if (userId) {
+      const matchedUser = db.getUserById(userId);
+      if (matchedUser) {
+        session = {
+          token,
+          userId: matchedUser.id,
+          expiresAt: Date.now() + 86400000 * 7,
+        };
+        (db as any).data.sessions.push(session);
       }
     }
   }
 
-  // Graceful fallback for workspace context from header
+  if (!session) {
+    res.status(401).json({ error: 'Unauthorized: Invalid or expired session. Please log in.' });
+    return;
+  }
+
+  const user = db.getUserById(session.userId);
+  if (!user) {
+    res.status(401).json({ error: 'Unauthorized: User account not found.' });
+    return;
+  }
+
+  (req as any).user = user;
+
   if (workspaceHeader) {
-    const allWorkspaces = db.getAllWorkspaces();
-    const matchedWs = allWorkspaces.find((w) => w.id === workspaceHeader) || allWorkspaces[0];
-    const wsOwner = matchedWs ? db.getUserById(matchedWs.ownerId) : null;
-    const defaultUser = wsOwner || db.getUsers()[0] || { id: 'usr_superadmin', name: 'Store Owner', email: 'yearinvo@gmail.com', role: 'admin', isSuperAdmin: true };
-    (req as any).user = defaultUser;
     (req as any).workspaceId = workspaceHeader;
-    return next();
+  } else {
+    const userWorkspaces = db.getWorkspacesForUser(user.id);
+    (req as any).workspaceId = userWorkspaces[0]?.id || `ws_${user.id}`;
   }
 
-  // Fallback for applet workspace queries
-  const allUsers = db.getUsers();
-  const fallbackUser = allUsers[0] || { id: 'usr_superadmin', name: 'Store Owner', email: 'yearinvo@gmail.com', role: 'admin', isSuperAdmin: true };
-  const allWs = db.getAllWorkspaces();
-  (req as any).user = fallbackUser;
-  (req as any).workspaceId = allWs[0]?.id || 'ws_demo_store';
-  next();
+  return next();
 }
 
 function superAdminMiddleware(req: Request, res: Response, next: NextFunction): void {
@@ -1685,36 +1671,9 @@ app.put('/api/orders/:id/status', authMiddleware, (req: Request, res: Response) 
 // 7.1 VOICE SALES ASSISTANT & EMAIL REPORTS
 // ==========================================
 
-// Resilient Auth Middleware for Voice Assistant & Live Reports
-// Resolves authorized user & workspace when available, and gracefully falls back to active workspace/owner
+// Voice Assistant Auth Middleware (Enforces authenticated workspace session)
 function voiceAuthMiddleware(req: Request, res: Response, next: NextFunction): void {
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.split(' ')[1];
-    const session = db.getSession(token);
-    if (session) {
-      const user = db.getUserById(session.userId);
-      if (user) {
-        (req as any).user = user;
-        const workspaceHeader = req.headers['x-workspace-id'] as string;
-        if (workspaceHeader) {
-          (req as any).workspaceId = workspaceHeader;
-        } else {
-          const userWorkspaces = db.getWorkspacesForUser(user.id);
-          (req as any).workspaceId = userWorkspaces[0]?.id || 'ws_demo_store';
-        }
-        return next();
-      }
-    }
-  }
-
-  // Graceful fallback for workspace context
-  const workspaceHeader = req.headers['x-workspace-id'] as string;
-  const allWorkspaces = db.getAllWorkspaces();
-  (req as any).workspaceId = workspaceHeader || allWorkspaces[0]?.id || 'ws_demo_store';
-  const allUsers = db.getUsers();
-  (req as any).user = allUsers[0] || { id: 'usr_superadmin', name: 'Store Owner', email: 'yearinvo@gmail.com' };
-  next();
+  return authMiddleware(req, res, next);
 }
 
 // Get real-time sales metrics for today

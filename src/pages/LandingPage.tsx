@@ -26,7 +26,7 @@ interface LandingPageProps {
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterApp }) => {
-  const { user, language, toggleLanguage } = useAuth();
+  const { user, language, toggleLanguage, logout } = useAuth();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [branding, setBranding] = useState<any>(null);
 
@@ -113,13 +113,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterApp
             </button>
 
             {user ? (
-              <button
-                onClick={onEnterApp}
-                className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-purple-600/30 hover:from-purple-500 hover:to-indigo-500 transition"
-              >
-                <span>{isBn ? 'ড্যাশবোর্ডে প্রবেশ করুন' : 'Open Workspace'}</span>
-                <ArrowRight className="h-3.5 w-3.5" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={onEnterApp}
+                  className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-purple-600/30 hover:from-purple-500 hover:to-indigo-500 transition"
+                >
+                  <span>{isBn ? 'ড্যাশবোর্ডে প্রবেশ করুন' : 'Open Workspace'}</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  onClick={logout}
+                  className="rounded-xl border border-slate-800 bg-slate-900/80 px-3 py-2 text-xs font-semibold text-rose-300 hover:border-rose-500/50 hover:bg-rose-950/30 hover:text-white transition"
+                  title="Log Out"
+                >
+                  {isBn ? 'লগআউট' : 'Log Out'}
+                </button>
+              </div>
             ) : (
               <div className="flex items-center gap-2">
                 <button
@@ -174,13 +183,31 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterApp
 
           {/* CTA Buttons */}
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-            <button
-              onClick={() => onOpenAuth('register')}
-              className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-7 py-3.5 text-sm font-bold text-white shadow-xl shadow-purple-600/40 hover:scale-[1.02] active:scale-[0.98] transition-all"
-            >
-              <span>{isBn ? 'ফ্রি শুরু করুন' : 'Get Started Free'}</span>
-              <ArrowRight className="h-4 w-4" />
-            </button>
+            {user ? (
+              <button
+                onClick={onEnterApp}
+                className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-7 py-3.5 text-sm font-bold text-white shadow-xl shadow-purple-600/40 hover:scale-[1.02] active:scale-[0.98] transition-all"
+              >
+                <span>{isBn ? 'ড্যাশবোর্ডে প্রবেশ করুন' : 'Open Workspace'}</span>
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={() => onOpenAuth('register')}
+                  className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-7 py-3.5 text-sm font-bold text-white shadow-xl shadow-purple-600/40 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                >
+                  <span>{isBn ? 'ফ্রি শুরু করুন' : 'Get Started Free'}</span>
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => onOpenAuth('login')}
+                  className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/90 px-6 py-3.5 text-sm font-semibold text-slate-200 hover:border-purple-500 hover:text-white transition"
+                >
+                  <span>{isBn ? 'লগইন করুন' : 'Log In'}</span>
+                </button>
+              </>
+            )}
             <a
               href="#features"
               className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/90 px-6 py-3.5 text-sm font-semibold text-slate-200 hover:border-purple-500 hover:text-white transition"

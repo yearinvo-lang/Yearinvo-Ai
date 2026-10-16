@@ -216,6 +216,21 @@ function MainApp() {
     );
   }
 
+  // Loading state while checking Firebase authentication session
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <YearInfoLogo size="lg" showText={true} />
+          <div className="flex items-center gap-2.5 text-purple-400 text-sm font-semibold mt-2">
+            <div className="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+            <span>YEAR INFO AI {isBn ? 'লোড হচ্ছে...' : 'Loading...'}</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // If user is not logged in or clicks "View Landing Page", show Public Landing Page
   if (!user || showLanding) {
     return (
