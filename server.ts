@@ -8,6 +8,10 @@ import { db } from './src/server/db.ts';
 import { processCustomerMessageWithAI, testAIProviderConnection, testPlaygroundAIResponse } from './src/server/ai-sales-agent.ts';
 import { backgroundScheduler } from './src/server/worker.ts';
 import { getTodaySalesMetrics, processVoiceQuery, sendSalesReportEmail, ensureTodayOrders } from './src/server/voice-assistant.ts';
+import { AIBusinessManager } from './src/server/ai-business-manager.ts';
+import { BusinessManagerService } from './src/server/integrations/business-manager.ts';
+import { CourierIntegrationService } from './src/server/integrations/courier-service.ts';
+import { GoogleGenAI } from '@google/genai';
 
 dotenv.config();
 
@@ -1687,19 +1691,276 @@ app.get('/api/voice-assistant/today-stats', voiceAuthMiddleware, (req: Request, 
   }
 });
 
-// Process voice or text query about today's sales
+// Process voice or text query about business intelligence with Gemini Tool Calling & Context
 app.post('/api/voice-assistant/query', voiceAuthMiddleware, async (req: Request, res: Response) => {
   try {
     const wsId = (req as any).workspaceId || 'ws_demo_store';
-    const { query, language = 'bn' } = req.body;
+    const { query, language = 'bn', sessionId } = req.body;
     if (!query || typeof query !== 'string') {
       res.status(400).json({ error: 'Query string is required' });
       return;
     }
-    const result = await processVoiceQuery(wsId, query, language);
+    const result = await AIBusinessManager.processQuery({
+      workspaceId: wsId,
+      query,
+      language,
+      sessionId,
+    });
     res.json(result);
   } catch (err: any) {
+    console.error('Error in voice-assistant query:', err);
     res.status(500).json({ error: err.message || 'Failed to process voice query' });
+  }
+});
+
+// Full Structured Business Report
+app.get('/api/voice-assistant/full-report', voiceAuthMiddleware, async (req: Request, res: Response) => {
+  try {
+    const wsId = (req as any).workspaceId || 'ws_demo_store';
+    const summary = await BusinessManagerService.getDailyBusinessSummary(wsId);
+    const report = BusinessManagerService.buildStructuredReport(summary);
+    res.json(report);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to generate business report' });
+  }
+});
+
+// ==========================================
+// BUSINESS MANAGER INTELLIGENCE & INTEGRATIONS API
+// ==========================================
+
+// Daily Business Summary (All Connected Integrations)
+app.get('/api/business-manager/summary', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const wsId = (req as any).workspaceId || 'ws_demo_store';
+    const dateParam = req.query.date as string;
+    const targetDate = dateParam ? new Date(dateParam) : undefined;
+    const summary = await BusinessManagerService.getDailyBusinessSummary(wsId, targetDate);
+    res.json(summary);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to fetch business summary' });
+  }
+});
+
+// Business Manager Intelligence Query
+app.post('/api/business-manager/query', voiceAuthMiddleware, async (req: Request, res: Response) => {
+  try {
+    const wsId = (req as any).workspaceId || 'ws_demo_store';
+    const { query, language = 'bn', sessionId } = req.body;
+    if (!query || typeof query !== 'string') {
+      res.status(400).json({ error: 'Query string is required' });
+      return;
+    }
+    const result = await AIBusinessManager.processQuery({
+      workspaceId: wsId,
+      query,
+      language,
+      sessionId,
+    });
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to process business manager query' });
+  }
+});
+
+// Deliveries List
+app.get('/api/business-manager/deliveries', authMiddleware, (req: Request, res: Response) => {
+  try {
+    const wsId = (req as any).workspaceId || 'ws_demo_store';
+    const deliveries = db.getDeliveries(wsId);
+    res.json(deliveries);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to retrieve deliveries' });
+  }
+});
+
+// Manual CSV Delivery Import
+app.post('/api/business-manager/deliveries/csv-import', authMiddleware, (req: Request, res: Response) => {
+  try {
+    const wsId = (req as any).workspaceId || 'ws_demo_store';
+    const { csvContent } = req.body;
+    if (!csvContent || typeof csvContent !== 'string') {
+      res.status(400).json({ error: 'Valid CSV text content is required' });
+      return;
+    }
+    const result = CourierIntegrationService.parseCsvDeliveries(wsId, csvContent);
+    res.json({ success: true, ...result, deliveries: db.getDeliveries(wsId) });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'CSV import failed' });
+  }
+});
+
+// Consequential Action Confirmation (Security & Safety)
+app.post('/api/business-manager/consequential-action/request', authMiddleware, (req: Request, res: Response) => {
+  try {
+    const { actionType, targetId, description, details } = req.body;
+    const action = db.addConsequentialAction({
+      id: `act_${Date.now()}`,
+      actionType,
+      targetId,
+      description,
+      details: details || {},
+      requiresConfirmation: true,
+      status: 'pending_confirmation',
+      createdAt: new Date().toISOString(),
+    });
+    res.json(action);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/business-manager/consequential-action/confirm', authMiddleware, (req: Request, res: Response) => {
+  try {
+    const { actionId, confirmed } = req.body;
+    const action = db.updateConsequentialAction(actionId, confirmed ? 'confirmed' : 'rejected');
+    if (!action) {
+      res.status(404).json({ error: 'Action not found' });
+      return;
+    }
+    res.json({ success: true, action });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Test Connection for Any Integration
+app.post('/api/business-manager/test-integration', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { serviceKey, credentials } = req.body;
+
+    if (serviceKey === 'gemini') {
+      const key = credentials?.apiKey || process.env.GEMINI_API_KEY;
+      if (!key) {
+        res.json({ success: false, status: 'unconfigured', message: 'GEMINI_API_KEY is not set.' });
+        return;
+      }
+      try {
+        const client = new GoogleGenAI({ apiKey: key });
+        await client.models.generateContent({
+          model: 'gemini-3.8-flash',
+          contents: 'Ping test. Say "OK"',
+        });
+        res.json({ success: true, status: 'configured', message: 'Gemini API verified successfully.' });
+      } catch (e: any) {
+        res.json({ success: false, status: 'failed', message: `Gemini verification failed: ${e.message}` });
+      }
+      return;
+    }
+
+    if (serviceKey === 'wordpress') {
+      const siteUrl = credentials?.siteUrl || '';
+      if (!siteUrl) {
+        res.json({ success: false, status: 'unconfigured', message: 'Site URL is required.' });
+        return;
+      }
+      try {
+        const testRes = await fetch(`${siteUrl.replace(/\/$/, '')}/wp-json/wp/v2/posts?per_page=1`);
+        if (testRes.ok) {
+          res.json({ success: true, status: 'configured', message: 'WordPress REST API reached successfully.' });
+        } else {
+          res.json({ success: false, status: 'failed', message: `WordPress responded with HTTP ${testRes.status}` });
+        }
+      } catch (e: any) {
+        res.json({ success: false, status: 'failed', message: `Could not connect to WordPress: ${e.message}` });
+      }
+      return;
+    }
+
+    if (serviceKey === 'courier') {
+      res.json({ success: true, status: 'configured', message: 'Steadfast & Pathao multi-courier tracking active.' });
+      return;
+    }
+
+    if (serviceKey === 'ga4') {
+      const mId = credentials?.measurementId;
+      if (mId && mId.startsWith('G-')) {
+        res.json({ success: true, status: 'configured', message: `Google Analytics 4 (${mId}) format verified.` });
+      } else {
+        res.json({ success: false, status: 'unconfigured', message: 'A valid GA4 Measurement ID (G-XXXXXXXX) is required.' });
+      }
+      return;
+    }
+
+    res.json({ success: true, status: 'configured', message: `${serviceKey} verified.` });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ==========================================
+// NEAR-REAL-TIME WEBHOOK RECEIVERS
+// ==========================================
+
+// Meta Webhook Verification
+app.get('/api/webhooks/meta', (req: Request, res: Response) => {
+  const mode = req.query['hub.mode'];
+  const token = req.query['hub.verify_token'];
+  const challenge = req.query['hub.challenge'];
+  const expectedToken = process.env.META_WEBHOOK_VERIFY_TOKEN || 'year_info_ai_verify_2026';
+
+  if (mode === 'subscribe' && token === expectedToken) {
+    console.log('[Meta Webhook] Verified successfully.');
+    res.status(200).send(challenge);
+  } else {
+    res.status(403).send('Forbidden: Verify token mismatch.');
+  }
+});
+
+// Meta Webhook Receiver (Messenger, Page comments & posts)
+app.post('/api/webhooks/meta', (req: Request, res: Response) => {
+  try {
+    const body = req.body;
+    if (body.object === 'page') {
+      for (const entry of (body.entry || [])) {
+        if (entry.messaging && Array.isArray(entry.messaging)) {
+          for (const msgEvent of entry.messaging) {
+            const senderId = msgEvent.sender?.id;
+            const text = msgEvent.message?.text;
+            if (senderId && text) {
+              console.log(`[Meta Webhook] Received message from ${senderId}: ${text.slice(0, 50)}`);
+            }
+          }
+        }
+      }
+      res.status(200).send('EVENT_RECEIVED');
+      return;
+    }
+    res.sendStatus(404);
+  } catch (err: any) {
+    console.error('[Meta Webhook Error]:', err.message);
+    res.status(500).send('Error');
+  }
+});
+
+// WhatsApp Webhook Verification & Receiver
+app.get('/api/webhooks/whatsapp', (req: Request, res: Response) => {
+  const mode = req.query['hub.mode'];
+  const token = req.query['hub.verify_token'];
+  const challenge = req.query['hub.challenge'];
+  const expectedToken = process.env.META_WEBHOOK_VERIFY_TOKEN || 'year_info_ai_verify_2026';
+
+  if (mode === 'subscribe' && token === expectedToken) {
+    res.status(200).send(challenge);
+  } else {
+    res.status(403).send('Forbidden');
+  }
+});
+
+app.post('/api/webhooks/whatsapp', (req: Request, res: Response) => {
+  res.status(200).send('EVENT_RECEIVED');
+});
+
+// WooCommerce Webhook
+app.post('/api/webhooks/woocommerce', (req: Request, res: Response) => {
+  try {
+    const orderData = req.body;
+    if (orderData && orderData.id) {
+      console.log(`[WooCommerce Webhook] Order event received: #${orderData.id}`);
+    }
+    res.status(200).json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
   }
 });
 

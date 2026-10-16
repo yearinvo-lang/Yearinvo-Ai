@@ -66,7 +66,15 @@ function MainApp() {
 
   // Navigation State
   const [currentPage, setCurrentPage] = useState<string>('overview');
-  const [showLanding, setShowLanding] = useState<boolean>(false);
+  // Always show Landing Page on initial visit or when not logged in
+  const [showLanding, setShowLanding] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    const token = localStorage.getItem('yia_token');
+    const entered = sessionStorage.getItem('yia_entered_app');
+    // If not logged in or haven't entered the workspace in this active browser session, show Landing Page first
+    if (!token || entered !== 'true') return true;
+    return false;
+  });
   const [authModalOpen, setAuthModalOpen] = useState<boolean>(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
   const [onboardingOpen, setOnboardingOpen] = useState<boolean>(false);
@@ -240,13 +248,22 @@ function MainApp() {
             setAuthModalMode(mode);
             setAuthModalOpen(true);
           }}
-          onEnterApp={() => setShowLanding(false)}
+          onEnterApp={() => {
+            if (user) {
+              sessionStorage.setItem('yia_entered_app', 'true');
+              setShowLanding(false);
+            } else {
+              setAuthModalMode('login');
+              setAuthModalOpen(true);
+            }
+          }}
         />
         <AuthModal
           isOpen={authModalOpen}
           initialMode={authModalMode}
           onClose={() => setAuthModalOpen(false)}
           onSuccess={(isNewUser) => {
+            sessionStorage.setItem('yia_entered_app', 'true');
             setAuthModalOpen(false);
             setShowLanding(false);
             if (isNewUser) {
@@ -360,7 +377,10 @@ function MainApp() {
         {/* Sidebar Footer User & Landing Switch */}
         <div className="p-3 border-t border-slate-200 dark:border-purple-500/20 bg-slate-50 dark:bg-slate-950/80 shrink-0 space-y-2">
           <button
-            onClick={() => setShowLanding(true)}
+            onClick={() => {
+              sessionStorage.removeItem('yia_entered_app');
+              setShowLanding(true);
+            }}
             className="flex w-full items-center justify-between rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:border-purple-500 hover:text-purple-600 dark:hover:text-white transition shadow-sm"
           >
             <span className="flex items-center gap-2">

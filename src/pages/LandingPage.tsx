@@ -518,7 +518,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterApp
                   <span className="text-xs text-slate-400">/ month (${plan.usd})</span>
                 </div>
                 <button
-                  onClick={() => onOpenAuth('register')}
+                  onClick={() => (user ? onEnterApp() : onOpenAuth('register'))}
                   className={`mt-6 w-full rounded-xl py-2.5 text-xs font-bold transition ${
                     plan.featured
                       ? 'bg-purple-600 text-white hover:bg-purple-500 shadow-lg shadow-purple-600/30'

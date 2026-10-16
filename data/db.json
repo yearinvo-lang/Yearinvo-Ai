@@ -108,9 +108,27 @@
       "createdAt": "2026-10-16T03:28:53.076Z",
       "passwordHash": "237c63473eb4c5c697646ac30944d5dee058a6cb67e5d9a4c01240f2116f90924f2540d4aaee86f163cc9ec1b1d4e4707aa7e4ba1ce9c3f887b36506968efe9b",
       "salt": "21e7250d309970645e2c7c4a2e7486a8"
+    },
+    {
+      "id": "usr_1792167925486_nn2t48",
+      "name": "testowner",
+      "email": "testowner@example.com",
+      "businessName": "testowner's Business",
+      "phone": "",
+      "role": "admin",
+      "isSuperAdmin": false,
+      "createdAt": "2026-10-16T16:25:25.486Z",
+      "passwordHash": "3989ba6f38579eb23eca187099f6604ff7f653a8f54598116371737d753acbdca4aba224c1bd95c8639324f652c9d6f00aa649e7cf034547085dbc267af9c563",
+      "salt": "38cba321ec50a7779e968b2bb5785cdf"
     }
   ],
-  "sessions": [],
+  "sessions": [
+    {
+      "token": "adc32c5b7e26c60fab039debedbd332bdf26aabf5be911870f508f49a95b8f64",
+      "userId": "usr_1792167925486_nn2t48",
+      "expiresAt": 1792772725488
+    }
+  ],
   "workspaces": [
     {
       "id": "ws_demo_store",
@@ -225,6 +243,18 @@
       "timezone": "Asia/Dhaka",
       "language": "both",
       "createdAt": "2026-10-16T03:28:53.076Z"
+    },
+    {
+      "id": "ws_1792167925487",
+      "name": "testowner's Store",
+      "slug": "testowner-5487",
+      "ownerId": "usr_1792167925486_nn2t48",
+      "businessType": "Retail & E-commerce",
+      "phone": "",
+      "currency": "BDT",
+      "timezone": "Asia/Dhaka",
+      "language": "both",
+      "createdAt": "2026-10-16T16:25:25.487Z"
     }
   ],
   "workspaceMembers": [
@@ -271,6 +301,11 @@
     {
       "workspaceId": "ws_1792121333076",
       "userId": "fb_test_uid_123",
+      "role": "owner"
+    },
+    {
+      "workspaceId": "ws_1792167925487",
+      "userId": "usr_1792167925486_nn2t48",
       "role": "owner"
     }
   ],
@@ -661,6 +696,48 @@
       "status": "not_connected",
       "metadata": {
         "widgetKey": "yia_widget_ws_1792121333076"
+      }
+    },
+    {
+      "id": "ch_facebook_ws_1792167925487",
+      "workspaceId": "ws_1792167925487",
+      "type": "facebook",
+      "name": "Facebook Pages",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_messenger_ws_1792167925487",
+      "workspaceId": "ws_1792167925487",
+      "type": "messenger",
+      "name": "Facebook Messenger",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_instagram_ws_1792167925487",
+      "workspaceId": "ws_1792167925487",
+      "type": "instagram",
+      "name": "Instagram",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_whatsapp_ws_1792167925487",
+      "workspaceId": "ws_1792167925487",
+      "type": "whatsapp",
+      "name": "WhatsApp Business",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_livechat_ws_1792167925487",
+      "workspaceId": "ws_1792167925487",
+      "type": "livechat",
+      "name": "Website Live Chat",
+      "status": "not_connected",
+      "metadata": {
+        "widgetKey": "yia_widget_ws_1792167925487"
       }
     }
   ],
@@ -1591,6 +1668,28 @@
       "enableDirectOrderCreation": true,
       "customGreetingBn": "আসসালামু আলাইকুম! testuser's Store-এ আপনাকে স্বাগতম। আমি কীভাবে সহযোগিতা করতে পারি?",
       "customGreetingEn": "Welcome to testuser's Store! How may I help you today?"
+    },
+    {
+      "workspaceId": "ws_1792167925487",
+      "enabled": false,
+      "model": "gemini-3.8-flash",
+      "brandVoice": "friendly",
+      "languageMode": "auto_detect",
+      "autoReplyChannels": [],
+      "businessHoursOnly": false,
+      "businessHoursStart": "09:00",
+      "businessHoursEnd": "22:00",
+      "humanTakeoverKeywords": [
+        "human",
+        "agent",
+        "support",
+        "manush",
+        "kotha bolbo"
+      ],
+      "confidenceThreshold": 0.75,
+      "enableDirectOrderCreation": true,
+      "customGreetingBn": "আসসালামু আলাইকুম! testowner's Store-এ আপনাকে স্বাগতম। আমি কীভাবে সহযোগিতা করতে পারি?",
+      "customGreetingEn": "Welcome to testowner's Store! How may I help you today?"
     }
   ],
   "knowledgeItems": [
@@ -2135,5 +2234,88 @@
     "rateLimitPerMinute": 120,
     "webhookSecret": "whsec_yia_live_2026",
     "autoBackupEnabled": true
-  }
+  },
+  "deliveries": [
+    {
+      "id": "del_1",
+      "workspaceId": "ws_demo_store",
+      "orderId": "ord_today_1",
+      "orderNumber": "YIA-2026-201",
+      "courierProvider": "steadfast",
+      "trackingCode": "STEAD-90821-DH",
+      "consignmentId": "CSG-8812",
+      "recipientName": "Tanvir Hossain",
+      "recipientPhone": "01712998877",
+      "recipientAddress": "House 12, Road 4, Dhanmondi, Dhaka",
+      "codAmount": 2220,
+      "codCollected": true,
+      "status": "delivered",
+      "statusDetails": "Delivered to recipient. Cash collected.",
+      "dispatchedAt": "2026-10-16T10:25:04.901Z",
+      "deliveredAt": "2026-10-16T15:25:04.901Z",
+      "lastSyncAt": "2026-10-16T16:25:04.901Z",
+      "createdAt": "2026-10-16T10:25:04.901Z",
+      "updatedAt": "2026-10-16T16:25:04.901Z"
+    },
+    {
+      "id": "del_2",
+      "workspaceId": "ws_demo_store",
+      "orderId": "ord_today_2",
+      "orderNumber": "YIA-2026-202",
+      "courierProvider": "pathao",
+      "trackingCode": "PTH-77123-DHK",
+      "consignmentId": "PTH-CON-042",
+      "recipientName": "Nusrat Jahan",
+      "recipientPhone": "01855667788",
+      "recipientAddress": "Flat 5B, Green Road, Dhanmondi, Dhaka",
+      "codAmount": 0,
+      "codCollected": false,
+      "status": "in_transit",
+      "statusDetails": "Rider picked up parcel. Out for delivery.",
+      "dispatchedAt": "2026-10-16T14:25:04.901Z",
+      "lastSyncAt": "2026-10-16T16:25:04.901Z",
+      "createdAt": "2026-10-16T13:25:04.901Z",
+      "updatedAt": "2026-10-16T16:25:04.901Z"
+    },
+    {
+      "id": "del_3",
+      "workspaceId": "ws_demo_store",
+      "orderId": "ord_today_3",
+      "orderNumber": "YIA-2026-203",
+      "courierProvider": "steadfast",
+      "trackingCode": "STEAD-90829-MR",
+      "consignmentId": "CSG-8819",
+      "recipientName": "Kamrul Hasan",
+      "recipientPhone": "01911223344",
+      "recipientAddress": "Mirpur DOHS, Road 9, Dhaka",
+      "codAmount": 1320,
+      "codCollected": false,
+      "status": "pending_pickup",
+      "statusDetails": "Consignment created. Awaiting courier pickup.",
+      "lastSyncAt": "2026-10-16T16:25:04.901Z",
+      "createdAt": "2026-10-16T15:25:04.901Z",
+      "updatedAt": "2026-10-16T16:25:04.901Z"
+    },
+    {
+      "id": "del_4",
+      "workspaceId": "ws_demo_store",
+      "orderId": "ord_prev_1",
+      "orderNumber": "YIA-2026-199",
+      "courierProvider": "redx",
+      "trackingCode": "REDX-44102-CTG",
+      "consignmentId": "RDX-9128",
+      "recipientName": "Sabbir Ahmed",
+      "recipientPhone": "01688776655",
+      "recipientAddress": "GEC Circle, Chittagong",
+      "codAmount": 3450,
+      "codCollected": false,
+      "status": "attempted_failed",
+      "statusDetails": "Customer phone unreachable on 1st attempt. Rescheduled.",
+      "dispatchedAt": "2026-10-15T16:25:04.901Z",
+      "lastSyncAt": "2026-10-16T16:25:04.901Z",
+      "createdAt": "2026-10-15T16:25:04.901Z",
+      "updatedAt": "2026-10-16T16:25:04.901Z"
+    }
+  ],
+  "consequentialActions": []
 }

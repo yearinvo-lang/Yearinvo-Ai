@@ -27,6 +27,8 @@ import type {
   PlatformFeatureFlags,
   PaymentRecord,
   AdminNotification,
+  CourierDelivery,
+  ConsequentialActionRequest,
 } from '../types/index.ts';
 
 interface DBState {
@@ -41,6 +43,8 @@ interface DBState {
   internalNotes: InternalNote[];
   products: Product[];
   orders: Order[];
+  deliveries: CourierDelivery[];
+  consequentialActions: ConsequentialActionRequest[];
   aiSettings: AISettings[];
   knowledgeItems: KnowledgeItem[];
   aiUsageRecords: AIUsageRecord[];
@@ -75,6 +79,8 @@ class DatabaseStore {
     internalNotes: [],
     products: [],
     orders: [],
+    deliveries: [],
+    consequentialActions: [],
     aiSettings: [],
     knowledgeItems: [],
     aiUsageRecords: [],
@@ -237,6 +243,98 @@ class DatabaseStore {
         }
         if (!this.data.adminNotifications || this.data.adminNotifications.length === 0) {
           this.seedAdminNotifications();
+          needsPersist = true;
+        }
+        if (!this.data.deliveries || this.data.deliveries.length === 0) {
+          const now = new Date();
+          const todayIso = now.toISOString();
+          const demoWsId = this.data.workspaces[0]?.id || 'ws_demo_store';
+          this.data.deliveries = [
+            {
+              id: 'del_1',
+              workspaceId: demoWsId,
+              orderId: 'ord_today_1',
+              orderNumber: 'YIA-2026-201',
+              courierProvider: 'steadfast',
+              trackingCode: 'STEAD-90821-DH',
+              consignmentId: 'CSG-8812',
+              recipientName: 'Tanvir Hossain',
+              recipientPhone: '01712998877',
+              recipientAddress: 'House 12, Road 4, Dhanmondi, Dhaka',
+              codAmount: 2220,
+              codCollected: true,
+              status: 'delivered',
+              statusDetails: 'Delivered to recipient. Cash collected.',
+              dispatchedAt: new Date(now.getTime() - 3600000 * 6).toISOString(),
+              deliveredAt: new Date(now.getTime() - 3600000 * 1).toISOString(),
+              lastSyncAt: todayIso,
+              createdAt: new Date(now.getTime() - 3600000 * 6).toISOString(),
+              updatedAt: todayIso,
+            },
+            {
+              id: 'del_2',
+              workspaceId: demoWsId,
+              orderId: 'ord_today_2',
+              orderNumber: 'YIA-2026-202',
+              courierProvider: 'pathao',
+              trackingCode: 'PTH-77123-DHK',
+              consignmentId: 'PTH-CON-042',
+              recipientName: 'Nusrat Jahan',
+              recipientPhone: '01855667788',
+              recipientAddress: 'Flat 5B, Green Road, Dhanmondi, Dhaka',
+              codAmount: 0,
+              codCollected: false,
+              status: 'in_transit',
+              statusDetails: 'Rider picked up parcel. Out for delivery.',
+              dispatchedAt: new Date(now.getTime() - 3600000 * 2).toISOString(),
+              lastSyncAt: todayIso,
+              createdAt: new Date(now.getTime() - 3600000 * 3).toISOString(),
+              updatedAt: todayIso,
+            },
+            {
+              id: 'del_3',
+              workspaceId: demoWsId,
+              orderId: 'ord_today_3',
+              orderNumber: 'YIA-2026-203',
+              courierProvider: 'steadfast',
+              trackingCode: 'STEAD-90829-MR',
+              consignmentId: 'CSG-8819',
+              recipientName: 'Kamrul Hasan',
+              recipientPhone: '01911223344',
+              recipientAddress: 'Mirpur DOHS, Road 9, Dhaka',
+              codAmount: 1320,
+              codCollected: false,
+              status: 'pending_pickup',
+              statusDetails: 'Consignment created. Awaiting courier pickup.',
+              lastSyncAt: todayIso,
+              createdAt: new Date(now.getTime() - 3600000 * 1).toISOString(),
+              updatedAt: todayIso,
+            },
+            {
+              id: 'del_4',
+              workspaceId: demoWsId,
+              orderId: 'ord_prev_1',
+              orderNumber: 'YIA-2026-199',
+              courierProvider: 'redx',
+              trackingCode: 'REDX-44102-CTG',
+              consignmentId: 'RDX-9128',
+              recipientName: 'Sabbir Ahmed',
+              recipientPhone: '01688776655',
+              recipientAddress: 'GEC Circle, Chittagong',
+              codAmount: 3450,
+              codCollected: false,
+              status: 'attempted_failed',
+              statusDetails: 'Customer phone unreachable on 1st attempt. Rescheduled.',
+              dispatchedAt: new Date(now.getTime() - 86400000).toISOString(),
+              lastSyncAt: todayIso,
+              createdAt: new Date(now.getTime() - 86400000).toISOString(),
+              updatedAt: todayIso,
+            },
+          ];
+          needsPersist = true;
+        }
+        if (!this.data.consequentialActions) {
+          this.data.consequentialActions = [];
           needsPersist = true;
         }
         if (!this.data.systemSettings) {
@@ -1251,6 +1349,81 @@ class DatabaseStore {
     return null;
   }
 
+  // --- DELIVERIES ---
+  public getDeliveries(workspaceId: string): CourierDelivery[] {
+    this.data.deliveries = this.data.deliveries || [];
+    return this.data.deliveries
+      .filter((d) => d.workspaceId === workspaceId)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  public getDelivery(id: string): CourierDelivery | undefined {
+    this.data.deliveries = this.data.deliveries || [];
+    return this.data.deliveries.find((d) => d.id === id);
+  }
+
+  public getDeliveryByOrderId(orderId: string): CourierDelivery | undefined {
+    this.data.deliveries = this.data.deliveries || [];
+    return this.data.deliveries.find((d) => d.orderId === orderId);
+  }
+
+  public addDelivery(delivery: CourierDelivery): CourierDelivery {
+    this.data.deliveries = this.data.deliveries || [];
+    this.data.deliveries.unshift(delivery);
+    this.persist();
+    return delivery;
+  }
+
+  public updateDelivery(id: string, updates: Partial<CourierDelivery>): CourierDelivery | null {
+    this.data.deliveries = this.data.deliveries || [];
+    const idx = this.data.deliveries.findIndex((d) => d.id === id);
+    if (idx !== -1) {
+      this.data.deliveries[idx] = {
+        ...this.data.deliveries[idx],
+        ...updates,
+        updatedAt: new Date().toISOString(),
+      };
+      this.persist();
+      return this.data.deliveries[idx];
+    }
+    return null;
+  }
+
+  public deleteDelivery(id: string): boolean {
+    this.data.deliveries = this.data.deliveries || [];
+    const initialLen = this.data.deliveries.length;
+    this.data.deliveries = this.data.deliveries.filter((d) => d.id !== id);
+    if (this.data.deliveries.length !== initialLen) {
+      this.persist();
+      return true;
+    }
+    return false;
+  }
+
+  // --- CONSEQUENTIAL ACTIONS (SAFE CONFIRMATION) ---
+  public getConsequentialActions(workspaceId?: string): ConsequentialActionRequest[] {
+    this.data.consequentialActions = this.data.consequentialActions || [];
+    return this.data.consequentialActions;
+  }
+
+  public addConsequentialAction(action: ConsequentialActionRequest): ConsequentialActionRequest {
+    this.data.consequentialActions = this.data.consequentialActions || [];
+    this.data.consequentialActions.unshift(action);
+    this.persist();
+    return action;
+  }
+
+  public updateConsequentialAction(id: string, status: ConsequentialActionRequest['status']): ConsequentialActionRequest | null {
+    this.data.consequentialActions = this.data.consequentialActions || [];
+    const action = this.data.consequentialActions.find((a) => a.id === id);
+    if (action) {
+      action.status = status;
+      this.persist();
+      return action;
+    }
+    return null;
+  }
+
   // AI Settings & Knowledge Base
   public getAISettings(workspaceId: string): AISettings | undefined {
     return this.data.aiSettings.find((s) => s.workspaceId === workspaceId);
@@ -1504,6 +1677,56 @@ class DatabaseStore {
         lastTestedAt: new Date().toISOString(),
         lastTestStatus: 'untested',
         metadata: { mode: 'sandbox' },
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: 'integ_wordpress',
+        serviceKey: 'wordpress',
+        name: 'WordPress & WooCommerce REST API',
+        purpose: 'Direct e-commerce orders sync, stock levels, blog posts publishing and customer comments tracking.',
+        status: 'unconfigured',
+        isEnabled: false,
+        lastTestedAt: new Date().toISOString(),
+        lastTestStatus: 'untested',
+        metadata: {
+          siteUrl: '',
+          consumerKeyConfigured: false,
+          wooCommerceDetected: false,
+          endpoint: '/wp-json/wc/v3',
+        },
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: 'integ_courier',
+        serviceKey: 'courier',
+        name: 'Courier & Logistics Dispatch (Steadfast, Pathao, RedX, CSV)',
+        purpose: 'Real-time multi-courier tracking, consignment status, delivery confirmation and COD auditing.',
+        status: 'configured',
+        isEnabled: true,
+        maskedFingerprint: 'Steadfast / Pathao / CSV Active',
+        lastTestedAt: new Date().toISOString(),
+        lastTestStatus: 'success',
+        metadata: {
+          activeProviders: ['steadfast', 'pathao', 'manual'],
+          supportsCsvImport: true,
+          defaultProvider: 'steadfast',
+        },
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: 'integ_ga4',
+        serviceKey: 'ga4',
+        name: 'Google Analytics 4 (Web Traffic & Conversions)',
+        purpose: 'Website live traffic sessions, visitors today, bounce rates and real conversion attribution.',
+        status: 'unconfigured',
+        isEnabled: false,
+        lastTestedAt: new Date().toISOString(),
+        lastTestStatus: 'untested',
+        metadata: {
+          propertyId: '',
+          measurementId: '',
+          requiresConnection: true,
+        },
         updatedAt: new Date().toISOString(),
       },
     ];

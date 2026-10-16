@@ -352,10 +352,10 @@ export interface AIProviderConfig {
 
 export interface GlobalIntegrationConfig {
   id: string;
-  serviceKey: 'gemini' | 'meta' | 'whatsapp' | 'custom_ai' | 'smtp' | 'stripe';
+  serviceKey: 'gemini' | 'meta' | 'whatsapp' | 'custom_ai' | 'smtp' | 'stripe' | 'wordpress' | 'courier' | 'ga4';
   name: string;
   purpose: string;
-  status: 'configured' | 'unconfigured' | 'needs_verification';
+  status: 'configured' | 'unconfigured' | 'needs_verification' | 'blocked';
   isEnabled: boolean;
   maskedFingerprint?: string;
   lastTestedAt?: string;
@@ -446,4 +446,225 @@ export interface AdminNotification {
   read: boolean;
   createdAt: string;
   targetId?: string;
+}
+
+// ==========================================
+// BUSINESS MANAGER & COURIER/INTEGRATION TYPES
+// ==========================================
+
+export type DeliveryStatus = 'pending_pickup' | 'in_transit' | 'delivered' | 'attempted_failed' | 'returned' | 'cancelled';
+export type CourierProvider = 'steadfast' | 'pathao' | 'redx' | 'ecourier' | 'paperfly' | 'manual';
+
+export interface CourierDelivery {
+  id: string;
+  workspaceId: string;
+  orderId: string;
+  orderNumber: string;
+  courierProvider: CourierProvider;
+  trackingCode: string;
+  consignmentId?: string;
+  recipientName: string;
+  recipientPhone: string;
+  recipientAddress: string;
+  codAmount: number;
+  codCollected: boolean;
+  status: DeliveryStatus;
+  statusDetails?: string;
+  dispatchedAt?: string;
+  deliveredAt?: string;
+  lastSyncAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FacebookPagePostMetrics {
+  id: string;
+  message?: string;
+  story?: string;
+  createdTime: string;
+  publishedToday: boolean;
+  permalinkUrl?: string;
+  commentsCount: number;
+  reactionsCount: number;
+  sharesCount: number;
+  reach?: number;
+  impressions?: number;
+}
+
+export interface FacebookBusinessMetrics {
+  isConnected: boolean;
+  permissionStatus: 'granted' | 'needs_review' | 'blocked' | 'disconnected';
+  grantedPermissions: string[];
+  pageName?: string;
+  pageId?: string;
+  newConversationsToday: number;
+  totalIncomingMessagesToday: number;
+  uniqueCustomersToday: number;
+  unreadOrUnansweredCount: number;
+  postsPublishedToday: number;
+  commentsReceivedToday: number;
+  topCommentedPost?: {
+    id: string;
+    caption: string;
+    commentsCount: number;
+    sharesCount: number;
+    permalinkUrl?: string;
+    publishedAt: string;
+  };
+  leadsOrInquiriesToday: number;
+  lastSyncAt: string;
+  error?: string;
+}
+
+export interface WordPressBusinessMetrics {
+  isConnected: boolean;
+  siteUrl?: string;
+  isWooCommerceDetected: boolean;
+  publishedPostsToday: number;
+  recentCommentsToday: number;
+  siteHealthStatus: 'good' | 'warning' | 'error' | 'disconnected';
+  activeErrors: string[];
+  wooCommerceStats?: {
+    ordersToday: number;
+    grossSalesToday: number;
+    netSalesToday: number;
+    refundsToday: number;
+    discountsToday: number;
+    topProductsSold: { name: string; quantity: number }[];
+  };
+  lastSyncAt: string;
+  error?: string;
+}
+
+export interface CourierTrackingSummary {
+  isConnected: boolean;
+  activeProviders: CourierProvider[];
+  totalShipments: number;
+  deliveredToday: number;
+  inTransit: number;
+  pendingPickup: number;
+  attemptedOrFailed: number;
+  returnedOrCancelled: number;
+  codCollectedToday: number;
+  codPending: number;
+  deliveries: CourierDelivery[];
+  lastSyncAt: string;
+  error?: string;
+}
+
+export interface WebsiteAnalyticsMetrics {
+  isConnected: boolean;
+  provider: 'ga4' | 'custom' | 'none';
+  measurementId?: string;
+  activeVisitorsNow?: number;
+  totalVisitorsToday?: number;
+  pageViewsToday?: number;
+  bounceRatePercent?: number;
+  conversionRatePercent?: number;
+  status: 'connected' | 'not_connected';
+  note: string;
+}
+
+export interface DailyBusinessMetrics {
+  date: string; // YYYY-MM-DD
+  dateBangla: string;
+  timezone: string; // 'Asia/Dhaka'
+  generatedAt: string;
+
+  // 1. Sales & Revenue
+  sales: {
+    totalSales: number; // Gross
+    netSales: number;
+    discountsTotal: number;
+    refundsTotal: number;
+    completedRevenue: number;
+    pendingRevenue: number;
+    averageOrderValue: number;
+    yesterdayTotalSales: number;
+    growthPercentVsYesterday: number;
+  };
+
+  // 2. Orders & Order Status Breakdown
+  orders: {
+    totalOrdersToday: number;
+    completed: number;
+    confirmed: number;
+    processing: number;
+    pending: number;
+    cancelled: number;
+    failed: number;
+    yesterdayTotalOrders: number;
+    growthPercentVsYesterday: number;
+    topProductsToday: { name: string; sku?: string; quantity: number; revenue: number }[];
+    unfulfilledOrdersCount: number;
+  };
+
+  // 3. Deliveries
+  deliveries: CourierTrackingSummary;
+
+  // 4. Facebook & Messenger
+  facebook: FacebookBusinessMetrics;
+
+  // 5. Website & WordPress
+  website: WordPressBusinessMetrics;
+
+  // 6. Web Analytics (GA4)
+  analytics: WebsiteAnalyticsMetrics;
+
+  // 7. Problems & Attention Items
+  problemsRequiringAttention: {
+    id: string;
+    severity: 'high' | 'medium' | 'low';
+    category: 'orders' | 'messages' | 'deliveries' | 'integrations' | 'system';
+    title: string;
+    description: string;
+    actionLink?: string;
+  }[];
+
+  // 8. Suggested Next Actions
+  suggestedNextActions: {
+    priority: number;
+    action: string;
+    reason: string;
+  }[];
+
+  // Service connection overview
+  connectedServices: {
+    meta: { status: 'connected' | 'disconnected' | 'blocked'; lastSync?: string };
+    woocommerce: { status: 'connected' | 'disconnected' | 'blocked'; lastSync?: string };
+    courier: { status: 'connected' | 'disconnected' | 'blocked'; lastSync?: string };
+    ga4: { status: 'connected' | 'disconnected' | 'blocked'; lastSync?: string };
+    gemini: { status: 'connected' | 'disconnected' | 'blocked'; lastSync?: string };
+  };
+}
+
+export interface BusinessManagerStructuredReport {
+  title: string;
+  dateBangla: string;
+  dateStr: string;
+  summaryPreamble: string;
+  sections: {
+    salesRevenue: { title: string; content: string; keyFigures: string[] };
+    ordersCancellations: { title: string; content: string; keyFigures: string[] };
+    facebookMessenger: { title: string; content: string; keyFigures: string[] };
+    postsComments: { title: string; content: string; keyFigures: string[] };
+    deliveryStatus: { title: string; content: string; keyFigures: string[] };
+    websiteWordPress: { title: string; content: string; keyFigures: string[] };
+    problemsRequiringAttention: { title: string; items: string[] };
+    suggestedNextActions: { title: string; items: string[] };
+  };
+  fullBanglaReportText: string;
+  fullEnglishReportText: string;
+  speechText: string;
+}
+
+export interface ConsequentialActionRequest {
+  id: string;
+  actionType: 'send_broadcast_message' | 'delete_post' | 'cancel_order' | 'refund_order' | 'disconnect_channel';
+  targetId: string;
+  description: string;
+  details: Record<string, any>;
+  requiresConfirmation: boolean;
+  status: 'pending_confirmation' | 'confirmed' | 'rejected' | 'executed';
+  createdAt: string;
 }

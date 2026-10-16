@@ -436,6 +436,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('yia_token');
     localStorage.removeItem('yia_cached_user');
     localStorage.removeItem('yia_cached_workspace');
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('yia_entered_app');
+    }
   };
 
   const setActiveWorkspace = (ws: Workspace) => {
