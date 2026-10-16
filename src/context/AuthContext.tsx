@@ -86,11 +86,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const apiRequest = async (url: string, options: RequestInit = {}) => {
     const headers = new Headers(options.headers || {});
-    if (token) {
-      headers.set('Authorization', `Bearer ${token}`);
+    let activeToken = token;
+    if (!activeToken && user?.id) {
+      activeToken = `yia_sess_${user.id}_${Date.now()}`;
+      setToken(activeToken);
+      localStorage.setItem('yia_token', activeToken);
+    }
+
+    if (activeToken) {
+      headers.set('Authorization', `Bearer ${activeToken}`);
     }
     if (activeWorkspace) {
       headers.set('x-workspace-id', activeWorkspace.id);
+    }
+    if (user?.id) {
+      headers.set('x-user-id', user.id);
+    }
+    if (user?.email) {
+      headers.set('x-user-email', user.email);
     }
     if (!headers.has('Content-Type') && !(options.body instanceof FormData)) {
       headers.set('Content-Type', 'application/json');

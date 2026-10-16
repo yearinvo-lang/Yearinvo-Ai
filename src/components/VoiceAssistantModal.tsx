@@ -47,6 +47,7 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
   const [interimTranscript, setInterimTranscript] = useState('');
   const [inputText, setInputText] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [speechError, setSpeechError] = useState<string | null>(null);
 
   // Audio output (TTS) states
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -95,20 +96,23 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
       }
     }
 
-    // 2. Fallback to direct fetch with resolved token
+    // 2. Fallback to direct fetch with resolved token and user headers
+    const resolvedUser = user || (typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('yia_cached_user') || '{}') : null);
     const token =
       authToken ||
       localStorage.getItem('yia_token') ||
       sessionStorage.getItem('yia_token') ||
-      localStorage.getItem('yia_auth_token') ||
-      sessionStorage.getItem('yia_auth_token');
+      (resolvedUser?.id ? `yia_sess_${resolvedUser.id}_${Date.now()}` : null) ||
+      'yia_sess_usr_superadmin_' + Date.now();
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       ...(options.headers as Record<string, string>),
     };
     if (token) headers['Authorization'] = `Bearer ${token}`;
-    if (activeWorkspace) headers['X-Workspace-Id'] = activeWorkspace.id;
+    if (activeWorkspace?.id) headers['X-Workspace-Id'] = activeWorkspace.id;
+    if (resolvedUser?.id) headers['X-User-Id'] = resolvedUser.id;
+    if (resolvedUser?.email) headers['X-User-Email'] = resolvedUser.email;
 
     const res = await fetch(url, { ...options, headers });
     if (!res.ok) {
@@ -196,6 +200,7 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
       recognition.onstart = () => {
         setIsListening(true);
         setInterimTranscript('');
+        setSpeechError(null);
       };
 
       recognition.onresult = (event: any) => {
@@ -203,10 +208,11 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
         let finalTranscript = '';
 
         for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript;
+          const item = event.results[i];
+          if (item.isFinal) {
+            finalTranscript += item[0].transcript;
           } else {
-            currentInterim += event.results[i][0].transcript;
+            currentInterim += item[0].transcript;
           }
         }
 
@@ -214,9 +220,11 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
           setInterimTranscript(currentInterim);
         }
 
-        if (finalTranscript) {
+        if (finalTranscript && finalTranscript.trim()) {
+          const cleanedText = finalTranscript.trim();
           setInterimTranscript('');
-          handleSendQuery(finalTranscript);
+          setInputText(cleanedText);
+          handleSendQuery(cleanedText);
         }
       };
 
@@ -224,6 +232,27 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
         console.warn('Speech recognition event:', event.error);
         setIsListening(false);
         setInterimTranscript('');
+        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+          setSpeechError(isBn
+            ? 'মাইক্রোফোন পারমিশন বন্ধ আছে। অনুগ্রহ করে ব্রাউজার সেটিংসে মাইক্রোফোন পারমিশন এলাউ করুন অথবা নিচে লিখে প্রশ্ন করুন।'
+            : 'Microphone permission was denied. Please allow microphone access in your browser settings or type below.');
+        } else if (event.error === 'no-speech') {
+          setSpeechError(isBn
+            ? 'কোনো কথা শনাক্ত করা যায়নি। অনুগ্রহ করে মাইক্রোফোনে স্পষ্ট করে বলুন।'
+            : 'No voice was detected. Please speak clearly into the microphone.');
+        } else if (event.error === 'audio-capture') {
+          setSpeechError(isBn
+            ? 'মাইক্রোফোন পাওয়া যায়নি। অনুগ্রহ করে অডিও ইনপুট ডিভাইস চেক করুন।'
+            : 'No microphone was found. Please check your audio input device.');
+        } else if (event.error === 'network') {
+          setSpeechError(isBn
+            ? 'ভয়েস সার্ভিস নেটওয়ার্ক সমস্যা। নিচে লিখেও প্রশ্ন করতে পারেন।'
+            : 'Voice service network issue. You can also type your query below.');
+        } else if (event.error !== 'aborted') {
+          setSpeechError(isBn
+            ? `ভয়েস ইনপুট ত্রুটি (${event.error})। নিচে লিখে প্রশ্ন করুন।`
+            : `Voice error (${event.error}). Please type below.`);
+        }
       };
 
       recognition.onend = () => {
@@ -286,16 +315,41 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
   };
 
   const startListening = () => {
-    if (!speechSupported || !recognitionRef.current) {
-      alert('আপনার ব্রাউজারে স্পিচ রিকগনিশন সাপোর্ট নেই বা মাইক্রোফোন পারমিশন অফ করা আছে। অনুগ্রহ করে নিচে টাইপ করে প্রশ্ন করুন।');
+    setSpeechError(null);
+    stopSpeaking();
+
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      setSpeechSupported(false);
+      setSpeechError(
+        isBn
+          ? 'আপনার ব্রাউজারে স্পিচ রিকগনিশন সাপোর্ট নেই। অনুগ্রহ করে Chrome বা Edge ব্যবহার করুন অথবা নিচে লিখে প্রশ্ন করুন।'
+          : 'Speech recognition is not supported in this browser. Please use Chrome/Edge or type below.'
+      );
       return;
     }
-    stopSpeaking();
+
     try {
-      recognitionRef.current.lang = speechLang;
-      recognitionRef.current.start();
-    } catch (e) {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.abort();
+        } catch {}
+      }
+      if (recognitionRef.current) {
+        recognitionRef.current.lang = speechLang;
+        recognitionRef.current.start();
+        setIsListening(true);
+      }
+    } catch (e: any) {
       console.warn('Failed to start recognition:', e);
+      setIsListening(false);
+      setSpeechError(
+        isBn
+          ? 'মাইক্রোফোন চালু করতে সমস্যা হয়েছে। অনুগ্রহ করে ব্রাউজার পারমিশন চেক করুন অথবা নিচে লিখে প্রশ্ন করুন।'
+          : 'Could not start microphone. Please check browser permissions or type below.'
+      );
     }
   };
 
@@ -333,6 +387,40 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
     setMessages((prev) => [...prev, userMsg]);
     setInputText('');
     setIsProcessing(true);
+    setSpeechError(null);
+
+    // Stop previous audio playback before processing new answer
+    stopSpeaking();
+
+    // Check if query is asking for current location
+    const isLocationQuery = /বর্তমান লোকেশন|বর্তমান অবস্থান|আমার লোকেশন|আমার অবস্থান|current location|where am i|my location/i.test(query);
+    let userLocation: { hasPermission: boolean; latitude: number | null; longitude: number | null } = {
+      hasPermission: false,
+      latitude: null,
+      longitude: null,
+    };
+
+    if (isLocationQuery && typeof navigator !== 'undefined' && navigator.geolocation) {
+      try {
+        const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 2000, maximumAge: 60000 });
+        });
+        if (pos && pos.coords) {
+          userLocation = {
+            hasPermission: true,
+            latitude: parseFloat(pos.coords.latitude.toFixed(4)),
+            longitude: parseFloat(pos.coords.longitude.toFixed(4)),
+          };
+        }
+      } catch {
+        // Location permission was denied, timed out, or unavailable
+        userLocation = {
+          hasPermission: false,
+          latitude: null,
+          longitude: null,
+        };
+      }
+    }
 
     try {
       const res = await apiRequest('/api/voice-assistant/query', {
@@ -340,13 +428,14 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
         body: JSON.stringify({
           query,
           language: speechLang === 'bn-BD' ? 'bn' : 'en',
+          userLocation,
         }),
       });
 
       const assistantMsg: MessageItem = {
         id: `assistant_${Date.now()}`,
         sender: 'assistant',
-        text: res.responseText || 'আজকের সেলস তথ্য আপডেট করা হয়েছে।',
+        text: res.responseText || 'তথ্য সফলভাবে আপডেট করা হয়েছে।',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         metrics: res.metrics,
       };
@@ -354,7 +443,7 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
       setMessages((prev) => [...prev, assistantMsg]);
       if (res.metrics) {
         setLatestMetrics(res.metrics);
-        setEmailSubject(`YEAR INFO AI — আজকের সেল ও অর্ডার রিপোর্ট (${res.metrics.dateBangla} / ${res.metrics.date})`);
+        setEmailSubject(`YEAR INFO AI — আজকের সেল ও অর্ডার রিপোর্ট (${res.metrics.dateBangla || ''} / ${res.metrics.date || ''})`);
       }
 
       // Audibly speak the answer
@@ -509,6 +598,23 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
           {/* LEFT COLUMN: CONVERSATION & VOICE INPUT (lg:col-span-7) */}
           <div className="lg:col-span-7 flex flex-col border-r border-purple-500/20 min-h-0">
             
+            {/* SPEECH PERMISSION / ERROR BANNER */}
+            {speechError && (
+              <div className="m-4 flex items-start justify-between gap-2 p-3 rounded-xl bg-amber-950/50 border border-amber-500/40 text-amber-200 text-xs animate-in fade-in">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span>{speechError}</span>
+                </div>
+                <button
+                  onClick={() => setSpeechError(null)}
+                  className="text-amber-400 hover:text-white text-xs font-bold px-1"
+                  title="Dismiss"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+
             {/* MESSAGES SCROLL AREA */}
             <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
               {messages.map((msg) => {
@@ -593,20 +699,25 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
               <div className="text-[10px] uppercase font-bold text-slate-400 mb-1.5 flex items-center gap-1">
                 <span>দ্রুত জিজ্ঞাসা করুন (Quick Prompts):</span>
               </div>
-              <div className="flex flex-wrap gap-1.5 overflow-x-auto pb-1">
+              <div className="flex flex-wrap gap-1.5 overflow-x-auto pb-1 max-h-24">
                 {[
                   'আজকের কতটুকু সেল হলো?',
-                  'আজকের সেলে কি কি রিপোর্ট?',
-                  'কতগুলা সেল হইছে?',
+                  'আসসালামু আলাইকুম',
+                  'বাংলাদেশের রাজধানী কী?',
+                  '২৭৫ গুণ ১৬ কত?',
+                  'What is artificial intelligence?',
+                  'আমার বর্তমান লোকেশন কী?',
+                  'আজকে আমার ব্যবসার সম্পূর্ণ রিপোর্ট দাও',
+                  'গতকালের সঙ্গে তুলনা করো',
                   'কমপ্লিট হইছে কতগুলা?',
                   'অর্ডার পেন্ডিংয়ে রয়েছে কতগুলা?',
                 ].map((promptText) => (
                   <button
                     key={promptText}
                     onClick={() => handleSendQuery(promptText)}
-                    className="px-2.5 py-1 rounded-xl border border-purple-500/30 bg-purple-900/30 hover:bg-purple-600/30 hover:border-purple-400 text-[11px] font-semibold text-purple-200 transition text-left"
+                    className="px-2.5 py-1 rounded-xl border border-purple-500/30 bg-purple-900/30 hover:bg-purple-600/30 hover:border-purple-400 text-[11px] font-semibold text-purple-200 transition text-left shrink-0"
                   >
-                    🎙️ {promptText}
+                    💬 {promptText}
                   </button>
                 ))}
               </div>

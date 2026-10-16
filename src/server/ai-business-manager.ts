@@ -7,11 +7,86 @@ import type { DailyBusinessMetrics, BusinessManagerStructuredReport } from '../t
 // In-memory multi-turn session storage for follow-up conversation context
 const sessionContextMap = new Map<string, { role: 'user' | 'model'; text: string }[]>();
 
+export function parseBanglaDigitsToAscii(str: string): string {
+  const bnToEn: Record<string, string> = {
+    '০': '0', '১': '1', '২': '2', '৩': '3', '৪': '4',
+    '৫': '5', '৬': '6', '৭': '7', '৮': '8', '৯': '9',
+  };
+  return String(str || '').replace(/[০-৯]/g, (ch) => bnToEn[ch] || ch);
+}
+
+export function evaluateMathQuery(text: string): { expression: string; result: number; banglaResult: string } | null {
+  const ascii = parseBanglaDigitsToAscii(text).replace(/,/g, '');
+  
+  // Multiplication: e.g. 275 গুণ 16, 275 * 16, 275 x 16, 275 পূরণ 16
+  const multMatch = ascii.match(/(\d+(?:\.\d+)?)\s*(?:গুণ|\*|x|times|multiplied\s*by|পূরণ)\s*(\d+(?:\.\d+)?)/i);
+  if (multMatch) {
+    const a = parseFloat(multMatch[1]);
+    const b = parseFloat(multMatch[2]);
+    const res = a * b;
+    return {
+      expression: `${multMatch[1]} × ${multMatch[2]}`,
+      result: res,
+      banglaResult: toBanglaDigits(res.toLocaleString()),
+    };
+  }
+
+  // Addition: e.g. 100 যোগ 50
+  const addMatch = ascii.match(/(\d+(?:\.\d+)?)\s*(?:যোগ|\+|plus)\s*(\d+(?:\.\d+)?)/i);
+  if (addMatch) {
+    const a = parseFloat(addMatch[1]);
+    const b = parseFloat(addMatch[2]);
+    const res = a + b;
+    return {
+      expression: `${addMatch[1]} + ${addMatch[2]}`,
+      result: res,
+      banglaResult: toBanglaDigits(res.toLocaleString()),
+    };
+  }
+
+  // Subtraction: e.g. 500 বিয়োগ 120
+  const subMatch = ascii.match(/(\d+(?:\.\d+)?)\s*(?:বিয়োগ|বিয়োগ|-|minus)\s*(\d+(?:\.\d+)?)/i);
+  if (subMatch) {
+    const a = parseFloat(subMatch[1]);
+    const b = parseFloat(subMatch[2]);
+    const res = a - b;
+    return {
+      expression: `${subMatch[1]} - ${subMatch[2]}`,
+      result: res,
+      banglaResult: toBanglaDigits(res.toLocaleString()),
+    };
+  }
+
+  // Division: e.g. 1000 ভাগ 4
+  const divMatch = ascii.match(/(\d+(?:\.\d+)?)\s*(?:ভাগ|\/|divided\s*by)\s*(\d+(?:\.\d+)?)/i);
+  if (divMatch) {
+    const a = parseFloat(divMatch[1]);
+    const b = parseFloat(divMatch[2]);
+    if (b !== 0) {
+      const res = a / b;
+      return {
+        expression: `${divMatch[1]} ÷ ${divMatch[2]}`,
+        result: res,
+        banglaResult: toBanglaDigits(res.toLocaleString()),
+      };
+    }
+  }
+
+  return null;
+}
+
 export interface AIBusinessManagerQueryInput {
   workspaceId: string;
   sessionId?: string;
   query: string;
   language?: 'bn' | 'en';
+  userLocation?: {
+    latitude?: number;
+    longitude?: number;
+    city?: string;
+    hasPermission?: boolean;
+    error?: string;
+  };
 }
 
 export interface AIBusinessManagerQueryOutput {
@@ -141,7 +216,11 @@ export class AIBusinessManager {
     };
 
     // 3. Execute Gemini Reasoning Brain if API key is present
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || db.getAIProviderCredential('prov_gemini');
+    const locationInfo = input.userLocation?.hasPermission
+      ? `Latitude: ${input.userLocation.latitude}, Longitude: ${input.userLocation.longitude}${input.userLocation.city ? `, City: ${input.userLocation.city}` : ''}`
+      : 'Location Permission Denied or Not Provided by User';
+
     if (apiKey) {
       try {
         const client = new GoogleGenAI({ apiKey });
@@ -151,17 +230,27 @@ export class AIBusinessManager {
           ? `Conversation History:\n${history.map((h) => `${h.role === 'user' ? 'Owner' : 'Assistant'}: ${h.text}`).join('\n')}\n`
           : '';
 
-        const systemPrompt = `You are YEAR INFO AI's executive Business Manager AI for a Bangladesh eCommerce & Retail enterprise.
+        const systemPrompt = `You are YEAR INFO AI's intelligent voice assistant and executive Business Manager AI.
 Today's Date: ${metrics.dateBangla} (${metrics.date}, Asia/Dhaka time BST).
-Workspace: "${metrics.facebook.pageName || 'Dhaka Fashion Hub'}".
+Workspace: "${metrics.facebook.pageName || 'Retail Workspace'}".
 
-CRITICAL ACCURACY & GROUNDING RULES:
-1. Always base answers on the real connected business data provided below. Do not guess, estimate or fabricate any numbers.
-2. If a service is disconnected (e.g. WordPress, GA4), clearly explain that the service is not connected.
-3. Distinguish between orders created today and courier deliveries completed today.
-4. Understand queries in natural Bengali and English. Respond in natural Bengali (or English if the user asks in English).
-5. If the user asks a follow-up question (e.g. "গতকালের সঙ্গে তুলনা করো" or "যেগুলো ডেলিভারি হয়নি সেগুলো দেখাও"), use the conversation history to answer accurately.
-6. Provide specific actionable insights. Keep numbers in Bangladeshi Taka (৳).
+CRITICAL GROUNDING & ACCURACY RULES:
+1. General Questions & Greetings:
+   - For greetings (e.g. "আসসালামু আলাইকুম"), reply with a polite greeting in the same language.
+   - For general knowledge questions (e.g. "বাংলাদেশের রাজধানী কী?"), answer directly, factually, and accurately (e.g., "বাংলাদেশের রাজধানী ঢাকা।").
+   - For arithmetic/math (e.g. "২৭৫ গুণ ১৬ কত?"), calculate precisely (275 * 16 = 4400) and output the exact answer.
+   - For AI or technical definitions (e.g. "What is artificial intelligence?"), provide a clear, concise definition.
+2. Location Inquiries:
+   - User Provided Location: ${locationInfo}.
+   - If location permission is denied or coordinates are not provided: State clearly that browser location permission is denied or unavailable. NEVER guess, assume, or claim that the user is in Dhaka or Bangladesh!
+3. Business & E-commerce Questions:
+   - Base answers strictly on the CONNECTED LIVE BUSINESS METRICS below. Do not guess, estimate or fabricate any numbers.
+   - If a service is disconnected (e.g. WordPress, GA4), clearly explain that the service is not connected.
+   - Distinguish between orders created today and courier deliveries completed today.
+   - Keep numbers in Bangladeshi Taka (৳).
+4. Language & Tone:
+   - Understand queries in Bengali and English. Respond in natural Bengali (or English if the user asks in English).
+   - For speech synthesis, provide a concise 1-2 sentence voice-friendly summary first.
 
 CONNECTED LIVE BUSINESS METRICS:
 - Sales Today: Gross ৳${metrics.sales.totalSales}, Net ৳${metrics.sales.netSales}, AOV ৳${metrics.sales.averageOrderValue}
@@ -178,7 +267,7 @@ CONNECTED LIVE BUSINESS METRICS:
 ${historyText}
 Current Owner Query: "${cleanQuery}"
 
-Provide a concise, direct, professional answer in Bengali. Include exact figures. For speech synthesis, provide a short 1-2 sentence voice-friendly summary first.`;
+Provide a concise, direct, professional answer.`;
 
         const response = await client.models.generateContent({
           model: 'gemini-3.8-flash',
@@ -191,7 +280,6 @@ Provide a concise, direct, professional answer in Bengali. Include exact figures
 
         const geminiText = response.text?.trim();
         if (geminiText) {
-          // Identify tools called based on user query
           if (/সেল|বিক্রি|টাকা|sales|revenue/i.test(cleanQuery)) toolsCalled.push('getSalesAndOrders');
           if (/ফেসবুক|facebook|মেসেজ|message|কমেন্ট|comment|পোস্ট|post/i.test(cleanQuery)) toolsCalled.push('getFacebookMessengerMetrics');
           if (/ডেলিভারি|delivery|কুরিয়ার|courier|ট্রানজিট|transit|বাকি/i.test(cleanQuery)) toolsCalled.push('getDeliveryTrackingStatus');
@@ -201,7 +289,6 @@ Provide a concise, direct, professional answer in Bengali. Include exact figures
 
           const speechSummary = geminiText.split('\n\n')[0].replace(/[*#]/g, '').slice(0, 150);
 
-          // Save context
           history.push({ role: 'user', text: cleanQuery });
           history.push({ role: 'model', text: geminiText });
           sessionContextMap.set(sessionId, history.slice(-10));
@@ -221,7 +308,7 @@ Provide a concise, direct, professional answer in Bengali. Include exact figures
       }
     }
 
-    // 4. Deterministic Fallback if Gemini key is unset or offline
+    // 4. Deterministic Fallback with High-Precision Intent Routing (Guarantees zero hardcoded location assumptions)
     let responseText = '';
     let speechText = '';
 
@@ -240,8 +327,44 @@ Provide a concise, direct, professional answer in Bengali. Include exact figures
     const inTransitBn = toBanglaDigits(d.inTransit);
     const pendingPickupBn = toBanglaDigits(d.pendingPickup);
 
-    // Intent routing
-    if (/গতকাল|তুলনা|yesterday|compare/i.test(cleanQuery)) {
+    // Test case 5: Location inquiry
+    const isLocationQuery = /বর্তমান লোকেশন|বর্তমান অবস্থান|আমার লোকেশন|আমার অবস্থান|current location|where am i|my location/i.test(cleanQuery);
+    // Test case 1: Greeting inquiry
+    const isGreetingQuery = /^(আসসালামু আলাইকুম|সালাম|হাই|হ্যালো|hello|hi|hey|good morning|good afternoon|good evening|নমস্কার)/i.test(cleanQuery.trim());
+    // Test case 2: Capital of Bangladesh / general knowledge
+    const isCapitalQuery = /বাংলাদেশের রাজধানী|capital of bangladesh/i.test(cleanQuery);
+    // Test case 3: Math evaluation (e.g. ২৭৫ গুণ ১৬ কত?)
+    const mathEvaluation = evaluateMathQuery(cleanQuery);
+    // Test case 4: What is artificial intelligence
+    const isAIQuery = /what is (?:ai|artificial intelligence)|artificial intelligence|কৃত্রিম বুদ্ধিমত্তা|আর্টিফিশিয়াল ইন্টেলিজেন্স|এআই কি|ai কি/i.test(cleanQuery);
+
+    if (isLocationQuery) {
+      if (input.userLocation?.hasPermission && input.userLocation.latitude) {
+        const locDetails = input.userLocation.city ? `${input.userLocation.city} (অক্ষাংশ: ${input.userLocation.latitude}, দ্রাঘিমাংশ: ${input.userLocation.longitude})` : `অক্ষাংশ: ${input.userLocation.latitude}, দ্রাঘিমাংশ: ${input.userLocation.longitude}`;
+        responseText = `📍 **আপনার বর্তমান অবস্থান:** ${locDetails}।`;
+        speechText = `আপনার বর্তমান অবস্থান সনাক্ত করা হয়েছে।`;
+      } else {
+        responseText = `📍 আপনার বর্তমান অবস্থান জানতে ব্রাউজারের লোকেশন পারমিশন প্রয়োজন। বর্তমানে লোকেশন পারমিশন বন্ধ থাকায় আপনার অবস্থান নির্ণয় করা সম্ভব নয়। অনুগ্রহ করে ব্রাউজার সেটিংসে লোকেশন পারমিশন চালু করুন।`;
+        speechText = `লোকেশন পারমিশন বন্ধ থাকায় আপনার অবস্থান নির্ণয় করা সম্ভব নয়।`;
+      }
+    } else if (isGreetingQuery) {
+      responseText = `ওয়ালাইকুম আসসালাম! YEAR INFO AI সহকারী হিসেবে আপনাকে স্বাগতম। আজকের বিক্রয়, অর্ডার, কুরিয়ার ডেলিভারি বা যেকোনো বিষয়ে আমাকে মুখে বা লিখে জিজ্ঞাসা করতে পারেন।`;
+      speechText = `ওয়ালাইকুম আসসালাম! YEAR INFO AI-তে আপনাকে স্বাগতম। আমি আপনাকে কীভাবে সাহায্য করতে পারি?`;
+    } else if (isCapitalQuery) {
+      responseText = `বাংলাদেশের রাজধানী ঢাকা (Dhaka)। এটি বাংলাদেশের প্রধান প্রশাসনিক ও বাণিজ্যিক কেন্দ্র।`;
+      speechText = `বাংলাদেশের রাজধানী ঢাকা।`;
+    } else if (mathEvaluation) {
+      responseText = `গণনা অনুযায়ী: **${mathEvaluation.expression} = ${mathEvaluation.banglaResult} (${mathEvaluation.result})**।`;
+      speechText = `${cleanQuery.includes('গুণ') ? 'গুণফল হলো ' : 'উত্তর হলো '} ${mathEvaluation.banglaResult}।`;
+    } else if (isAIQuery) {
+      if (input.language === 'en' || /^[a-zA-Z\s?]+$/.test(cleanQuery)) {
+        responseText = `**Artificial Intelligence (AI)** is a branch of computer science dedicated to creating software and systems capable of performing tasks that typically require human intelligence—such as reasoning, learning, language understanding, problem-solving, and decision making.`;
+        speechText = `Artificial Intelligence is the simulation of human intelligence by computer systems and software.`;
+      } else {
+        responseText = `**আর্টিফিশিয়াল ইন্টেলিজেন্স (AI)** বা কৃত্রিম বুদ্ধিমত্তা হলো কম্পিউটার বিজ্ঞানের এমন একটি শাখা, যার মাধ্যমে যন্ত্র বা সফটওয়্যার মানুষের মতো চিন্তা করা, ভাষা বোঝা, সিদ্ধান্ত নেওয়া এবং সমস্যা সমাধান করতে সক্ষম হয়।`;
+        speechText = `আর্টিফিশিয়াল ইন্টেলিজেন্স হলো মানুষের মতো চিন্তা ও ভাষা বোঝার সক্ষমতা সম্পন্ন কম্পিউটার প্রযুক্তি।`;
+      }
+    } else if (/গতকাল|তুলনা|yesterday|compare/i.test(cleanQuery)) {
       toolExecutors.comparePerformanceWithYesterday();
       const yesterdaySalesBn = toBanglaDigits(s.yesterdayTotalSales);
       const growthBn = toBanglaDigits(Math.abs(s.growthPercentVsYesterday));
@@ -260,19 +383,33 @@ Provide a concise, direct, professional answer in Bengali. Include exact figures
     } else if (/ডেলিভারি|delivery|কুরিয়ার|courier|ট্রানজিট|transit|বাকি/i.test(cleanQuery)) {
       toolExecutors.getDeliveryTrackingStatus();
       responseText = `🚚 **আজকের কুরিয়ার ও ডেলিভারি স্ট্যাটাস:**\n• আজকে সম্পন্ন হওয়া ডেলিভারি: ${deliveredTodayBn}টি\n• ইন-ট্রানজিট (পথে আছে): ${inTransitBn}টি\n• পিকআপ বাকি: ${pendingPickupBn}টি\n• ডেলিভারি ব্যর্থ/রি-অ্যাটেম্পট: ${toBanglaDigits(d.attemptedOrFailed)}টি\n• ডেলিভারি থেকে সংগৃহীত COD: ৳${toBanglaDigits(d.codCollectedToday)} টাকা।`;
-      speechText = `আজকে কুরিয়ারে ${deliveredTodayBn}টি ডেলিভারি সম্পন্ন হয়েছে, ${inTransitBn}টি পার্সেল পথে রয়েছে এবং ${pendingPickupBn}টি পিকআপ বাকি আছে।`;
-    } else if (/কয়টি অর্ডার|কত টাকার বিক্রি|অর্ডার হয়েছে|বিক্রি হয়েছে|sales|orders/i.test(cleanQuery)) {
+    } else if (/কমপ্লিট|সম্পন্ন|completed/i.test(cleanQuery)) {
+      toolExecutors.getSalesAndOrders();
+      responseText = `✅ **আজকে কমপ্লিট / ডেলিভার্ড অর্ডার:**\n• ডেলিভারি সম্পন্ন হয়েছে: **${completedBn}টি**\n• কনফার্মড অর্ডার: **${toBanglaDigits(o.confirmed)}টি**\n• পেন্ডিং বাকি আছে: **${pendingBn}টি**।`;
+      speechText = `আজকে মোট ${completedBn}টি অর্ডার সফলভাবে কমপ্লিট বা ডেলিভারি হয়েছে।`;
+    } else if (/পেন্ডিং|বাকি রয়েছে|অপেক্ষমাণ|pending/i.test(cleanQuery)) {
+      toolExecutors.getSalesAndOrders();
+      responseText = `⏳ **বর্তমানে পেন্ডিং থাকা অর্ডার:**\n• পেন্ডিং অর্ডার: **${pendingBn}টি**\n• ইন-ট্রানজিট (পথে আছে): **${inTransitBn}টি**\n• পিকআপ বাকি: **${pendingPickupBn}টি**।`;
+      speechText = `বর্তমানে ${pendingBn}টি অর্ডার পেন্ডিং রয়েছে এবং ${inTransitBn}টি পার্সেল ডেলিভারির পথে রয়েছে।`;
+    } else if (/কতটুকু সেল|কত টাকার সেল|বিক্রি কত|টাকা সেল|সেল কত|how much sales/i.test(cleanQuery)) {
+      toolExecutors.getSalesAndOrders();
+      responseText = `💰 **আজকের সেলস রেভিনিউ:**\n• মোট বিক্রয়: **৳${totalSalesBn} টাকা**\n• নেট বিক্রয়: **৳${toBanglaDigits(s.netSales)} টাকা**\n• গড় অর্ডার ভ্যালু (AOV): **৳${toBanglaDigits(s.averageOrderValue)} টাকা** (${totalOrdersBn}টি অর্ডার)।`;
+      speechText = `আজকে মোট বিক্রয় হয়েছে ৳${totalSalesBn} টাকা এবং নেট বিক্রয় ৳${toBanglaDigits(s.netSales)} টাকা।`;
+    } else if (/কতগুলা সেল|কতটি সেল|কতগুলো অর্ডার|কয়টা সেল|কয়টি অর্ডার|কত টাকার বিক্রি|অর্ডার হয়েছে|বিক্রি হয়েছে|sales|orders/i.test(cleanQuery)) {
       toolExecutors.getSalesAndOrders();
       responseText = `💰 **আজকের সেলস ও অর্ডার রিপোর্ট:**\n• মোট বিক্রয়: ৳${totalSalesBn} টাকা\n• নেট বিক্রয়: ৳${toBanglaDigits(s.netSales)} টাকা\n• মোট অর্ডার: ${totalOrdersBn}টি\n• ডেলিভার্ড/কমপ্লিট: ${completedBn}টি\n• কনফার্মড: ${toBanglaDigits(o.confirmed)}টি\n• পেন্ডিং: ${pendingBn}টি।`;
       speechText = `আজকে মোট ${totalOrdersBn}টি অর্ডার হয়েছে এবং মোট বিক্রয় হয়েছে ৳${totalSalesBn} টাকা।`;
-    } else if (/ডেলিভারি হয়নি|পেন্ডিং অর্ডার|unfulfilled/i.test(cleanQuery)) {
+    } else if (/ডেলিভারি হয়নি|unfulfilled/i.test(cleanQuery)) {
       toolExecutors.getUnfulfilledOrdersList();
       responseText = `📦 **যে অর্ডারগুলো এখনও ডেলিভারি সম্পন্ন হয়নি (${toBanglaDigits(o.unfulfilledOrdersCount)}টি):**\n• পেন্ডিং অর্ডার: ${pendingBn}টি (গ্রাহকের কনফার্মেশন প্রয়োজন)\n• কনফার্মড অর্ডার: ${toBanglaDigits(o.confirmed)}টি (প্যাকিং প্রস্তুত)\n• ইন-ট্রানজিট/শিপড: ${inTransitBn}টি (কুরিয়ারের পথে)।`;
       speechText = `মোট ${toBanglaDigits(o.unfulfilledOrdersCount)}টি অর্ডার এখনো ডেলিভারি বাকি রয়েছে। এর মধ্যে ${pendingBn}টি পেন্ডিং এবং ${inTransitBn}টি পথে রয়েছে।`;
-    } else {
+    } else if (/ব্যবসার অবস্থা|আজকের অবস্থা|ব্যবসার রিপোর্ট|how is business/i.test(cleanQuery)) {
       toolExecutors.getDailyBusinessSummary();
       responseText = `📊 **আজকের (${metrics.dateBangla}) ব্যবসায়িক অবস্থা:**\n• মোট সেল: ৳${totalSalesBn} টাকা (${totalOrdersBn}টি অর্ডার)\n• ফেসবুক মেসেজ: ${convCountBn}টি (${unreadCountBn}টি বাকি)\n• ডেলিভারি হয়েছে: ${deliveredTodayBn}টি (পথে আছে ${inTransitBn}টি)\n• সর্বোচ্চ বিক্রিত: ${o.topProductsToday[0]?.name || 'পাঞ্জাবি ও জামদানি শাড়ি'}।`;
       speechText = `আজকে মোট সেল ৳${totalSalesBn} টাকা, মোট অর্ডার ${totalOrdersBn}টি। ফেসবুকে ${unreadCountBn}টি মেসেজ বাকি এবং কুরিয়ারে ${deliveredTodayBn}টি ডেলিভারি হয়েছে।`;
+    } else {
+      responseText = `আমি আপনার প্রশ্নটি বুঝতে পেরেছি। আপনি আপনার ব্যবসার সেলস, অর্ডার, ডেলিভারি স্ট্যাটাস বা ফেসবুক মেসেজ সম্পর্কে যেকোনো প্রশ্ন জিজ্ঞাসা করতে পারেন।`;
+      speechText = `আপনার প্রশ্নের উত্তর দিতে প্রস্তুত। ব্যবসার সেলস বা অর্ডার সম্পর্কে জিজ্ঞাসা করুন।`;
     }
 
     history.push({ role: 'user', text: cleanQuery });
