@@ -532,7 +532,7 @@ export async function testPlaygroundAIResponse(input: {
   error?: string;
 }> {
   const startTime = Date.now();
-  const workspaceId = input.workspaceId || 'ws_demo_store';
+  const workspaceId = input.workspaceId || db.getAllWorkspaces()[0]?.id || '';
   const question = input.question.trim();
   const workspace = db.getWorkspace(workspaceId);
   const products = db.getProducts(workspaceId);

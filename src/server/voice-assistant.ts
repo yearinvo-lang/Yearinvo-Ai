@@ -50,122 +50,16 @@ export function toBanglaDigits(num: number | string): string {
 }
 
 /**
- * Ensure workspace has realistic orders for today so queries always have live data
+ * Real order validator (strictly uses real orders, never generates sample/fake orders)
  */
-export function ensureTodayOrders(workspaceId: string): void {
-  const orders = db.getOrders(workspaceId);
-  const todayStr = new Date().toISOString().slice(0, 10);
-  const hasOrdersToday = orders.some((o) => o.createdAt.slice(0, 10) === todayStr);
-
-  if (!hasOrdersToday) {
-    const now = new Date();
-    // Seed 3 realistic orders for today
-    const order1: Order = {
-      id: `ord_today_1_${Date.now()}`,
-      orderNumber: `YIA-${now.getFullYear()}-201`,
-      workspaceId,
-      customerId: 'cust_1',
-      customerName: 'Tanvir Hossain',
-      customerPhone: '01712998877',
-      deliveryAddress: 'House 12, Road 4, Dhanmondi, Dhaka',
-      items: [
-        {
-          productId: 'prod_1',
-          productName: 'Premium Cotton Panjabi - Royal Navy',
-          sku: 'PANJABI-NV-42',
-          variantId: 'v_2',
-          variantName: 'Size 42 (L)',
-          unitPrice: 2150,
-          quantity: 1,
-          subtotal: 2150,
-        },
-      ],
-      subtotal: 2150,
-      deliveryCharge: 70,
-      discount: 0,
-      total: 2220,
-      status: 'delivered',
-      paymentStatus: 'paid',
-      paymentMethod: 'cash_on_delivery',
-      aiAssisted: true,
-      notes: 'Delivered successfully this morning. Customer satisfied.',
-      createdAt: new Date(now.getTime() - 1000 * 60 * 60 * 5).toISOString(),
-      updatedAt: new Date(now.getTime() - 1000 * 60 * 60 * 1).toISOString(),
-    };
-
-    const order2: Order = {
-      id: `ord_today_2_${Date.now()}`,
-      orderNumber: `YIA-${now.getFullYear()}-202`,
-      workspaceId,
-      customerId: 'cust_2',
-      customerName: 'Nusrat Jahan',
-      customerPhone: '01855667788',
-      deliveryAddress: 'Flat 5B, Green Road, Dhanmondi, Dhaka',
-      items: [
-        {
-          productId: 'prod_2',
-          productName: 'Handloom Jamdani Saree - Crimson Gold',
-          sku: 'JAMDANI-CG-01',
-          unitPrice: 5200,
-          quantity: 1,
-          subtotal: 5200,
-        },
-      ],
-      subtotal: 5200,
-      deliveryCharge: 110,
-      discount: 0,
-      total: 5310,
-      status: 'confirmed',
-      paymentStatus: 'paid',
-      paymentMethod: 'bkash',
-      aiAssisted: true,
-      notes: 'Paid via bKash. Packaging in progress for dispatch.',
-      createdAt: new Date(now.getTime() - 1000 * 60 * 60 * 3).toISOString(),
-      updatedAt: new Date(now.getTime() - 1000 * 60 * 60 * 2).toISOString(),
-    };
-
-    const order3: Order = {
-      id: `ord_today_3_${Date.now()}`,
-      orderNumber: `YIA-${now.getFullYear()}-203`,
-      workspaceId,
-      customerId: 'cust_3',
-      customerName: 'Kamrul Hasan',
-      customerPhone: '01911223344',
-      deliveryAddress: 'Mirpur DOHS, Road 9, Dhaka',
-      items: [
-        {
-          productId: 'prod_3',
-          productName: 'Pure Leather Bifold Wallet',
-          sku: 'WALLET-LTHR-01',
-          unitPrice: 1250,
-          quantity: 1,
-          subtotal: 1250,
-        },
-      ],
-      subtotal: 1250,
-      deliveryCharge: 70,
-      discount: 0,
-      total: 1320,
-      status: 'pending',
-      paymentStatus: 'pending',
-      paymentMethod: 'cash_on_delivery',
-      aiAssisted: true,
-      notes: 'Customer inquired via WhatsApp. Awaiting final confirmation.',
-      createdAt: new Date(now.getTime() - 1000 * 60 * 45).toISOString(),
-      updatedAt: new Date(now.getTime() - 1000 * 60 * 45).toISOString(),
-    };
-
-    db.createOrder(order1);
-    db.createOrder(order2);
-    db.createOrder(order3);
-  }
+export function ensureTodayOrders(_workspaceId: string): void {
+  // No-op: Do not fabricate sample orders or fake sales. Uses real data exclusively.
 }
 
 /**
  * Retrieve today's comprehensive sales statistics from real database records
  */
 export function getTodaySalesMetrics(workspaceId: string): TodaySalesMetrics {
-  ensureTodayOrders(workspaceId);
   const allOrders = db.getOrders(workspaceId);
   const todayStr = new Date().toISOString().slice(0, 10);
 

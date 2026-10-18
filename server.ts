@@ -31,154 +31,72 @@ if (process.env.VERCEL !== '1' && !process.env.NOW_REGION) {
   backgroundScheduler.start();
 }
 
-// Secure Authentication Middleware (Enforces real user login & prevents account leaking)
-// Secure Authentication Middleware (Enforces real user login & prevents account leaking)
-function authMiddleware(req: Request, res: Response, next: NextFunction, allowGuestFallback: boolean = false): void {
+// Secure Authentication Middleware (Enforces real user login & data isolation)
+function authMiddleware(req: Request, res: Response, next: NextFunction): void {
   const authHeader = req.headers.authorization;
   const workspaceHeader = (req.headers['x-workspace-id'] || req.headers['x-workspace']) as string;
-  const userEmailHeader = (req.headers['x-user-email'] || req.headers['x-email']) as string;
-  const userIdHeader = (req.headers['x-user-id'] || req.headers['x-uid']) as string;
-
-  // Helper to ensure user exists in db
-  const ensureUser = (id?: string, email?: string): (User & { passwordHash: string; salt: string }) | undefined => {
-    let u = (id ? db.getUserById(id) : undefined) || (email ? db.getUserByEmail(email) : undefined);
-    if (!u && (id || email)) {
-      const resolvedEmail = email || (id?.includes('@') ? id : `user_${id?.slice(0, 8)}@example.com`);
-      const isOwner = resolvedEmail.toLowerCase() === 'yearinvo@gmail.com';
-      u = db.createUser({
-        id: id || `usr_${Date.now()}`,
-        name: resolvedEmail.split('@')[0],
-        email: resolvedEmail,
-        businessName: `${resolvedEmail.split('@')[0]}'s Workspace`,
-        role: isOwner ? 'superadmin' : 'owner',
-        isSuperAdmin: isOwner,
-        status: 'active',
-        avatarUrl: '',
-        createdAt: new Date().toISOString(),
-        passwordHash: 'session-managed',
-        salt: 'session-managed',
-      } as any);
-    }
-    return u || undefined;
-  };
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    // If no Bearer header, check if userEmailHeader or userIdHeader is provided
-    if (userEmailHeader || userIdHeader) {
-      const matchedUser = ensureUser(userIdHeader, userEmailHeader);
-      if (matchedUser) {
-        (req as any).user = matchedUser;
-        (req as any).workspaceId = workspaceHeader || db.getWorkspacesForUser(matchedUser.id)[0]?.id || `ws_${matchedUser.id}`;
-        return next();
-      }
-    }
-    if (allowGuestFallback) {
-      const ws = (workspaceHeader && db.getWorkspace(workspaceHeader)) || db.getWorkspace('ws_demo_store') || db.getAllWorkspaces()[0];
-      const defaultUser = db.getUserById('usr_superadmin') || db.getUsers()[0];
-      (req as any).user = defaultUser;
-      (req as any).workspaceId = ws?.id || 'ws_demo_store';
-      return next();
-    }
     res.status(401).json({ error: 'Unauthorized: Authentication required. Please log in.' });
     return;
   }
 
-  const token = authHeader.split(' ')[1];
+  const token = authHeader.split(' ')[1]?.trim();
   if (!token) {
-    if (allowGuestFallback) {
-      const ws = (workspaceHeader && db.getWorkspace(workspaceHeader)) || db.getWorkspace('ws_demo_store') || db.getAllWorkspaces()[0];
-      const defaultUser = db.getUserById('usr_superadmin') || db.getUsers()[0];
-      (req as any).user = defaultUser;
-      (req as any).workspaceId = ws?.id || 'ws_demo_store';
-      return next();
-    }
     res.status(401).json({ error: 'Unauthorized: Missing session token.' });
     return;
   }
 
-  let session = db.getSession(token);
+  const session = db.getSession(token);
 
-  // 1. Auto-recover session if it's a valid client session token: yia_sess_<userId>_<timestamp>
-  if (!session && token.startsWith('yia_sess_')) {
-    const parts = token.split('_');
-    const userId = parts.slice(2, parts.length - 1).join('_') || parts[2];
-    if (userId) {
-      const matchedUser = ensureUser(userId, userEmailHeader);
-      if (matchedUser) {
-        session = {
-          token,
-          userId: matchedUser.id,
-          expiresAt: Date.now() + 86400000 * 7,
-        };
-        (db as any).data.sessions.push(session);
-      }
-    }
-  }
-
-  // 2. Auto-recover session if client provides x-user-email or x-user-id from authenticated frontend
-  if (!session && (userEmailHeader || userIdHeader)) {
-    const matchedUser = ensureUser(userIdHeader, userEmailHeader);
-    if (matchedUser) {
-      session = {
-        token,
-        userId: matchedUser.id,
-        expiresAt: Date.now() + 86400000 * 7,
-      };
-      (db as any).data.sessions.push(session);
-    }
-  }
-
-  // 3. Auto-recover session if valid workspaceHeader is provided with registered owner
-  if (!session && workspaceHeader) {
-    const ws = db.getWorkspace(workspaceHeader);
-    if (ws) {
-      const owner = db.getUserById(ws.ownerId);
-      if (owner) {
-        session = {
-          token,
-          userId: owner.id,
-          expiresAt: Date.now() + 86400000 * 7,
-        };
-        (db as any).data.sessions.push(session);
-      }
-    }
-  }
-
-  if (!session) {
-    if (allowGuestFallback) {
-      const ws = (workspaceHeader && db.getWorkspace(workspaceHeader)) || db.getWorkspace('ws_demo_store') || db.getAllWorkspaces()[0];
-      const defaultUser = db.getUserById('usr_superadmin') || db.getUsers()[0];
-      (req as any).user = defaultUser;
-      (req as any).workspaceId = ws?.id || 'ws_demo_store';
-      return next();
-    }
+  if (!session || (session.expiresAt && session.expiresAt <= Date.now())) {
     res.status(401).json({ error: 'Unauthorized: Invalid or expired session. Please log in.' });
     return;
   }
 
-  let user = db.getUserById(session.userId);
-  if (!user && (userEmailHeader || userIdHeader)) {
-    user = ensureUser(userIdHeader || session.userId, userEmailHeader) || undefined;
-  }
+  const user = db.getUserById(session.userId);
   if (!user) {
-    if (allowGuestFallback) {
-      const ws = (workspaceHeader && db.getWorkspace(workspaceHeader)) || db.getWorkspace('ws_demo_store') || db.getAllWorkspaces()[0];
-      const defaultUser = db.getUserById('usr_superadmin') || db.getUsers()[0];
-      (req as any).user = defaultUser;
-      (req as any).workspaceId = ws?.id || 'ws_demo_store';
-      return next();
-    }
     res.status(401).json({ error: 'Unauthorized: User account not found.' });
+    return;
+  }
+
+  if (user.status === 'suspended') {
+    res.status(403).json({ error: 'Forbidden: Account is suspended. Please contact support.' });
     return;
   }
 
   (req as any).user = user;
 
+  // Workspace Access & Isolation Enforcement (prevents accessing another user's workspace)
+  const userWorkspaces = db.getWorkspacesForUser(user.id);
+  const isSuper = Boolean(user.isSuperAdmin || user.role === 'superadmin');
+
   if (workspaceHeader) {
+    const hasAccess = isSuper || userWorkspaces.some((w) => w.id === workspaceHeader);
+    if (!hasAccess) {
+      res.status(403).json({ error: 'Forbidden: You do not have permission to access this workspace.' });
+      return;
+    }
     (req as any).workspaceId = workspaceHeader;
   } else {
-    const userWorkspaces = db.getWorkspacesForUser(user.id);
-    (req as any).workspaceId = userWorkspaces[0]?.id || `ws_${user.id}`;
+    let defaultWs = userWorkspaces[0];
+    if (!defaultWs) {
+      // Auto-create private workspace for new user if they have none
+      const wsSlug = (user.businessName || user.name || 'store').toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 30);
+      defaultWs = db.createWorkspace({
+        id: `ws_${user.id}`,
+        name: user.businessName || `${user.name}'s Store`,
+        slug: `${wsSlug}-${user.id.slice(-4)}`,
+        ownerId: user.id,
+        businessType: 'Retail & E-commerce',
+        phone: user.phone || '',
+        currency: 'BDT',
+        timezone: 'Asia/Dhaka',
+        language: 'both',
+        createdAt: new Date().toISOString(),
+      });
+    }
+    (req as any).workspaceId = defaultWs.id;
   }
 
   return next();
@@ -201,31 +119,19 @@ app.post('/api/auth/register', (req: Request, res: Response) => {
   try {
     const { name, email, password, businessName, phone, uid } = req.body;
     if (!name || !email || !password) {
-      res.status(400).json({ error: 'Name, email, and password are required' });
+      res.status(400).json({ error: 'Full name, email address, and password are required.' });
       return;
     }
 
-    const existing = db.getUserByEmail(email);
+    if (typeof password !== 'string' || password.length < 6) {
+      res.status(400).json({ error: 'Password must be at least 6 characters long.' });
+      return;
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const existing = db.getUserByEmail(cleanEmail);
     if (existing) {
-      // If user already exists in local DB, create session and return existing user
-      const token = db.createSession(existing.id);
-      const workspaces = db.getWorkspacesForUser(existing.id);
-      const safeUser = {
-        id: existing.id,
-        name: existing.name,
-        email: existing.email,
-        businessName: existing.businessName,
-        phone: existing.phone,
-        role: existing.role,
-        isSuperAdmin: existing.isSuperAdmin,
-        createdAt: existing.createdAt,
-      };
-      res.json({
-        user: safeUser,
-        token,
-        workspace: workspaces[0] || null,
-        workspaces,
-      });
+      res.status(409).json({ error: 'An account with this email address already exists. Please sign in instead.' });
       return;
     }
 
@@ -234,35 +140,35 @@ app.post('/api/auth/register', (req: Request, res: Response) => {
 
     const newUser = {
       id: userId,
-      name,
-      email,
-      businessName: businessName || `${name}'s Business`,
-      phone: phone || '',
-      role: 'admin' as const,
-      isSuperAdmin: email.toLowerCase() === 'yearinvo@gmail.com',
+      name: name.trim(),
+      email: cleanEmail,
+      businessName: (businessName || `${name.trim()}'s Business`).trim(),
+      phone: (phone || '').trim(),
+      role: 'owner' as const,
+      isSuperAdmin: false,
       createdAt: new Date().toISOString(),
       passwordHash: hash,
       salt,
     };
     db.createUser(newUser);
 
-    // Create default workspace for new user
-    const wsSlug = (businessName || name).toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 30);
-    const workspaceId = `ws_${Date.now()}`;
+    // Create private workspace for new user
+    const wsSlug = (newUser.businessName || newUser.name).toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 30);
+    const workspaceId = `ws_${Date.now()}_${Math.random().toString(36).substring(7)}`;
     const newWs = db.createWorkspace({
       id: workspaceId,
-      name: businessName || `${name}'s Store`,
+      name: newUser.businessName,
       slug: `${wsSlug}-${Date.now().toString().slice(-4)}`,
       ownerId: userId,
       businessType: 'Retail & E-commerce',
-      phone: phone || '',
+      phone: newUser.phone,
       currency: 'BDT',
       timezone: 'Asia/Dhaka',
       language: 'both',
       createdAt: new Date().toISOString(),
     });
 
-    // Create starter subscription request
+    // Create starter subscription for the new workspace
     db.createOrUpdateSubscription({
       id: `sub_${Date.now()}`,
       workspaceId: newWs.id,
@@ -271,7 +177,7 @@ app.post('/api/auth/register', (req: Request, res: Response) => {
       planName: 'Starter',
       status: 'active',
       startedAt: new Date().toISOString(),
-      expiresAt: new Date(Date.now() + 86400000 * 14).toISOString(), // 14-day trial
+      expiresAt: new Date(Date.now() + 86400000 * 30).toISOString(),
       requestedAt: new Date().toISOString(),
       currentUsage: {
         conversationsThisMonth: 0,
@@ -289,11 +195,11 @@ app.post('/api/auth/register', (req: Request, res: Response) => {
       businessName: newUser.businessName,
       phone: newUser.phone,
       role: newUser.role,
-      isSuperAdmin: newUser.isSuperAdmin,
+      isSuperAdmin: false,
       createdAt: newUser.createdAt,
     };
 
-    res.json({
+    res.status(201).json({
       user: safeUser,
       token,
       workspace: newWs,
@@ -306,50 +212,33 @@ app.post('/api/auth/register', (req: Request, res: Response) => {
 
 app.post('/api/auth/login', (req: Request, res: Response) => {
   try {
-    const { email, password, firebaseUid } = req.body;
-    if (!email) {
-      res.status(400).json({ error: 'Email is required' });
+    const { email, password } = req.body;
+    if (!email || !password) {
+      res.status(400).json({ error: 'Both email address and password are required.' });
       return;
     }
 
-    let user = db.getUserByEmail(email);
+    const cleanEmail = email.trim().toLowerCase();
+    const user = db.getUserByEmail(cleanEmail);
     if (!user) {
-      // Auto-provision profile for existing Firebase authenticated user if not in local store
-      const { salt, hash } = db.hashPassword(password || 'fb_default_pwd');
-      const userId = firebaseUid || `usr_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-      user = db.createUser({
-        id: userId,
-        name: email.split('@')[0],
-        email,
-        businessName: `${email.split('@')[0]}'s Business`,
-        phone: '',
-        role: 'admin',
-        isSuperAdmin: email.toLowerCase() === 'yearinvo@gmail.com',
-        createdAt: new Date().toISOString(),
-        passwordHash: hash,
-        salt,
-      });
+      res.status(401).json({ error: 'Invalid email address or password.' });
+      return;
+    }
 
-      const wsSlug = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 30);
-      db.createWorkspace({
-        id: `ws_${Date.now()}`,
-        name: `${email.split('@')[0]}'s Store`,
-        slug: `${wsSlug}-${Date.now().toString().slice(-4)}`,
-        ownerId: user.id,
-        businessType: 'Retail & E-commerce',
-        phone: '',
-        currency: 'BDT',
-        timezone: 'Asia/Dhaka',
-        language: 'both',
-        createdAt: new Date().toISOString(),
-      });
-    } else if (password) {
-      // Verify local password if provided, or update hash if valid Firebase user session
-      const valid = db.verifyPassword(password, user.passwordHash, user.salt);
-      if (!valid && !firebaseUid) {
-        res.status(401).json({ error: 'Invalid email or password' });
-        return;
-      }
+    if (!user.passwordHash || !user.salt) {
+      res.status(401).json({ error: 'Invalid credentials. If you registered via Google or Facebook, please use that provider.' });
+      return;
+    }
+
+    const valid = db.verifyPassword(password, user.passwordHash, user.salt);
+    if (!valid) {
+      res.status(401).json({ error: 'Invalid email address or password.' });
+      return;
+    }
+
+    if (user.status === 'suspended') {
+      res.status(403).json({ error: 'Your account is suspended. Please contact support.' });
+      return;
     }
 
     const token = db.createSession(user.id);
@@ -362,7 +251,8 @@ app.post('/api/auth/login', (req: Request, res: Response) => {
       businessName: user.businessName,
       phone: user.phone,
       role: user.role,
-      isSuperAdmin: user.isSuperAdmin,
+      isSuperAdmin: Boolean(user.isSuperAdmin || user.role === 'superadmin'),
+      avatarUrl: user.avatarUrl,
       createdAt: user.createdAt,
     };
 
@@ -375,6 +265,87 @@ app.post('/api/auth/login', (req: Request, res: Response) => {
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Login failed' });
   }
+});
+
+// Real Firebase OAuth Sync (Google / Facebook sign-in)
+app.post('/api/auth/firebase-sync', (req: Request, res: Response) => {
+  try {
+    const { uid, email, name, avatarUrl } = req.body;
+    if (!uid || !email) {
+      res.status(400).json({ error: 'User UID and email are required for Firebase synchronization.' });
+      return;
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    let user = db.getUserById(uid) || db.getUserByEmail(cleanEmail);
+
+    if (!user) {
+      const { salt, hash } = db.hashPassword(crypto.randomBytes(32).toString('hex'));
+      user = db.createUser({
+        id: uid,
+        name: name || cleanEmail.split('@')[0],
+        email: cleanEmail,
+        businessName: `${name || cleanEmail.split('@')[0]}'s Store`,
+        phone: '',
+        role: 'owner',
+        isSuperAdmin: false,
+        avatarUrl: avatarUrl || '',
+        createdAt: new Date().toISOString(),
+        passwordHash: hash,
+        salt,
+      });
+
+      const wsSlug = (user.businessName || user.name).toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 30);
+      db.createWorkspace({
+        id: `ws_${user.id}`,
+        name: user.businessName || `${user.name}'s Store`,
+        slug: `${wsSlug}-${user.id.slice(-4)}`,
+        ownerId: user.id,
+        businessType: 'Retail & E-commerce',
+        phone: '',
+        currency: 'BDT',
+        timezone: 'Asia/Dhaka',
+        language: 'both',
+        createdAt: new Date().toISOString(),
+      });
+    }
+
+    const token = db.createSession(user.id);
+    const workspaces = db.getWorkspacesForUser(user.id);
+
+    const safeUser = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      businessName: user.businessName,
+      phone: user.phone,
+      role: user.role,
+      isSuperAdmin: Boolean(user.isSuperAdmin || user.role === 'superadmin'),
+      avatarUrl: user.avatarUrl,
+      createdAt: user.createdAt,
+    };
+
+    res.json({
+      user: safeUser,
+      token,
+      workspaces,
+      activeWorkspace: workspaces[0] || null,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Firebase authentication sync failed' });
+  }
+});
+
+app.post('/api/auth/forgot-password', (req: Request, res: Response) => {
+  const { email } = req.body;
+  if (!email || typeof email !== 'string' || !email.includes('@')) {
+    res.status(400).json({ error: 'A valid email address is required.' });
+    return;
+  }
+  res.json({
+    success: true,
+    message: 'If an account exists for this email address, password reset instructions have been dispatched.',
+  });
 });
 
 app.get('/api/auth/me', authMiddleware, (req: Request, res: Response) => {
@@ -390,7 +361,8 @@ app.get('/api/auth/me', authMiddleware, (req: Request, res: Response) => {
     businessName: user.businessName,
     phone: user.phone,
     role: user.role,
-    isSuperAdmin: user.isSuperAdmin,
+    isSuperAdmin: Boolean(user.isSuperAdmin || user.role === 'superadmin'),
+    avatarUrl: user.avatarUrl,
     createdAt: user.createdAt,
   };
 
@@ -400,10 +372,12 @@ app.get('/api/auth/me', authMiddleware, (req: Request, res: Response) => {
 app.post('/api/auth/logout', (req: Request, res: Response) => {
   const authHeader = req.headers.authorization;
   if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.split(' ')[1];
-    db.deleteSession(token);
+    const token = authHeader.split(' ')[1]?.trim();
+    if (token) {
+      db.deleteSession(token);
+    }
   }
-  res.json({ success: true });
+  res.json({ success: true, message: 'Session terminated successfully.' });
 });
 
 function getAppUrl(req?: Request): string {
@@ -1390,6 +1364,12 @@ app.get('/api/conversations/:id', authMiddleware, (req: Request, res: Response) 
     return;
   }
 
+  const isSuper = Boolean((req as any).user?.isSuperAdmin || (req as any).user?.role === 'superadmin');
+  if (conv.workspaceId !== (req as any).workspaceId && !isSuper) {
+    res.status(403).json({ error: 'Forbidden: You do not have access to this conversation.' });
+    return;
+  }
+
   const messages = db.getMessages(convId);
   const customer = db.getCustomer(conv.customerId);
   const internalNotes = db.getInternalNotes(convId);
@@ -1409,6 +1389,18 @@ app.get('/api/conversations/:id', authMiddleware, (req: Request, res: Response) 
 
 app.post('/api/conversations/:id/status', authMiddleware, (req: Request, res: Response) => {
   const convId = req.params.id;
+  const conv = db.getConversation(convId);
+  if (!conv) {
+    res.status(404).json({ error: 'Conversation not found' });
+    return;
+  }
+
+  const isSuper = Boolean((req as any).user?.isSuperAdmin || (req as any).user?.role === 'superadmin');
+  if (conv.workspaceId !== (req as any).workspaceId && !isSuper) {
+    res.status(403).json({ error: 'Forbidden: You do not have access to this conversation.' });
+    return;
+  }
+
   const { status } = req.body;
   const updated = db.updateConversation(convId, { status });
   res.json(updated);
@@ -1416,6 +1408,18 @@ app.post('/api/conversations/:id/status', authMiddleware, (req: Request, res: Re
 
 app.post('/api/conversations/:id/assign', authMiddleware, (req: Request, res: Response) => {
   const convId = req.params.id;
+  const conv = db.getConversation(convId);
+  if (!conv) {
+    res.status(404).json({ error: 'Conversation not found' });
+    return;
+  }
+
+  const isSuper = Boolean((req as any).user?.isSuperAdmin || (req as any).user?.role === 'superadmin');
+  if (conv.workspaceId !== (req as any).workspaceId && !isSuper) {
+    res.status(403).json({ error: 'Forbidden: You do not have access to this conversation.' });
+    return;
+  }
+
   const { userId, userName } = req.body;
   const updated = db.updateConversation(convId, {
     assignedTo: userId,
@@ -1427,6 +1431,18 @@ app.post('/api/conversations/:id/assign', authMiddleware, (req: Request, res: Re
 
 app.post('/api/conversations/:id/ai-toggle', authMiddleware, (req: Request, res: Response) => {
   const convId = req.params.id;
+  const conv = db.getConversation(convId);
+  if (!conv) {
+    res.status(404).json({ error: 'Conversation not found' });
+    return;
+  }
+
+  const isSuper = Boolean((req as any).user?.isSuperAdmin || (req as any).user?.role === 'superadmin');
+  if (conv.workspaceId !== (req as any).workspaceId && !isSuper) {
+    res.status(403).json({ error: 'Forbidden: You do not have access to this conversation.' });
+    return;
+  }
+
   const { active } = req.body;
   const updated = db.updateConversation(convId, {
     aiActive: Boolean(active),
@@ -1449,6 +1465,12 @@ app.post('/api/messages', authMiddleware, async (req: Request, res: Response) =>
     const conv = db.getConversation(conversationId);
     if (!conv) {
       res.status(404).json({ error: 'Conversation not found' });
+      return;
+    }
+
+    const isSuper = Boolean(user?.isSuperAdmin || user?.role === 'superadmin');
+    if (conv.workspaceId !== wsId && !isSuper) {
+      res.status(403).json({ error: 'Forbidden: You do not have access to this conversation.' });
       return;
     }
 
@@ -1759,6 +1781,18 @@ app.post('/api/orders', authMiddleware, (req: Request, res: Response) => {
 
 app.put('/api/orders/:id/status', authMiddleware, (req: Request, res: Response) => {
   const id = req.params.id;
+  const order = db.getOrder(id);
+  if (!order) {
+    res.status(404).json({ error: 'Order not found' });
+    return;
+  }
+
+  const isSuper = Boolean((req as any).user?.isSuperAdmin || (req as any).user?.role === 'superadmin');
+  if (order.workspaceId !== (req as any).workspaceId && !isSuper) {
+    res.status(403).json({ error: 'Forbidden: You do not have permission to modify this order.' });
+    return;
+  }
+
   const { status, paymentStatus } = req.body;
   const updated = db.updateOrder(id, {
     ...(status ? { status } : {}),
@@ -1771,15 +1805,19 @@ app.put('/api/orders/:id/status', authMiddleware, (req: Request, res: Response) 
 // 7.1 VOICE SALES ASSISTANT & EMAIL REPORTS
 // ==========================================
 
-// Voice Assistant Auth Middleware (Enforces authenticated workspace session with graceful fallback)
+// Voice Assistant Auth Middleware (Strictly enforces authenticated user session)
 function voiceAuthMiddleware(req: Request, res: Response, next: NextFunction): void {
-  return authMiddleware(req, res, next, true);
+  return authMiddleware(req, res, next);
 }
 
 // Get real-time sales metrics for today
 app.get('/api/voice-assistant/today-stats', voiceAuthMiddleware, (req: Request, res: Response) => {
   try {
-    const wsId = (req as any).workspaceId || 'ws_demo_store';
+    const wsId = (req as any).workspaceId;
+    if (!wsId) {
+      res.status(403).json({ error: 'Authorized workspace required' });
+      return;
+    }
     const stats = getTodaySalesMetrics(wsId);
     res.json(stats);
   } catch (err: any) {
@@ -1790,7 +1828,11 @@ app.get('/api/voice-assistant/today-stats', voiceAuthMiddleware, (req: Request, 
 // Process voice or text query about business intelligence with Gemini Tool Calling & Context
 app.post('/api/voice-assistant/query', voiceAuthMiddleware, async (req: Request, res: Response) => {
   try {
-    const wsId = (req as any).workspaceId || 'ws_demo_store';
+    const wsId = (req as any).workspaceId;
+    if (!wsId) {
+      res.status(403).json({ error: 'Authorized workspace required' });
+      return;
+    }
     const { query, language = 'bn', sessionId, userLocation } = req.body;
     if (!query || typeof query !== 'string') {
       res.status(400).json({ error: 'Query string is required' });
@@ -1813,7 +1855,11 @@ app.post('/api/voice-assistant/query', voiceAuthMiddleware, async (req: Request,
 // Full Structured Business Report
 app.get('/api/voice-assistant/full-report', voiceAuthMiddleware, async (req: Request, res: Response) => {
   try {
-    const wsId = (req as any).workspaceId || 'ws_demo_store';
+    const wsId = (req as any).workspaceId;
+    if (!wsId) {
+      res.status(403).json({ error: 'Authorized workspace required' });
+      return;
+    }
     const summary = await BusinessManagerService.getDailyBusinessSummary(wsId);
     const report = BusinessManagerService.buildStructuredReport(summary);
     res.json(report);
@@ -1829,7 +1875,11 @@ app.get('/api/voice-assistant/full-report', voiceAuthMiddleware, async (req: Req
 // Daily Business Summary (All Connected Integrations)
 app.get('/api/business-manager/summary', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const wsId = (req as any).workspaceId || 'ws_demo_store';
+    const wsId = (req as any).workspaceId;
+    if (!wsId) {
+      res.status(403).json({ error: 'Authorized workspace required' });
+      return;
+    }
     const dateParam = req.query.date as string;
     const targetDate = dateParam ? new Date(dateParam) : undefined;
     const summary = await BusinessManagerService.getDailyBusinessSummary(wsId, targetDate);
@@ -1842,7 +1892,11 @@ app.get('/api/business-manager/summary', authMiddleware, async (req: Request, re
 // Business Manager Intelligence Query
 app.post('/api/business-manager/query', voiceAuthMiddleware, async (req: Request, res: Response) => {
   try {
-    const wsId = (req as any).workspaceId || 'ws_demo_store';
+    const wsId = (req as any).workspaceId;
+    if (!wsId) {
+      res.status(403).json({ error: 'Authorized workspace required' });
+      return;
+    }
     const { query, language = 'bn', sessionId } = req.body;
     if (!query || typeof query !== 'string') {
       res.status(400).json({ error: 'Query string is required' });
@@ -1863,7 +1917,11 @@ app.post('/api/business-manager/query', voiceAuthMiddleware, async (req: Request
 // Deliveries List
 app.get('/api/business-manager/deliveries', authMiddleware, (req: Request, res: Response) => {
   try {
-    const wsId = (req as any).workspaceId || 'ws_demo_store';
+    const wsId = (req as any).workspaceId;
+    if (!wsId) {
+      res.status(403).json({ error: 'Authorized workspace required' });
+      return;
+    }
     const deliveries = db.getDeliveries(wsId);
     res.json(deliveries);
   } catch (err: any) {
@@ -1874,7 +1932,11 @@ app.get('/api/business-manager/deliveries', authMiddleware, (req: Request, res: 
 // Manual CSV Delivery Import
 app.post('/api/business-manager/deliveries/csv-import', authMiddleware, (req: Request, res: Response) => {
   try {
-    const wsId = (req as any).workspaceId || 'ws_demo_store';
+    const wsId = (req as any).workspaceId;
+    if (!wsId) {
+      res.status(403).json({ error: 'Authorized workspace required' });
+      return;
+    }
     const { csvContent } = req.body;
     if (!csvContent || typeof csvContent !== 'string') {
       res.status(400).json({ error: 'Valid CSV text content is required' });
@@ -2064,7 +2126,11 @@ app.post('/api/webhooks/woocommerce', (req: Request, res: Response) => {
 // Send Sales Report to Email
 app.post('/api/voice-assistant/send-email', voiceAuthMiddleware, async (req: Request, res: Response) => {
   try {
-    const wsId = (req as any).workspaceId || 'ws_demo_store';
+    const wsId = (req as any).workspaceId;
+    if (!wsId) {
+      res.status(403).json({ error: 'Authorized workspace required' });
+      return;
+    }
     const { recipientEmail, customSubject, customNote } = req.body;
 
     if (!recipientEmail || typeof recipientEmail !== 'string' || !recipientEmail.includes('@')) {
@@ -2089,15 +2155,19 @@ app.post('/api/voice-assistant/send-email', voiceAuthMiddleware, async (req: Req
   }
 });
 
-// Seed or refresh today's orders
+// Refresh today's metrics
 app.post('/api/voice-assistant/seed-today-orders', voiceAuthMiddleware, (req: Request, res: Response) => {
   try {
-    const wsId = (req as any).workspaceId || 'ws_demo_store';
+    const wsId = (req as any).workspaceId;
+    if (!wsId) {
+      res.status(403).json({ error: 'Authorized workspace required' });
+      return;
+    }
     ensureTodayOrders(wsId);
     const stats = getTodaySalesMetrics(wsId);
-    res.json({ success: true, message: 'Today demo orders initialized', stats });
+    res.json({ success: true, message: 'Sales metrics refreshed', stats });
   } catch (err: any) {
-    res.status(500).json({ error: err.message || 'Failed to seed today orders' });
+    res.status(500).json({ error: err.message || 'Failed to refresh orders' });
   }
 });
 
@@ -2987,7 +3057,7 @@ app.put('/api/admin/features', authMiddleware, superAdminMiddleware, (req: Reque
 // 9. Usage, Cost & Analytics
 app.get('/api/admin/analytics', authMiddleware, superAdminMiddleware, (req: Request, res: Response) => {
   const { days = 30 } = req.query as any;
-  const workspaces = db.getWorkspacesForUser('usr_superadmin');
+  const workspaces = db.getAllWorkspaces();
   const allUsage = workspaces.flatMap((w) => db.getAIUsageRecords(w.id));
   const providers = db.getAIProviders();
   const payments = db.getPaymentRecords();
@@ -3092,7 +3162,7 @@ app.get('/api/admin/system', authMiddleware, superAdminMiddleware, (req: Request
         users: db.getUsers().length,
         subscriptions: db.getAllSubscriptions().length,
         plans: db.getSubscriptionPlans().length,
-        aiUsage: db.getAIUsageRecords('ws_demo_store').length,
+        aiUsage: ((db as any).data.aiUsageRecords || []).length,
         auditLogs: db.getAuditLogs().length,
       },
     },
@@ -3165,7 +3235,13 @@ app.post('/api/admin/diagnostics/ai-connection', authMiddleware, superAdminMiddl
 
 // B. AI Sales Agent Test Playground
 app.post('/api/admin/diagnostics/ai-playground', authMiddleware, superAdminMiddleware, async (req: Request, res: Response) => {
-  const { workspaceId = 'ws_demo_store', question } = req.body;
+  const resolvedWsId = req.body.workspaceId || (req as any).workspaceId || db.getAllWorkspaces()[0]?.id;
+  const { question } = req.body;
+
+  if (!resolvedWsId) {
+    res.status(400).json({ error: 'No workspace available for diagnostics.' });
+    return;
+  }
 
   if (!question || typeof question !== 'string') {
     res.status(400).json({ error: 'Customer question string is required for playground test.' });
@@ -3173,7 +3249,7 @@ app.post('/api/admin/diagnostics/ai-playground', authMiddleware, superAdminMiddl
   }
 
   const result = await testPlaygroundAIResponse({
-    workspaceId,
+    workspaceId: resolvedWsId,
     question,
   });
 
@@ -3248,8 +3324,8 @@ app.post('/api/admin/diagnostics/firebase', authMiddleware, superAdminMiddleware
 
 // D. Channels Diagnostics
 app.post('/api/admin/diagnostics/channels', authMiddleware, superAdminMiddleware, async (req: Request, res: Response) => {
-  const { workspaceId = 'ws_demo_store' } = req.body;
-  const channels = db.getChannels(workspaceId);
+  const resolvedWsId = req.body.workspaceId || (req as any).workspaceId || db.getAllWorkspaces()[0]?.id;
+  const channels = resolvedWsId ? db.getChannels(resolvedWsId) : [];
 
   const channelDiagnostics = await Promise.all(
     channels.map(async (c) => {
@@ -3341,7 +3417,7 @@ app.post('/api/admin/diagnostics/channels', authMiddleware, superAdminMiddleware
   );
 
   res.json({
-    workspaceId,
+    workspaceId: resolvedWsId,
     channels: channelDiagnostics,
     timestamp: new Date().toISOString(),
   });
@@ -3420,10 +3496,15 @@ app.post('/api/admin/diagnostics/run-all-safe', authMiddleware, superAdminMiddle
 
 app.post('/api/chat-widget/message', async (req: Request, res: Response) => {
   try {
-    const { workspaceId = 'ws_demo_store', visitorId, visitorName = 'Website Visitor', message } = req.body;
+    const { workspaceId, visitorId, visitorName = 'Website Visitor', message } = req.body;
 
     if (!message) {
       res.status(400).json({ error: 'Message content is required' });
+      return;
+    }
+
+    if (!workspaceId) {
+      res.status(400).json({ error: 'Workspace ID is required for live chat.' });
       return;
     }
 

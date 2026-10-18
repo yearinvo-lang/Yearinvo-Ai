@@ -1,19 +1,6 @@
 {
   "users": [
     {
-      "id": "usr_superadmin",
-      "name": "YEAR INFO Admin",
-      "email": "yearinvo@gmail.com",
-      "businessName": "YEAR INFO AI Platform",
-      "phone": "+8801700000000",
-      "role": "superadmin",
-      "isSuperAdmin": true,
-      "avatarUrl": "",
-      "createdAt": "2026-10-09T13:45:00.051Z",
-      "passwordHash": "c130b686e660958becceb26c44d07dd2901d4e344e578027fe9ba882bf50a963c540d2e1d732ee31b33629983af8d8a6d9783f1ecc6b7b50f7601523c364d162",
-      "salt": "seed-salt-admin-key-2026"
-    },
-    {
       "id": "usr_1791561279006_56kih7",
       "name": "Regular Store Owner",
       "email": "testcustomer@example.com",
@@ -120,30 +107,63 @@
       "createdAt": "2026-10-16T16:25:25.486Z",
       "passwordHash": "3989ba6f38579eb23eca187099f6604ff7f653a8f54598116371737d753acbdca4aba224c1bd95c8639324f652c9d6f00aa649e7cf034547085dbc267af9c563",
       "salt": "38cba321ec50a7779e968b2bb5785cdf"
+    },
+    {
+      "id": "VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "name": "user_VJ631cgL",
+      "email": "user_VJ631cgL@example.com",
+      "businessName": "user_VJ631cgL's Workspace",
+      "role": "owner",
+      "isSuperAdmin": false,
+      "status": "active",
+      "avatarUrl": "",
+      "createdAt": "2026-10-17T15:51:47.498Z",
+      "passwordHash": "session-managed",
+      "salt": "session-managed"
+    },
+    {
+      "id": "usr_1792255819168_3bp1vg",
+      "name": "Jamal Hossain",
+      "email": "jamal.enterprise@example.com",
+      "businessName": "Jamal Electronics",
+      "phone": "01711223344",
+      "role": "owner",
+      "isSuperAdmin": false,
+      "createdAt": "2026-10-17T16:50:19.168Z",
+      "passwordHash": "bf666534c85f94b1c6b73287c29d5ad5fe01b17d1d3e150dfc058a188ed810d26d4077b42e577d6a71ff5a3d9200f8fc3740160106f851d570567081f780a814",
+      "salt": "5d03c0f8df5769684915cb6938473497"
+    },
+    {
+      "id": "usr_1792336640805_c5a1g",
+      "name": "Real User",
+      "email": "realuser_1792336640791@example.com",
+      "businessName": "Real User's Business",
+      "phone": "",
+      "role": "owner",
+      "isSuperAdmin": false,
+      "createdAt": "2026-10-18T15:17:20.805Z",
+      "passwordHash": "b996984c13e889e4c7836efbe8167d4ade5758e5251a3efc64ded1191edb2f15e5d0c2ce53f20a3dbf10769be5c0dba0f3f0e2997fcc46757bd60fa13da34169",
+      "salt": "7577027ee0e1b2c8f88378b2fa6212d1"
     }
   ],
   "sessions": [
     {
-      "token": "adc32c5b7e26c60fab039debedbd332bdf26aabf5be911870f508f49a95b8f64",
-      "userId": "usr_1792167925486_nn2t48",
-      "expiresAt": 1792772725488
+      "token": "8b6a611116a048cfdac8c808f4aadd135a15f98d295ee79b171853ec1d57e167",
+      "userId": "usr_1792255819168_3bp1vg",
+      "expiresAt": 1792860619170
+    },
+    {
+      "token": "a8fc1876a5fa1960c3dbea228cff1ad861f72f6137291e8a155934bd3af13277",
+      "userId": "VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "expiresAt": 1792940342547
+    },
+    {
+      "token": "2a501ffb49c83a522165035e731eb8c7ce33ce33e6fb2cc3b5d2100f38d64ccc",
+      "userId": "usr_1792336640805_c5a1g",
+      "expiresAt": 1792941440837
     }
   ],
   "workspaces": [
-    {
-      "id": "ws_demo_store",
-      "name": "Dhaka Fashion Hub",
-      "slug": "dhaka-fashion-hub",
-      "ownerId": "usr_superadmin",
-      "businessType": "E-commerce & Fashion",
-      "phone": "+8801812345678",
-      "currency": "BDT",
-      "timezone": "Asia/Dhaka",
-      "language": "both",
-      "address": "House 42, Road 11, Banani, Dhaka-1213",
-      "website": "https://dhakafashion.example.com",
-      "createdAt": "2026-10-09T13:45:00.052Z"
-    },
     {
       "id": "ws_1791561279007",
       "name": "My Fashion Shop",
@@ -255,14 +275,45 @@
       "timezone": "Asia/Dhaka",
       "language": "both",
       "createdAt": "2026-10-16T16:25:25.487Z"
+    },
+    {
+      "id": "ws_1792255819168_qrqtrr",
+      "name": "Jamal Electronics",
+      "slug": "jamal-electronics-9168",
+      "ownerId": "usr_1792255819168_3bp1vg",
+      "businessType": "Retail & E-commerce",
+      "phone": "01711223344",
+      "currency": "BDT",
+      "timezone": "Asia/Dhaka",
+      "language": "both",
+      "createdAt": "2026-10-17T16:50:19.168Z"
+    },
+    {
+      "id": "ws_VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "name": "user_VJ631cgL's Workspace",
+      "slug": "user-vj631cgl-s-workspace-HqL2",
+      "ownerId": "VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "businessType": "Retail & E-commerce",
+      "phone": "",
+      "currency": "BDT",
+      "timezone": "Asia/Dhaka",
+      "language": "both",
+      "createdAt": "2026-10-18T14:59:02.945Z"
+    },
+    {
+      "id": "ws_1792336640806_jcsll",
+      "name": "Real User's Business",
+      "slug": "real-user-s-business-0806",
+      "ownerId": "usr_1792336640805_c5a1g",
+      "businessType": "Retail & E-commerce",
+      "phone": "",
+      "currency": "BDT",
+      "timezone": "Asia/Dhaka",
+      "language": "both",
+      "createdAt": "2026-10-18T15:17:20.806Z"
     }
   ],
   "workspaceMembers": [
-    {
-      "workspaceId": "ws_demo_store",
-      "userId": "usr_superadmin",
-      "role": "owner"
-    },
     {
       "workspaceId": "ws_1791561279007",
       "userId": "usr_1791561279006_56kih7",
@@ -307,61 +358,24 @@
       "workspaceId": "ws_1792167925487",
       "userId": "usr_1792167925486_nn2t48",
       "role": "owner"
+    },
+    {
+      "workspaceId": "ws_1792255819168_qrqtrr",
+      "userId": "usr_1792255819168_3bp1vg",
+      "role": "owner"
+    },
+    {
+      "workspaceId": "ws_VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "userId": "VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "role": "owner"
+    },
+    {
+      "workspaceId": "ws_1792336640806_jcsll",
+      "userId": "usr_1792336640805_c5a1g",
+      "role": "owner"
     }
   ],
   "channels": [
-    {
-      "id": "ch_facebook_ws_demo_store",
-      "workspaceId": "ws_demo_store",
-      "type": "facebook",
-      "name": "Facebook Pages",
-      "status": "not_connected",
-      "metadata": {}
-    },
-    {
-      "id": "ch_messenger_ws_demo_store",
-      "workspaceId": "ws_demo_store",
-      "type": "messenger",
-      "name": "Facebook Messenger",
-      "status": "not_connected",
-      "metadata": {}
-    },
-    {
-      "id": "ch_instagram_ws_demo_store",
-      "workspaceId": "ws_demo_store",
-      "type": "instagram",
-      "name": "@test_brand_store",
-      "status": "not_connected",
-      "metadata": {
-        "pageName": "Test Brand Page",
-        "pageId": "108849204918231",
-        "igUsername": "test_brand_store",
-        "igAccountId": "178414000000000",
-        "permissionsGranted": [
-          "pages_show_list",
-          "pages_read_engagement",
-          "pages_messaging"
-        ]
-      }
-    },
-    {
-      "id": "ch_whatsapp_ws_demo_store",
-      "workspaceId": "ws_demo_store",
-      "type": "whatsapp",
-      "name": "WhatsApp Business",
-      "status": "not_connected",
-      "metadata": {}
-    },
-    {
-      "id": "ch_livechat_ws_demo_store",
-      "workspaceId": "ws_demo_store",
-      "type": "livechat",
-      "name": "Website Live Chat",
-      "status": "not_connected",
-      "metadata": {
-        "widgetKey": "yia_widget_ws_demo_store"
-      }
-    },
     {
       "id": "ch_facebook_ws_1791561279007",
       "workspaceId": "ws_1791561279007",
@@ -739,89 +753,135 @@
       "metadata": {
         "widgetKey": "yia_widget_ws_1792167925487"
       }
+    },
+    {
+      "id": "ch_facebook_ws_1792255819168_qrqtrr",
+      "workspaceId": "ws_1792255819168_qrqtrr",
+      "type": "facebook",
+      "name": "Facebook Pages",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_messenger_ws_1792255819168_qrqtrr",
+      "workspaceId": "ws_1792255819168_qrqtrr",
+      "type": "messenger",
+      "name": "Facebook Messenger",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_instagram_ws_1792255819168_qrqtrr",
+      "workspaceId": "ws_1792255819168_qrqtrr",
+      "type": "instagram",
+      "name": "Instagram",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_whatsapp_ws_1792255819168_qrqtrr",
+      "workspaceId": "ws_1792255819168_qrqtrr",
+      "type": "whatsapp",
+      "name": "WhatsApp Business",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_livechat_ws_1792255819168_qrqtrr",
+      "workspaceId": "ws_1792255819168_qrqtrr",
+      "type": "livechat",
+      "name": "Website Live Chat",
+      "status": "not_connected",
+      "metadata": {
+        "widgetKey": "yia_widget_ws_1792255819168_qrqtrr"
+      }
+    },
+    {
+      "id": "ch_facebook_ws_VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "workspaceId": "ws_VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "type": "facebook",
+      "name": "Facebook Pages",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_messenger_ws_VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "workspaceId": "ws_VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "type": "messenger",
+      "name": "Facebook Messenger",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_instagram_ws_VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "workspaceId": "ws_VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "type": "instagram",
+      "name": "Instagram",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_whatsapp_ws_VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "workspaceId": "ws_VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "type": "whatsapp",
+      "name": "WhatsApp Business",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_livechat_ws_VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "workspaceId": "ws_VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "type": "livechat",
+      "name": "Website Live Chat",
+      "status": "not_connected",
+      "metadata": {
+        "widgetKey": "yia_widget_ws_VJ631cgLoURvIrHz7m8y3vr3HqL2"
+      }
+    },
+    {
+      "id": "ch_facebook_ws_1792336640806_jcsll",
+      "workspaceId": "ws_1792336640806_jcsll",
+      "type": "facebook",
+      "name": "Facebook Pages",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_messenger_ws_1792336640806_jcsll",
+      "workspaceId": "ws_1792336640806_jcsll",
+      "type": "messenger",
+      "name": "Facebook Messenger",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_instagram_ws_1792336640806_jcsll",
+      "workspaceId": "ws_1792336640806_jcsll",
+      "type": "instagram",
+      "name": "Instagram",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_whatsapp_ws_1792336640806_jcsll",
+      "workspaceId": "ws_1792336640806_jcsll",
+      "type": "whatsapp",
+      "name": "WhatsApp Business",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_livechat_ws_1792336640806_jcsll",
+      "workspaceId": "ws_1792336640806_jcsll",
+      "type": "livechat",
+      "name": "Website Live Chat",
+      "status": "not_connected",
+      "metadata": {
+        "widgetKey": "yia_widget_ws_1792336640806_jcsll"
+      }
     }
   ],
   "customers": [
-    {
-      "id": "cust_1",
-      "workspaceId": "ws_demo_store",
-      "name": "Tanvir Hossain",
-      "phone": "01712998877",
-      "email": "tanvir.h@gmail.com",
-      "primaryChannel": "messenger",
-      "channelIdentifiers": [
-        {
-          "channelType": "messenger",
-          "externalId": "fb_user_tanvir"
-        }
-      ],
-      "totalOrders": 4,
-      "totalSpent": 8880,
-      "tags": [
-        "VIP",
-        "Panjabi Buyer"
-      ],
-      "notes": "Prefers Size 42 L",
-      "createdAt": "2026-10-07T13:45:00.053Z"
-    },
-    {
-      "id": "cust_2",
-      "workspaceId": "ws_demo_store",
-      "name": "Nusrat Jahan",
-      "phone": "01855667788",
-      "email": "nusrat.j@yahoo.com",
-      "primaryChannel": "instagram",
-      "channelIdentifiers": [
-        {
-          "channelType": "instagram",
-          "externalId": "ig_user_nusrat",
-          "username": "nusrat_j"
-        }
-      ],
-      "totalOrders": 3,
-      "totalSpent": 15930,
-      "tags": [
-        "Inquiry"
-      ],
-      "createdAt": "2026-10-08T13:45:00.053Z"
-    },
-    {
-      "id": "cust_3",
-      "workspaceId": "ws_demo_store",
-      "name": "Kamrul Hasan",
-      "phone": "01911223344",
-      "primaryChannel": "livechat",
-      "channelIdentifiers": [
-        {
-          "channelType": "livechat",
-          "externalId": "guest_visitor_kamrul"
-        }
-      ],
-      "totalOrders": 3,
-      "totalSpent": 3960,
-      "tags": [
-        "Live Visitor"
-      ],
-      "createdAt": "2026-10-09T13:45:00.053Z"
-    },
-    {
-      "id": "cust_live_1791553525047",
-      "workspaceId": "ws_demo_store",
-      "name": "Visitor Rahim",
-      "primaryChannel": "livechat",
-      "channelIdentifiers": [
-        {
-          "channelType": "livechat",
-          "externalId": "visitor_test_1"
-        }
-      ],
-      "totalOrders": 0,
-      "totalSpent": 0,
-      "tags": [
-        "Live Chat Visitor"
-      ],
-      "createdAt": "2026-10-09T13:45:25.047Z"
-    },
     {
       "id": "cust_live_1791566117313",
       "workspaceId": "ws_1791563585423",
@@ -855,172 +915,9 @@
       "lastMessageAt": "2026-10-09T17:16:02.648Z",
       "aiActive": true,
       "createdAt": "2026-10-09T17:15:17.314Z"
-    },
-    {
-      "id": "conv_live_1791553525048",
-      "workspaceId": "ws_demo_store",
-      "customerId": "cust_live_1791553525047",
-      "customerName": "Visitor Rahim",
-      "channel": "livechat",
-      "channelName": "Live Chat",
-      "status": "human_handled",
-      "unreadCount": 0,
-      "lastMessageText": "hai",
-      "lastMessageAt": "2026-10-09T15:48:21.854Z",
-      "aiActive": false,
-      "createdAt": "2026-10-09T13:45:25.048Z"
-    },
-    {
-      "id": "conv_1",
-      "workspaceId": "ws_demo_store",
-      "customerId": "cust_1",
-      "customerName": "Tanvir Hossain",
-      "customerPhone": "01712998877",
-      "channel": "messenger",
-      "channelName": "Messenger",
-      "status": "ai_handled",
-      "unreadCount": 0,
-      "lastMessageText": "ধন্যবাদ ভাইয়া, সাইজ ৪২ কনফার্ম করলাম। ক্যাশ অন ডেলিভারিতে পাঠিয়ে দিন।",
-      "lastMessageAt": "2026-10-09T10:45:00.053Z",
-      "aiActive": true,
-      "createdAt": "2026-10-08T13:45:00.053Z"
-    },
-    {
-      "id": "conv_2",
-      "workspaceId": "ws_demo_store",
-      "customerId": "cust_2",
-      "customerName": "Nusrat Jahan",
-      "customerPhone": "01855667788",
-      "channel": "instagram",
-      "channelName": "Instagram Direct",
-      "status": "open",
-      "unreadCount": 0,
-      "lastMessageText": "Aapnader Jamdani saree ta ki delivery charge included?",
-      "lastMessageAt": "2026-10-09T13:15:00.053Z",
-      "aiActive": true,
-      "createdAt": "2026-10-09T08:45:00.053Z"
-    },
-    {
-      "id": "conv_3",
-      "workspaceId": "ws_demo_store",
-      "customerId": "cust_3",
-      "customerName": "Kamrul Hasan",
-      "channel": "livechat",
-      "channelName": "Website Chat",
-      "status": "human_handled",
-      "unreadCount": 0,
-      "lastMessageText": "ki obostha",
-      "lastMessageAt": "2026-10-09T15:48:11.390Z",
-      "aiActive": false,
-      "createdAt": "2026-10-09T13:35:00.054Z"
     }
   ],
   "messages": [
-    {
-      "id": "msg_1",
-      "conversationId": "conv_1",
-      "workspaceId": "ws_demo_store",
-      "senderType": "customer",
-      "senderName": "Tanvir Hossain",
-      "content": "আসসালামু আলাইকুম! রয়্যাল নেভি সুতি পাঞ্জাবির সাইজ ৪২ কি স্টকে আছে? দাম কত?",
-      "timestamp": "2026-10-09T09:45:00.054Z",
-      "deliveryStatus": "read"
-    },
-    {
-      "id": "msg_2",
-      "conversationId": "conv_1",
-      "workspaceId": "ws_demo_store",
-      "senderType": "ai",
-      "senderName": "YEAR INFO AI Agent",
-      "content": "ওয়ালাইকুম আসসালাম! জ্বী, প্রিমিয়াম সুতি পাঞ্জাবি - রয়্যাল নেভি (Size 42 / L) বর্তমানে স্টকে রয়েছে। ডিসকাউন্টে দাম ২১৫০ টাকা (রেগুলার ২৪৫০ টাকা)। ঢাকার ভিতরে ডেলিভারি চার্জ ৭০ টাকা। আপনি কি অর্ডার করতে চান?",
-      "timestamp": "2026-10-09T09:51:00.054Z",
-      "deliveryStatus": "delivered",
-      "aiAssisted": true
-    },
-    {
-      "id": "msg_3",
-      "conversationId": "conv_1",
-      "workspaceId": "ws_demo_store",
-      "senderType": "customer",
-      "senderName": "Tanvir Hossain",
-      "content": "ধন্যবাদ ভাইয়া, সাইজ ৪২ কনফার্ম করলাম। ক্যাশ অন ডেলিভারিতে পাঠিয়ে দিন। ঠিকানা: বাড়ি ১২, রোড ৪, ধানমন্ডি, ঢাকা। মোবাইল: ০১৭১২৯৯৮৮৭৭।",
-      "timestamp": "2026-10-09T10:45:00.054Z",
-      "deliveryStatus": "read"
-    },
-    {
-      "id": "msg_4",
-      "conversationId": "conv_2",
-      "workspaceId": "ws_demo_store",
-      "senderType": "customer",
-      "senderName": "Nusrat Jahan",
-      "content": "Aapnader Jamdani saree ta ki delivery charge included?",
-      "timestamp": "2026-10-09T13:15:00.054Z",
-      "deliveryStatus": "delivered"
-    },
-    {
-      "id": "msg_5",
-      "conversationId": "conv_3",
-      "workspaceId": "ws_demo_store",
-      "senderType": "customer",
-      "senderName": "Kamrul Hasan",
-      "content": "Can I get delivery in Chittagong by tomorrow?",
-      "timestamp": "2026-10-09T13:35:00.054Z",
-      "deliveryStatus": "delivered"
-    },
-    {
-      "id": "msg_live_1791553525048",
-      "conversationId": "conv_live_1791553525048",
-      "workspaceId": "ws_demo_store",
-      "senderType": "customer",
-      "senderName": "Visitor Rahim",
-      "content": "পাঞ্জাবির দাম কত এবং ঢাকার ভেতরে ডেলিভারি চার্জ কত?",
-      "timestamp": "2026-10-09T13:45:25.048Z",
-      "deliveryStatus": "delivered"
-    },
-    {
-      "id": "msg_live_ai_1791553525051",
-      "conversationId": "conv_live_1791553525048",
-      "workspaceId": "ws_demo_store",
-      "senderType": "ai",
-      "senderName": "YEAR INFO AI Agent",
-      "content": "Inside Dhaka delivery charge is 70 BDT (delivery within 24-48 hours). Outside Dhaka delivery charge is 130 BDT via Steadfast/SA Paribahan (delivery within 3-4 days). Cash on Delivery is available all over Bangladesh.",
-      "timestamp": "2026-10-09T13:45:25.051Z",
-      "deliveryStatus": "delivered",
-      "aiAssisted": true
-    },
-    {
-      "id": "msg_1791560885675_pkvge",
-      "conversationId": "conv_3",
-      "workspaceId": "ws_demo_store",
-      "senderType": "agent",
-      "senderName": "YEAR INFO Admin",
-      "content": "hi",
-      "attachments": [],
-      "timestamp": "2026-10-09T15:48:05.675Z",
-      "deliveryStatus": "delivered"
-    },
-    {
-      "id": "msg_1791560891390_zua1c",
-      "conversationId": "conv_3",
-      "workspaceId": "ws_demo_store",
-      "senderType": "agent",
-      "senderName": "YEAR INFO Admin",
-      "content": "ki obostha",
-      "attachments": [],
-      "timestamp": "2026-10-09T15:48:11.390Z",
-      "deliveryStatus": "delivered"
-    },
-    {
-      "id": "msg_1791560901854_w8nec",
-      "conversationId": "conv_live_1791553525048",
-      "workspaceId": "ws_demo_store",
-      "senderType": "agent",
-      "senderName": "YEAR INFO Admin",
-      "content": "hai",
-      "attachments": [],
-      "timestamp": "2026-10-09T15:48:21.854Z",
-      "deliveryStatus": "delivered"
-    },
     {
       "id": "msg_live_1791566117317",
       "conversationId": "conv_live_1791566117314",
@@ -1073,426 +970,9 @@
     }
   ],
   "internalNotes": [],
-  "products": [
-    {
-      "id": "prod_1",
-      "workspaceId": "ws_demo_store",
-      "name": "Premium Cotton Panjabi - Royal Navy",
-      "nameBengali": "প্রিমিয়াম সুতি পাঞ্জাবি - রয়্যাল নেভি",
-      "sku": "PANJABI-NV-01",
-      "category": "Menswear",
-      "description": "100% fine cotton traditional embroidery Panjabi, perfect for festive and casual wear.",
-      "price": 2450,
-      "discountPrice": 2150,
-      "stock": 32,
-      "images": [
-        "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=600&auto=format&fit=crop&q=80"
-      ],
-      "variants": [
-        {
-          "id": "v_1",
-          "name": "Size 40 (M)",
-          "price": 2150,
-          "stock": 12,
-          "sku": "PANJABI-NV-40"
-        },
-        {
-          "id": "v_2",
-          "name": "Size 42 (L)",
-          "price": 2150,
-          "stock": 12,
-          "sku": "PANJABI-NV-42"
-        },
-        {
-          "id": "v_3",
-          "name": "Size 44 (XL)",
-          "price": 2150,
-          "stock": 8,
-          "sku": "PANJABI-NV-44"
-        }
-      ],
-      "available": true,
-      "shippingInfo": "Standard 48 hours delivery",
-      "createdAt": "2026-10-09T13:45:00.052Z"
-    },
-    {
-      "id": "prod_2",
-      "workspaceId": "ws_demo_store",
-      "name": "Handloom Jamdani Saree - Crimson Gold",
-      "nameBengali": "হ্যান্ডলুম জামদানি শাড়ি - ক্রিমসন গোল্ড",
-      "sku": "SAREE-JAM-CR",
-      "category": "Womenswear",
-      "description": "Authentic 84-count Dhakai Jamdani woven with golden zari motifs on soft crimson cotton silk base.",
-      "price": 5200,
-      "discountPrice": 4750,
-      "stock": 11,
-      "images": [
-        "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&auto=format&fit=crop&q=80"
-      ],
-      "variants": [],
-      "available": true,
-      "shippingInfo": "Handled with luxury box packaging",
-      "createdAt": "2026-10-09T13:45:00.052Z"
-    },
-    {
-      "id": "prod_3",
-      "workspaceId": "ws_demo_store",
-      "name": "Pure Leather Bifold Wallet",
-      "nameBengali": "আসল চামড়ার ওয়ালেট",
-      "sku": "WALLET-LTH-01",
-      "category": "Accessories",
-      "description": "Top-grain cowhide leather with 8 card slots, currency divider and RFID protection.",
-      "price": 1250,
-      "discountPrice": 990,
-      "stock": 47,
-      "images": [
-        "https://images.unsplash.com/photo-1627123424574-724758594e93?w=600&auto=format&fit=crop&q=80"
-      ],
-      "variants": [],
-      "available": true,
-      "shippingInfo": "Delivery within 24 hours in Dhaka",
-      "createdAt": "2026-10-09T13:45:00.052Z"
-    }
-  ],
-  "orders": [
-    {
-      "id": "ord_today_3_1792120050765",
-      "orderNumber": "YIA-2026-203",
-      "workspaceId": "ws_demo_store",
-      "customerId": "cust_3",
-      "customerName": "Kamrul Hasan",
-      "customerPhone": "01911223344",
-      "deliveryAddress": "Mirpur DOHS, Road 9, Dhaka",
-      "items": [
-        {
-          "productId": "prod_3",
-          "productName": "Pure Leather Bifold Wallet",
-          "sku": "WALLET-LTHR-01",
-          "unitPrice": 1250,
-          "quantity": 1,
-          "subtotal": 1250
-        }
-      ],
-      "subtotal": 1250,
-      "deliveryCharge": 70,
-      "discount": 0,
-      "total": 1320,
-      "status": "pending",
-      "paymentStatus": "pending",
-      "paymentMethod": "cash_on_delivery",
-      "aiAssisted": true,
-      "notes": "Customer inquired via WhatsApp. Awaiting final confirmation.",
-      "createdAt": "2026-10-16T02:22:30.765Z",
-      "updatedAt": "2026-10-16T02:22:30.765Z"
-    },
-    {
-      "id": "ord_today_2_1792120050765",
-      "orderNumber": "YIA-2026-202",
-      "workspaceId": "ws_demo_store",
-      "customerId": "cust_2",
-      "customerName": "Nusrat Jahan",
-      "customerPhone": "01855667788",
-      "deliveryAddress": "Flat 5B, Green Road, Dhanmondi, Dhaka",
-      "items": [
-        {
-          "productId": "prod_2",
-          "productName": "Handloom Jamdani Saree - Crimson Gold",
-          "sku": "JAMDANI-CG-01",
-          "unitPrice": 5200,
-          "quantity": 1,
-          "subtotal": 5200
-        }
-      ],
-      "subtotal": 5200,
-      "deliveryCharge": 110,
-      "discount": 0,
-      "total": 5310,
-      "status": "confirmed",
-      "paymentStatus": "paid",
-      "paymentMethod": "bkash",
-      "aiAssisted": true,
-      "notes": "Paid via bKash. Packaging in progress for dispatch.",
-      "createdAt": "2026-10-16T00:07:30.765Z",
-      "updatedAt": "2026-10-16T01:07:30.765Z"
-    },
-    {
-      "id": "ord_today_1_1792120050765",
-      "orderNumber": "YIA-2026-201",
-      "workspaceId": "ws_demo_store",
-      "customerId": "cust_1",
-      "customerName": "Tanvir Hossain",
-      "customerPhone": "01712998877",
-      "deliveryAddress": "House 12, Road 4, Dhanmondi, Dhaka",
-      "items": [
-        {
-          "productId": "prod_1",
-          "productName": "Premium Cotton Panjabi - Royal Navy",
-          "sku": "PANJABI-NV-42",
-          "variantId": "v_2",
-          "variantName": "Size 42 (L)",
-          "unitPrice": 2150,
-          "quantity": 1,
-          "subtotal": 2150
-        }
-      ],
-      "subtotal": 2150,
-      "deliveryCharge": 70,
-      "discount": 0,
-      "total": 2220,
-      "status": "delivered",
-      "paymentStatus": "paid",
-      "paymentMethod": "cash_on_delivery",
-      "aiAssisted": true,
-      "notes": "Delivered successfully this morning. Customer satisfied.",
-      "createdAt": "2026-10-15T22:07:30.765Z",
-      "updatedAt": "2026-10-16T02:07:30.765Z"
-    },
-    {
-      "id": "ord_today_3_1791993159160",
-      "orderNumber": "YIA-2026-203",
-      "workspaceId": "ws_demo_store",
-      "customerId": "cust_3",
-      "customerName": "Kamrul Hasan",
-      "customerPhone": "01911223344",
-      "deliveryAddress": "Mirpur DOHS, Road 9, Dhaka",
-      "items": [
-        {
-          "productId": "prod_3",
-          "productName": "Pure Leather Bifold Wallet",
-          "sku": "WALLET-LTHR-01",
-          "unitPrice": 1250,
-          "quantity": 1,
-          "subtotal": 1250
-        }
-      ],
-      "subtotal": 1250,
-      "deliveryCharge": 70,
-      "discount": 0,
-      "total": 1320,
-      "status": "pending",
-      "paymentStatus": "pending",
-      "paymentMethod": "cash_on_delivery",
-      "aiAssisted": true,
-      "notes": "Customer inquired via WhatsApp. Awaiting final confirmation.",
-      "createdAt": "2026-10-14T15:07:39.160Z",
-      "updatedAt": "2026-10-14T15:07:39.160Z"
-    },
-    {
-      "id": "ord_today_2_1791993159160",
-      "orderNumber": "YIA-2026-202",
-      "workspaceId": "ws_demo_store",
-      "customerId": "cust_2",
-      "customerName": "Nusrat Jahan",
-      "customerPhone": "01855667788",
-      "deliveryAddress": "Flat 5B, Green Road, Dhanmondi, Dhaka",
-      "items": [
-        {
-          "productId": "prod_2",
-          "productName": "Handloom Jamdani Saree - Crimson Gold",
-          "sku": "JAMDANI-CG-01",
-          "unitPrice": 5200,
-          "quantity": 1,
-          "subtotal": 5200
-        }
-      ],
-      "subtotal": 5200,
-      "deliveryCharge": 110,
-      "discount": 0,
-      "total": 5310,
-      "status": "confirmed",
-      "paymentStatus": "paid",
-      "paymentMethod": "bkash",
-      "aiAssisted": true,
-      "notes": "Paid via bKash. Packaging in progress for dispatch.",
-      "createdAt": "2026-10-14T12:52:39.160Z",
-      "updatedAt": "2026-10-14T13:52:39.160Z"
-    },
-    {
-      "id": "ord_today_1_1791993159160",
-      "orderNumber": "YIA-2026-201",
-      "workspaceId": "ws_demo_store",
-      "customerId": "cust_1",
-      "customerName": "Tanvir Hossain",
-      "customerPhone": "01712998877",
-      "deliveryAddress": "House 12, Road 4, Dhanmondi, Dhaka",
-      "items": [
-        {
-          "productId": "prod_1",
-          "productName": "Premium Cotton Panjabi - Royal Navy",
-          "sku": "PANJABI-NV-42",
-          "variantId": "v_2",
-          "variantName": "Size 42 (L)",
-          "unitPrice": 2150,
-          "quantity": 1,
-          "subtotal": 2150
-        }
-      ],
-      "subtotal": 2150,
-      "deliveryCharge": 70,
-      "discount": 0,
-      "total": 2220,
-      "status": "delivered",
-      "paymentStatus": "paid",
-      "paymentMethod": "cash_on_delivery",
-      "aiAssisted": true,
-      "notes": "Delivered successfully this morning. Customer satisfied.",
-      "createdAt": "2026-10-14T10:52:39.160Z",
-      "updatedAt": "2026-10-14T14:52:39.160Z"
-    },
-    {
-      "id": "ord_today_3_1791821532552",
-      "orderNumber": "YIA-2026-203",
-      "workspaceId": "ws_demo_store",
-      "customerId": "cust_3",
-      "customerName": "Kamrul Hasan",
-      "customerPhone": "01911223344",
-      "deliveryAddress": "Mirpur DOHS, Road 9, Dhaka",
-      "items": [
-        {
-          "productId": "prod_3",
-          "productName": "Pure Leather Bifold Wallet",
-          "sku": "WALLET-LTHR-01",
-          "unitPrice": 1250,
-          "quantity": 1,
-          "subtotal": 1250
-        }
-      ],
-      "subtotal": 1250,
-      "deliveryCharge": 70,
-      "discount": 0,
-      "total": 1320,
-      "status": "pending",
-      "paymentStatus": "pending",
-      "paymentMethod": "cash_on_delivery",
-      "aiAssisted": true,
-      "notes": "Customer inquired via WhatsApp. Awaiting final confirmation.",
-      "createdAt": "2026-10-12T15:27:12.552Z",
-      "updatedAt": "2026-10-12T15:27:12.552Z"
-    },
-    {
-      "id": "ord_today_2_1791821532552",
-      "orderNumber": "YIA-2026-202",
-      "workspaceId": "ws_demo_store",
-      "customerId": "cust_2",
-      "customerName": "Nusrat Jahan",
-      "customerPhone": "01855667788",
-      "deliveryAddress": "Flat 5B, Green Road, Dhanmondi, Dhaka",
-      "items": [
-        {
-          "productId": "prod_2",
-          "productName": "Handloom Jamdani Saree - Crimson Gold",
-          "sku": "JAMDANI-CG-01",
-          "unitPrice": 5200,
-          "quantity": 1,
-          "subtotal": 5200
-        }
-      ],
-      "subtotal": 5200,
-      "deliveryCharge": 110,
-      "discount": 0,
-      "total": 5310,
-      "status": "confirmed",
-      "paymentStatus": "paid",
-      "paymentMethod": "bkash",
-      "aiAssisted": true,
-      "notes": "Paid via bKash. Packaging in progress for dispatch.",
-      "createdAt": "2026-10-12T13:12:12.552Z",
-      "updatedAt": "2026-10-12T14:12:12.552Z"
-    },
-    {
-      "id": "ord_today_1_1791821532552",
-      "orderNumber": "YIA-2026-201",
-      "workspaceId": "ws_demo_store",
-      "customerId": "cust_1",
-      "customerName": "Tanvir Hossain",
-      "customerPhone": "01712998877",
-      "deliveryAddress": "House 12, Road 4, Dhanmondi, Dhaka",
-      "items": [
-        {
-          "productId": "prod_1",
-          "productName": "Premium Cotton Panjabi - Royal Navy",
-          "sku": "PANJABI-NV-42",
-          "variantId": "v_2",
-          "variantName": "Size 42 (L)",
-          "unitPrice": 2150,
-          "quantity": 1,
-          "subtotal": 2150
-        }
-      ],
-      "subtotal": 2150,
-      "deliveryCharge": 70,
-      "discount": 0,
-      "total": 2220,
-      "status": "delivered",
-      "paymentStatus": "paid",
-      "paymentMethod": "cash_on_delivery",
-      "aiAssisted": true,
-      "notes": "Delivered successfully this morning. Customer satisfied.",
-      "createdAt": "2026-10-12T11:12:12.552Z",
-      "updatedAt": "2026-10-12T15:12:12.552Z"
-    },
-    {
-      "id": "ord_1001",
-      "orderNumber": "YIA-2026-1001",
-      "workspaceId": "ws_demo_store",
-      "customerId": "cust_1",
-      "customerName": "Tanvir Hossain",
-      "customerPhone": "01712998877",
-      "deliveryAddress": "House 12, Road 4, Dhanmondi, Dhaka",
-      "items": [
-        {
-          "productId": "prod_1",
-          "productName": "Premium Cotton Panjabi - Royal Navy",
-          "sku": "PANJABI-NV-42",
-          "variantId": "v_2",
-          "variantName": "Size 42 (L)",
-          "unitPrice": 2150,
-          "quantity": 1,
-          "subtotal": 2150
-        }
-      ],
-      "subtotal": 2150,
-      "deliveryCharge": 70,
-      "discount": 0,
-      "total": 2220,
-      "status": "confirmed",
-      "paymentStatus": "pending",
-      "paymentMethod": "cash_on_delivery",
-      "conversationId": "conv_1",
-      "aiAssisted": true,
-      "notes": "AI assisted order. Size 42 L confirmed.",
-      "createdAt": "2026-10-09T11:15:00.054Z",
-      "updatedAt": "2026-10-09T11:15:00.054Z"
-    }
-  ],
+  "products": [],
+  "orders": [],
   "aiSettings": [
-    {
-      "workspaceId": "ws_demo_store",
-      "enabled": true,
-      "model": "gemini-3.8-flash",
-      "brandVoice": "friendly",
-      "languageMode": "auto_detect",
-      "autoReplyChannels": [
-        "messenger",
-        "instagram",
-        "livechat"
-      ],
-      "businessHoursOnly": false,
-      "businessHoursStart": "09:00",
-      "businessHoursEnd": "22:00",
-      "humanTakeoverKeywords": [
-        "human",
-        "agent",
-        "support",
-        "manush",
-        "kotha bolbo",
-        "representative"
-      ],
-      "confidenceThreshold": 0.8,
-      "enableDirectOrderCreation": true,
-      "customGreetingBn": "আসসালামু আলাইকুম! ঢাকা ফ্যাশন হাব এ আপনাকে স্বাগতম। আমি আপনার সেলস অ্যাসিস্ট্যান্ট। কিভাবে সাহায্য করতে পারি?",
-      "customGreetingEn": "Welcome to Dhaka Fashion Hub! How may I assist your shopping today?"
-    },
     {
       "workspaceId": "ws_1791561279007",
       "enabled": false,
@@ -1690,82 +1170,77 @@
       "enableDirectOrderCreation": true,
       "customGreetingBn": "আসসালামু আলাইকুম! testowner's Store-এ আপনাকে স্বাগতম। আমি কীভাবে সহযোগিতা করতে পারি?",
       "customGreetingEn": "Welcome to testowner's Store! How may I help you today?"
-    }
-  ],
-  "knowledgeItems": [
-    {
-      "id": "kn_1",
-      "workspaceId": "ws_demo_store",
-      "category": "delivery",
-      "question": "Delivery charges and turnaround time",
-      "answer": "Inside Dhaka delivery charge is 70 BDT (delivery within 24-48 hours). Outside Dhaka delivery charge is 130 BDT via Steadfast/SA Paribahan (delivery within 3-4 days). Cash on Delivery is available all over Bangladesh.",
-      "language": "both",
-      "updatedAt": "2026-10-09T13:45:00.052Z"
     },
     {
-      "id": "kn_2",
-      "workspaceId": "ws_demo_store",
-      "category": "payment",
-      "question": "Accepted payment methods",
-      "answer": "We accept Cash on Delivery (COD), bKash (Merchant / Personal Send Money), Nagad, and Bank Transfer.",
-      "language": "both",
-      "updatedAt": "2026-10-09T13:45:00.052Z"
+      "workspaceId": "ws_1792255819168_qrqtrr",
+      "enabled": false,
+      "model": "gemini-3.8-flash",
+      "brandVoice": "friendly",
+      "languageMode": "auto_detect",
+      "autoReplyChannels": [],
+      "businessHoursOnly": false,
+      "businessHoursStart": "09:00",
+      "businessHoursEnd": "22:00",
+      "humanTakeoverKeywords": [
+        "human",
+        "agent",
+        "support",
+        "manush",
+        "kotha bolbo"
+      ],
+      "confidenceThreshold": 0.75,
+      "enableDirectOrderCreation": true,
+      "customGreetingBn": "আসসালামু আলাইকুম! Jamal Electronics-এ আপনাকে স্বাগতম। আমি কীভাবে সহযোগিতা করতে পারি?",
+      "customGreetingEn": "Welcome to Jamal Electronics! How may I help you today?"
     },
     {
-      "id": "kn_3",
-      "workspaceId": "ws_demo_store",
-      "category": "policy",
-      "question": "Return & Exchange policy",
-      "answer": "Returns are accepted within 3 days of delivery if the product is defective, wrong size, or damaged during transit. Rider present return fee is 70 BDT.",
-      "language": "both",
-      "updatedAt": "2026-10-09T13:45:00.052Z"
+      "workspaceId": "ws_VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "enabled": false,
+      "model": "gemini-3.8-flash",
+      "brandVoice": "friendly",
+      "languageMode": "auto_detect",
+      "autoReplyChannels": [],
+      "businessHoursOnly": false,
+      "businessHoursStart": "09:00",
+      "businessHoursEnd": "22:00",
+      "humanTakeoverKeywords": [
+        "human",
+        "agent",
+        "support",
+        "manush",
+        "kotha bolbo"
+      ],
+      "confidenceThreshold": 0.75,
+      "enableDirectOrderCreation": true,
+      "customGreetingBn": "আসসালামু আলাইকুম! user_VJ631cgL's Workspace-এ আপনাকে স্বাগতম। আমি কীভাবে সহযোগিতা করতে পারি?",
+      "customGreetingEn": "Welcome to user_VJ631cgL's Workspace! How may I help you today?"
+    },
+    {
+      "workspaceId": "ws_1792336640806_jcsll",
+      "enabled": false,
+      "model": "gemini-3.8-flash",
+      "brandVoice": "friendly",
+      "languageMode": "auto_detect",
+      "autoReplyChannels": [],
+      "businessHoursOnly": false,
+      "businessHoursStart": "09:00",
+      "businessHoursEnd": "22:00",
+      "humanTakeoverKeywords": [
+        "human",
+        "agent",
+        "support",
+        "manush",
+        "kotha bolbo"
+      ],
+      "confidenceThreshold": 0.75,
+      "enableDirectOrderCreation": true,
+      "customGreetingBn": "আসসালামু আলাইকুম! Real User's Business-এ আপনাকে স্বাগতম। আমি কীভাবে সহযোগিতা করতে পারি?",
+      "customGreetingEn": "Welcome to Real User's Business! How may I help you today?"
     }
   ],
+  "knowledgeItems": [],
   "aiUsageRecords": [],
-  "scheduledPosts": [
-    {
-      "id": "post_1",
-      "workspaceId": "ws_demo_store",
-      "platforms": [
-        "facebook",
-        "instagram"
-      ],
-      "caption": "নতুন বৈশাখী কালেকশন ২০২৬! প্রিমিয়াম সুতি পাঞ্জাবি ও ধুনট হ্যান্ডলুম জামদানি এখন স্টকে। আপনার সাইজ শেষ হবার আগেই ইনবক্সে অর্ডার কনফার্ম করুন। ✨",
-      "hashtags": [
-        "#DhakaFashion",
-        "#YearInfoAI",
-        "#Panjabi",
-        "#Jamdani",
-        "#BangladeshEcommerce"
-      ],
-      "mediaUrls": [
-        "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=800&auto=format&fit=crop&q=80"
-      ],
-      "scheduledAt": "2026-10-10T01:45:00.054Z",
-      "timezone": "Asia/Dhaka",
-      "status": "failed",
-      "createdAt": "2026-10-09T13:45:00.054Z",
-      "errorMessage": "Publishing failed: No connected and authorized Facebook Page or Instagram account found for this workspace. Please connect channel in Settings."
-    },
-    {
-      "id": "diag_job_1791566431520",
-      "workspaceId": "ws_demo_store",
-      "caption": "[DIAGNOSTIC_TEST_JOB] Safe scheduler persistence verification.",
-      "platforms": [
-        "facebook"
-      ],
-      "hashtags": [
-        "#test",
-        "#diagnostic"
-      ],
-      "mediaUrls": [],
-      "scheduledAt": "2026-10-10T17:20:31.520Z",
-      "timezone": "Asia/Dhaka",
-      "status": "failed",
-      "createdAt": "2026-10-09T17:20:31.520Z",
-      "errorMessage": "Publishing failed: No connected and authorized Facebook Page or Instagram account found for this workspace. Please connect channel in Settings."
-    }
-  ],
+  "scheduledPosts": [],
   "scheduledMessages": [],
   "subscriptionPlans": [
     {
@@ -1836,24 +1311,6 @@
     }
   ],
   "subscriptions": [
-    {
-      "id": "sub_1",
-      "workspaceId": "ws_demo_store",
-      "workspaceName": "Dhaka Fashion Hub",
-      "planId": "plan_pro",
-      "planName": "Growth & Business",
-      "status": "active",
-      "startedAt": "2026-10-09T13:45:00.054Z",
-      "expiresAt": "2026-11-08T13:45:00.054Z",
-      "requestedAt": "2026-10-09T13:45:00.054Z",
-      "paymentMethod": "bKash Merchant",
-      "paymentReference": "TRX987654321",
-      "currentUsage": {
-        "conversationsThisMonth": 12,
-        "aiRepliesThisMonth": 19,
-        "scheduledPostsThisMonth": 3
-      }
-    },
     {
       "id": "sub_1791561279008",
       "workspaceId": "ws_1791561279007",
@@ -1965,17 +1422,49 @@
         "aiRepliesThisMonth": 0,
         "scheduledPostsThisMonth": 0
       }
+    },
+    {
+      "id": "sub_1792255819169",
+      "workspaceId": "ws_1792255819168_qrqtrr",
+      "workspaceName": "Jamal Electronics",
+      "planId": "plan_starter",
+      "planName": "Starter",
+      "status": "active",
+      "startedAt": "2026-10-17T16:50:19.169Z",
+      "expiresAt": "2026-11-16T16:50:19.169Z",
+      "requestedAt": "2026-10-17T16:50:19.169Z",
+      "currentUsage": {
+        "conversationsThisMonth": 0,
+        "aiRepliesThisMonth": 0,
+        "scheduledPostsThisMonth": 0
+      }
+    },
+    {
+      "id": "sub_1792336640807",
+      "workspaceId": "ws_1792336640806_jcsll",
+      "workspaceName": "Real User's Business",
+      "planId": "plan_starter",
+      "planName": "Starter",
+      "status": "active",
+      "startedAt": "2026-10-18T15:17:20.807Z",
+      "expiresAt": "2026-11-17T15:17:20.807Z",
+      "requestedAt": "2026-10-18T15:17:20.807Z",
+      "currentUsage": {
+        "conversationsThisMonth": 0,
+        "aiRepliesThisMonth": 0,
+        "scheduledPostsThisMonth": 0
+      }
     }
   ],
   "auditLogs": [
     {
-      "id": "audit_conn_1791654143541",
-      "workspaceId": "ws_demo_store",
-      "userId": "usr_superadmin",
-      "userName": "YEAR INFO Admin",
-      "action": "CHANNEL_CONNECTED",
-      "details": "Successfully connected instagram account \"Test Brand Page\" (ID: 108849204918231).",
-      "timestamp": "2026-10-10T17:42:23.541Z"
+      "id": "audit_disc_1792336640850",
+      "workspaceId": "ws_1792336640806_jcsll",
+      "userId": "system",
+      "userName": "Workspace User",
+      "action": "CHANNEL_DISCONNECTED",
+      "details": "Revoked authorization and disconnected Facebook Pages.",
+      "timestamp": "2026-10-18T15:17:20.850Z"
     },
     {
       "id": "audit_ai_test_1791561284187",
@@ -1985,15 +1474,6 @@
       "details": "Connection test on provider \"prov_gemini\": Failed (0ms)",
       "timestamp": "2026-10-09T15:54:44.187Z",
       "status": "failure"
-    },
-    {
-      "id": "log_1",
-      "workspaceId": "ws_demo_store",
-      "userId": "usr_superadmin",
-      "userName": "YEAR INFO Admin",
-      "action": "WORKSPACE_INITIALIZED",
-      "details": "Initial workspace and multi-channel configuration initialized successfully.",
-      "timestamp": "2026-10-09T13:45:00.054Z"
     }
   ],
   "aiProviders": [

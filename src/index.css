@@ -53,3 +53,80 @@ html[lang="en"] body {
   background: rgba(168, 85, 247, 0.4);
 }
 
+/* ========================================================
+   PREMIUM BACKGROUND GRID & OBSIDIAN DARK THEME SYSTEM
+   ======================================================== */
+
+/* Geometric Grid Background */
+.bg-grid-pattern {
+  background-image: linear-gradient(to right, rgba(99, 102, 241, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(99, 102, 241, 0.07) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.dark .bg-grid-pattern,
+[data-theme='dark'] .bg-grid-pattern {
+  background-image: linear-gradient(to right, rgba(168, 85, 247, 0.09) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(168, 85, 247, 0.09) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Fine-mesh Micro Grid */
+.bg-grid-fine {
+  background-image: linear-gradient(to right, rgba(99, 102, 241, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(99, 102, 241, 0.05) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+.dark .bg-grid-fine,
+[data-theme='dark'] .bg-grid-fine {
+  background-image: linear-gradient(to right, rgba(168, 85, 247, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(168, 85, 247, 0.06) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+/* Radiant Radial Vignette Mask for Grids */
+.mask-radial-vignette {
+  mask-image: radial-gradient(ellipse at center, rgba(0, 0, 0, 1) 40%, rgba(0, 0, 0, 0.3) 80%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse at center, rgba(0, 0, 0, 1) 40%, rgba(0, 0, 0, 0.3) 80%, transparent 100%);
+}
+
+.mask-top-vignette {
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.8) 60%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.8) 60%, transparent 100%);
+}
+
+/* Ultra-Premium Obsidian Canvas in Dark Mode (Eliminates flat washed-out grey) */
+.dark body,
+html.dark,
+[data-theme='dark'] {
+  background-color: #06050c;
+  color: #f8fafc;
+}
+
+/* Glassmorphic Obsidian Card with luminous edge */
+.premium-card-dark {
+  background: rgba(13, 11, 25, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(168, 85, 247, 0.22);
+  box-shadow: 0 12px 36px -8px rgba(0, 0, 0, 0.65), 0 0 24px -6px rgba(168, 85, 247, 0.12);
+}
+
+.premium-card-dark:hover {
+  border-color: rgba(168, 85, 247, 0.4);
+  box-shadow: 0 16px 42px -6px rgba(0, 0, 0, 0.75), 0 0 30px -4px rgba(168, 85, 247, 0.2);
+}
+
+/* Glowing Neon Borders */
+.border-glow-purple {
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.15);
+}
+
+.border-glow-emerald {
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  box-shadow: 0 0 15px rgba(52, 211, 153, 0.15);
+}
+
+

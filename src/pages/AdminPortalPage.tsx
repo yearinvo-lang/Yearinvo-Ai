@@ -150,7 +150,7 @@ export const AdminPortalPage: React.FC = () => {
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentForm, setPaymentForm] = useState({
-    workspaceId: 'ws_demo_store',
+    workspaceId: '',
     amountBdt: 2999,
     method: 'bkash',
     transactionReference: '',
@@ -494,7 +494,7 @@ export const AdminPortalPage: React.FC = () => {
       });
       triggerFeedback('Payment record verified and saved.');
       setShowPaymentModal(false);
-      setPaymentForm({ workspaceId: 'ws_demo_store', amountBdt: 2999, method: 'bkash', transactionReference: '' });
+      setPaymentForm({ workspaceId: subscriptionsList[0]?.workspaceId || '', amountBdt: 2999, method: 'bkash', transactionReference: '' });
       loadAllData();
     } catch (e: any) {
       setActionErrorMsg(e.message || 'Failed to record payment');
@@ -683,6 +683,20 @@ export const AdminPortalPage: React.FC = () => {
       setRunningAllSafe(false);
     }
   };
+
+  if (!user || (!user.isSuperAdmin && user.role !== 'superadmin')) {
+    return (
+      <div className="flex h-96 flex-col items-center justify-center text-center p-6 space-y-4">
+        <div className="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400">
+          <ShieldAlert className="h-8 w-8" />
+        </div>
+        <h2 className="text-xl font-bold text-white">Access Denied</h2>
+        <p className="text-sm text-slate-400 max-w-md">
+          Super Admin authorization is required to access the Owner Control Center. Your account does not have sufficient administrative privileges.
+        </p>
+      </div>
+    );
+  }
 
   if (loading && !overviewData) {
     return (

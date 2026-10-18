@@ -245,92 +245,8 @@ class DatabaseStore {
           this.seedAdminNotifications();
           needsPersist = true;
         }
-        if (!this.data.deliveries || this.data.deliveries.length === 0) {
-          const now = new Date();
-          const todayIso = now.toISOString();
-          const demoWsId = this.data.workspaces[0]?.id || 'ws_demo_store';
-          this.data.deliveries = [
-            {
-              id: 'del_1',
-              workspaceId: demoWsId,
-              orderId: 'ord_today_1',
-              orderNumber: 'YIA-2026-201',
-              courierProvider: 'steadfast',
-              trackingCode: 'STEAD-90821-DH',
-              consignmentId: 'CSG-8812',
-              recipientName: 'Tanvir Hossain',
-              recipientPhone: '01712998877',
-              recipientAddress: 'House 12, Road 4, Dhanmondi, Dhaka',
-              codAmount: 2220,
-              codCollected: true,
-              status: 'delivered',
-              statusDetails: 'Delivered to recipient. Cash collected.',
-              dispatchedAt: new Date(now.getTime() - 3600000 * 6).toISOString(),
-              deliveredAt: new Date(now.getTime() - 3600000 * 1).toISOString(),
-              lastSyncAt: todayIso,
-              createdAt: new Date(now.getTime() - 3600000 * 6).toISOString(),
-              updatedAt: todayIso,
-            },
-            {
-              id: 'del_2',
-              workspaceId: demoWsId,
-              orderId: 'ord_today_2',
-              orderNumber: 'YIA-2026-202',
-              courierProvider: 'pathao',
-              trackingCode: 'PTH-77123-DHK',
-              consignmentId: 'PTH-CON-042',
-              recipientName: 'Nusrat Jahan',
-              recipientPhone: '01855667788',
-              recipientAddress: 'Flat 5B, Green Road, Dhanmondi, Dhaka',
-              codAmount: 0,
-              codCollected: false,
-              status: 'in_transit',
-              statusDetails: 'Rider picked up parcel. Out for delivery.',
-              dispatchedAt: new Date(now.getTime() - 3600000 * 2).toISOString(),
-              lastSyncAt: todayIso,
-              createdAt: new Date(now.getTime() - 3600000 * 3).toISOString(),
-              updatedAt: todayIso,
-            },
-            {
-              id: 'del_3',
-              workspaceId: demoWsId,
-              orderId: 'ord_today_3',
-              orderNumber: 'YIA-2026-203',
-              courierProvider: 'steadfast',
-              trackingCode: 'STEAD-90829-MR',
-              consignmentId: 'CSG-8819',
-              recipientName: 'Kamrul Hasan',
-              recipientPhone: '01911223344',
-              recipientAddress: 'Mirpur DOHS, Road 9, Dhaka',
-              codAmount: 1320,
-              codCollected: false,
-              status: 'pending_pickup',
-              statusDetails: 'Consignment created. Awaiting courier pickup.',
-              lastSyncAt: todayIso,
-              createdAt: new Date(now.getTime() - 3600000 * 1).toISOString(),
-              updatedAt: todayIso,
-            },
-            {
-              id: 'del_4',
-              workspaceId: demoWsId,
-              orderId: 'ord_prev_1',
-              orderNumber: 'YIA-2026-199',
-              courierProvider: 'redx',
-              trackingCode: 'REDX-44102-CTG',
-              consignmentId: 'RDX-9128',
-              recipientName: 'Sabbir Ahmed',
-              recipientPhone: '01688776655',
-              recipientAddress: 'GEC Circle, Chittagong',
-              codAmount: 3450,
-              codCollected: false,
-              status: 'attempted_failed',
-              statusDetails: 'Customer phone unreachable on 1st attempt. Rescheduled.',
-              dispatchedAt: new Date(now.getTime() - 86400000).toISOString(),
-              lastSyncAt: todayIso,
-              createdAt: new Date(now.getTime() - 86400000).toISOString(),
-              updatedAt: todayIso,
-            },
-          ];
+        if (!this.data.deliveries) {
+          this.data.deliveries = [];
           needsPersist = true;
         }
         if (!this.data.consequentialActions) {
@@ -391,25 +307,7 @@ class DatabaseStore {
   }
 
   private seedInitialData() {
-    // 1. Initial Super Admin / Platform Owner
-    const adminSalt = 'seed-salt-admin-key-2026';
-    const adminHash = crypto.pbkdf2Sync('admin123', adminSalt, 1000, 64, 'sha512').toString('hex');
-    const superAdminUser: User & { passwordHash: string; salt: string } = {
-      id: 'usr_superadmin',
-      name: 'YEAR INFO Admin',
-      email: 'yearinvo@gmail.com',
-      businessName: 'YEAR INFO AI Platform',
-      phone: '+8801700000000',
-      role: 'superadmin',
-      isSuperAdmin: true,
-      avatarUrl: '',
-      createdAt: new Date().toISOString(),
-      passwordHash: adminHash,
-      salt: adminSalt,
-    };
-    this.data.users = [superAdminUser];
-
-    // 2. Initial Subscription Plans
+    // 1. Initial Subscription Plans
     this.data.subscriptionPlans = [
       {
         id: 'plan_starter',
@@ -479,417 +377,31 @@ class DatabaseStore {
       },
     ];
 
-    // 3. Initial Demo / Default Store Workspace for quick evaluation
-    const demoWorkspace: Workspace = {
-      id: 'ws_demo_store',
-      name: 'Dhaka Fashion Hub',
-      slug: 'dhaka-fashion-hub',
-      ownerId: 'usr_superadmin',
-      businessType: 'E-commerce & Fashion',
-      phone: '+8801812345678',
-      currency: 'BDT',
-      timezone: 'Asia/Dhaka',
-      language: 'both',
-      address: 'House 42, Road 11, Banani, Dhaka-1213',
-      website: 'https://dhakafashion.example.com',
-      createdAt: new Date().toISOString(),
-    };
-    this.data.workspaces = [demoWorkspace];
-    this.data.workspaceMembers = [{ workspaceId: demoWorkspace.id, userId: superAdminUser.id, role: 'owner' }];
+    // Initialize clean tables with no hardcoded demo users or mock sessions
+    this.data.users = [];
+    this.data.workspaces = [];
+    this.data.workspaceMembers = [];
+    this.data.channels = [];
+    this.data.aiSettings = [];
+    this.data.knowledgeItems = [];
+    this.data.products = [];
+    this.data.customers = [];
+    this.data.conversations = [];
+    this.data.messages = [];
+    this.data.orders = [];
+    this.data.subscriptions = [];
+    this.data.scheduledPosts = [];
+    this.data.auditLogs = [];
+    this.data.sessions = [];
 
-    // 4. AISettings for demo workspace
-    this.data.aiSettings = [
-      {
-        workspaceId: demoWorkspace.id,
-        enabled: true,
-        model: 'gemini-3.8-flash',
-        brandVoice: 'friendly',
-        languageMode: 'auto_detect',
-        autoReplyChannels: ['messenger', 'instagram', 'livechat'],
-        businessHoursOnly: false,
-        businessHoursStart: '09:00',
-        businessHoursEnd: '22:00',
-        humanTakeoverKeywords: ['human', 'agent', 'support', 'manush', 'kotha bolbo', 'representative'],
-        confidenceThreshold: 0.8,
-        enableDirectOrderCreation: true,
-        customGreetingBn: 'আসসালামু আলাইকুম! ঢাকা ফ্যাশন হাব এ আপনাকে স্বাগতম। আমি আপনার সেলস অ্যাসিস্ট্যান্ট। কিভাবে সাহায্য করতে পারি?',
-        customGreetingEn: 'Welcome to Dhaka Fashion Hub! How may I assist your shopping today?',
-      },
-    ];
-
-    // 5. Knowledge items for workspace
-    this.data.knowledgeItems = [
-      {
-        id: 'kn_1',
-        workspaceId: demoWorkspace.id,
-        category: 'delivery',
-        question: 'Delivery charges and turnaround time',
-        answer: 'Inside Dhaka delivery charge is 70 BDT (delivery within 24-48 hours). Outside Dhaka delivery charge is 130 BDT via Steadfast/SA Paribahan (delivery within 3-4 days). Cash on Delivery is available all over Bangladesh.',
-        language: 'both',
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: 'kn_2',
-        workspaceId: demoWorkspace.id,
-        category: 'payment',
-        question: 'Accepted payment methods',
-        answer: 'We accept Cash on Delivery (COD), bKash (Merchant / Personal Send Money), Nagad, and Bank Transfer.',
-        language: 'both',
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: 'kn_3',
-        workspaceId: demoWorkspace.id,
-        category: 'policy',
-        question: 'Return & Exchange policy',
-        answer: 'Returns are accepted within 3 days of delivery if the product is defective, wrong size, or damaged during transit. Rider present return fee is 70 BDT.',
-        language: 'both',
-        updatedAt: new Date().toISOString(),
-      },
-    ];
-
-    // 6. Products for demo workspace
-    this.data.products = [
-      {
-        id: 'prod_1',
-        workspaceId: demoWorkspace.id,
-        name: 'Premium Cotton Panjabi - Royal Navy',
-        nameBengali: 'প্রিমিয়াম সুতি পাঞ্জাবি - রয়্যাল নেভি',
-        sku: 'PANJABI-NV-01',
-        category: 'Menswear',
-        description: '100% fine cotton traditional embroidery Panjabi, perfect for festive and casual wear.',
-        price: 2450,
-        discountPrice: 2150,
-        stock: 35,
-        images: ['https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=600&auto=format&fit=crop&q=80'],
-        variants: [
-          { id: 'v_1', name: 'Size 40 (M)', price: 2150, stock: 12, sku: 'PANJABI-NV-40' },
-          { id: 'v_2', name: 'Size 42 (L)', price: 2150, stock: 15, sku: 'PANJABI-NV-42' },
-          { id: 'v_3', name: 'Size 44 (XL)', price: 2150, stock: 8, sku: 'PANJABI-NV-44' },
-        ],
-        available: true,
-        shippingInfo: 'Standard 48 hours delivery',
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: 'prod_2',
-        workspaceId: demoWorkspace.id,
-        name: 'Handloom Jamdani Saree - Crimson Gold',
-        nameBengali: 'হ্যান্ডলুম জামদানি শাড়ি - ক্রিমসন গোল্ড',
-        sku: 'SAREE-JAM-CR',
-        category: 'Womenswear',
-        description: 'Authentic 84-count Dhakai Jamdani woven with golden zari motifs on soft crimson cotton silk base.',
-        price: 5200,
-        discountPrice: 4750,
-        stock: 14,
-        images: ['https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&auto=format&fit=crop&q=80'],
-        variants: [],
-        available: true,
-        shippingInfo: 'Handled with luxury box packaging',
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: 'prod_3',
-        workspaceId: demoWorkspace.id,
-        name: 'Pure Leather Bifold Wallet',
-        nameBengali: 'আসল চামড়ার ওয়ালেট',
-        sku: 'WALLET-LTH-01',
-        category: 'Accessories',
-        description: 'Top-grain cowhide leather with 8 card slots, currency divider and RFID protection.',
-        price: 1250,
-        discountPrice: 990,
-        stock: 50,
-        images: ['https://images.unsplash.com/photo-1627123424574-724758594e93?w=600&auto=format&fit=crop&q=80'],
-        variants: [],
-        available: true,
-        shippingInfo: 'Delivery within 24 hours in Dhaka',
-        createdAt: new Date().toISOString(),
-      },
-    ];
-
-    // 7. Channels for demo workspace (ALL DISCONNECTED BY DEFAULT PER MANDATORY RULES)
-    this.data.channels = [
-      {
-        id: `ch_fb_${demoWorkspace.id}`,
-        workspaceId: demoWorkspace.id,
-        type: 'facebook',
-        name: 'Facebook Pages',
-        status: 'not_connected',
-        metadata: {},
-      },
-      {
-        id: `ch_msg_${demoWorkspace.id}`,
-        workspaceId: demoWorkspace.id,
-        type: 'messenger',
-        name: 'Facebook Messenger',
-        status: 'not_connected',
-        metadata: {},
-      },
-      {
-        id: `ch_ig_${demoWorkspace.id}`,
-        workspaceId: demoWorkspace.id,
-        type: 'instagram',
-        name: 'Instagram',
-        status: 'not_connected',
-        metadata: {},
-      },
-      {
-        id: `ch_wa_${demoWorkspace.id}`,
-        workspaceId: demoWorkspace.id,
-        type: 'whatsapp',
-        name: 'WhatsApp Business',
-        status: 'not_connected',
-        metadata: {},
-      },
-      {
-        id: `ch_live_${demoWorkspace.id}`,
-        workspaceId: demoWorkspace.id,
-        type: 'livechat',
-        name: 'Website Live Chat',
-        status: 'not_connected',
-        metadata: { widgetKey: `yia_widget_${demoWorkspace.id}` },
-      },
-    ];
-
-    // 8. Demo Customers & Conversations (real seed records, no artificial fake stats)
-    const customer1: Customer = {
-      id: 'cust_1',
-      workspaceId: demoWorkspace.id,
-      name: 'Tanvir Hossain',
-      phone: '01712998877',
-      email: 'tanvir.h@gmail.com',
-      primaryChannel: 'messenger',
-      channelIdentifiers: [{ channelType: 'messenger', externalId: 'fb_user_tanvir' }],
-      totalOrders: 1,
-      totalSpent: 2220,
-      tags: ['VIP', 'Panjabi Buyer'],
-      notes: 'Prefers Size 42 L',
-      createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-    };
-
-    const customer2: Customer = {
-      id: 'cust_2',
-      workspaceId: demoWorkspace.id,
-      name: 'Nusrat Jahan',
-      phone: '01855667788',
-      email: 'nusrat.j@yahoo.com',
-      primaryChannel: 'instagram',
-      channelIdentifiers: [{ channelType: 'instagram', externalId: 'ig_user_nusrat', username: 'nusrat_j' }],
-      totalOrders: 0,
-      totalSpent: 0,
-      tags: ['Inquiry'],
-      createdAt: new Date(Date.now() - 86400000).toISOString(),
-    };
-
-    const customer3: Customer = {
-      id: 'cust_3',
-      workspaceId: demoWorkspace.id,
-      name: 'Kamrul Hasan',
-      phone: '01911223344',
-      primaryChannel: 'livechat',
-      channelIdentifiers: [{ channelType: 'livechat', externalId: 'guest_visitor_kamrul' }],
-      totalOrders: 0,
-      totalSpent: 0,
-      tags: ['Live Visitor'],
-      createdAt: new Date().toISOString(),
-    };
-
-    this.data.customers = [customer1, customer2, customer3];
-
-    // 9. Conversations
-    const conv1: Conversation = {
-      id: 'conv_1',
-      workspaceId: demoWorkspace.id,
-      customerId: customer1.id,
-      customerName: customer1.name,
-      customerPhone: customer1.phone,
-      channel: 'messenger',
-      channelName: 'Messenger',
-      status: 'ai_handled',
-      unreadCount: 0,
-      lastMessageText: 'ধন্যবাদ ভাইয়া, সাইজ ৪২ কনফার্ম করলাম। ক্যাশ অন ডেলিভারিতে পাঠিয়ে দিন।',
-      lastMessageAt: new Date(Date.now() - 3600000 * 3).toISOString(),
-      aiActive: true,
-      createdAt: new Date(Date.now() - 86400000).toISOString(),
-    };
-
-    const conv2: Conversation = {
-      id: 'conv_2',
-      workspaceId: demoWorkspace.id,
-      customerId: customer2.id,
-      customerName: customer2.name,
-      customerPhone: customer2.phone,
-      channel: 'instagram',
-      channelName: 'Instagram Direct',
-      status: 'open',
-      unreadCount: 1,
-      lastMessageText: 'Aapnader Jamdani saree ta ki delivery charge included?',
-      lastMessageAt: new Date(Date.now() - 1800000).toISOString(),
-      aiActive: true,
-      createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
-    };
-
-    const conv3: Conversation = {
-      id: 'conv_3',
-      workspaceId: demoWorkspace.id,
-      customerId: customer3.id,
-      customerName: customer3.name,
-      channel: 'livechat',
-      channelName: 'Website Chat',
-      status: 'unread',
-      unreadCount: 1,
-      lastMessageText: 'Can I get delivery in Chittagong by tomorrow?',
-      lastMessageAt: new Date(Date.now() - 600000).toISOString(),
-      aiActive: true,
-      createdAt: new Date(Date.now() - 600000).toISOString(),
-    };
-
-    this.data.conversations = [conv1, conv2, conv3];
-
-    // 10. Messages for conv_1
-    this.data.messages = [
-      {
-        id: 'msg_1',
-        conversationId: conv1.id,
-        workspaceId: demoWorkspace.id,
-        senderType: 'customer',
-        senderName: customer1.name,
-        content: 'আসসালামু আলাইকুম! রয়্যাল নেভি সুতি পাঞ্জাবির সাইজ ৪২ কি স্টকে আছে? দাম কত?',
-        timestamp: new Date(Date.now() - 3600000 * 4).toISOString(),
-        deliveryStatus: 'read',
-      },
-      {
-        id: 'msg_2',
-        conversationId: conv1.id,
-        workspaceId: demoWorkspace.id,
-        senderType: 'ai',
-        senderName: 'YEAR INFO AI Agent',
-        content: 'ওয়ালাইকুম আসসালাম! জ্বী, প্রিমিয়াম সুতি পাঞ্জাবি - রয়্যাল নেভি (Size 42 / L) বর্তমানে স্টকে রয়েছে। ডিসকাউন্টে দাম ২১৫০ টাকা (রেগুলার ২৪৫০ টাকা)। ঢাকার ভিতরে ডেলিভারি চার্জ ৭০ টাকা। আপনি কি অর্ডার করতে চান?',
-        timestamp: new Date(Date.now() - 3600000 * 3.9).toISOString(),
-        deliveryStatus: 'delivered',
-        aiAssisted: true,
-      },
-      {
-        id: 'msg_3',
-        conversationId: conv1.id,
-        workspaceId: demoWorkspace.id,
-        senderType: 'customer',
-        senderName: customer1.name,
-        content: 'ধন্যবাদ ভাইয়া, সাইজ ৪২ কনফার্ম করলাম। ক্যাশ অন ডেলিভারিতে পাঠিয়ে দিন। ঠিকানা: বাড়ি ১২, রোড ৪, ধানমন্ডি, ঢাকা। মোবাইল: ০১৭১২৯৯৮৮৭৭।',
-        timestamp: new Date(Date.now() - 3600000 * 3).toISOString(),
-        deliveryStatus: 'read',
-      },
-      // Messages for conv_2
-      {
-        id: 'msg_4',
-        conversationId: conv2.id,
-        workspaceId: demoWorkspace.id,
-        senderType: 'customer',
-        senderName: customer2.name,
-        content: 'Aapnader Jamdani saree ta ki delivery charge included?',
-        timestamp: new Date(Date.now() - 1800000).toISOString(),
-        deliveryStatus: 'delivered',
-      },
-      // Messages for conv_3
-      {
-        id: 'msg_5',
-        conversationId: conv3.id,
-        workspaceId: demoWorkspace.id,
-        senderType: 'customer',
-        senderName: customer3.name,
-        content: 'Can I get delivery in Chittagong by tomorrow?',
-        timestamp: new Date(Date.now() - 600000).toISOString(),
-        deliveryStatus: 'delivered',
-      },
-    ];
-
-    // 11. Initial Order (Confirmed)
-    this.data.orders = [
-      {
-        id: 'ord_1001',
-        orderNumber: 'YIA-2026-1001',
-        workspaceId: demoWorkspace.id,
-        customerId: customer1.id,
-        customerName: customer1.name,
-        customerPhone: customer1.phone || '',
-        deliveryAddress: 'House 12, Road 4, Dhanmondi, Dhaka',
-        items: [
-          {
-            productId: 'prod_1',
-            productName: 'Premium Cotton Panjabi - Royal Navy',
-            sku: 'PANJABI-NV-42',
-            variantId: 'v_2',
-            variantName: 'Size 42 (L)',
-            unitPrice: 2150,
-            quantity: 1,
-            subtotal: 2150,
-          },
-        ],
-        subtotal: 2150,
-        deliveryCharge: 70,
-        discount: 0,
-        total: 2220,
-        status: 'confirmed',
-        paymentStatus: 'pending',
-        paymentMethod: 'cash_on_delivery',
-        conversationId: conv1.id,
-        aiAssisted: true,
-        notes: 'AI assisted order. Size 42 L confirmed.',
-        createdAt: new Date(Date.now() - 3600000 * 2.5).toISOString(),
-        updatedAt: new Date(Date.now() - 3600000 * 2.5).toISOString(),
-      },
-    ];
-
-    // 12. Active Subscription for Demo Workspace
-    this.data.subscriptions = [
-      {
-        id: 'sub_1',
-        workspaceId: demoWorkspace.id,
-        workspaceName: demoWorkspace.name,
-        planId: 'plan_pro',
-        planName: 'Growth & Business',
-        status: 'active',
-        startedAt: new Date().toISOString(),
-        expiresAt: new Date(Date.now() + 86400000 * 30).toISOString(),
-        requestedAt: new Date().toISOString(),
-        paymentMethod: 'bKash Merchant',
-        paymentReference: 'TRX987654321',
-        currentUsage: {
-          conversationsThisMonth: 12,
-          aiRepliesThisMonth: 19,
-          scheduledPostsThisMonth: 3,
-        },
-      },
-    ];
-
-    // 13. Scheduled Posts
-    this.data.scheduledPosts = [
-      {
-        id: 'post_1',
-        workspaceId: demoWorkspace.id,
-        platforms: ['facebook', 'instagram'],
-        caption: 'নতুন বৈশাখী কালেকশন ২০২৬! প্রিমিয়াম সুতি পাঞ্জাবি ও ধুনট হ্যান্ডলুম জামদানি এখন স্টকে। আপনার সাইজ শেষ হবার আগেই ইনবক্সে অর্ডার কনফার্ম করুন। ✨',
-        hashtags: ['#DhakaFashion', '#YearInfoAI', '#Panjabi', '#Jamdani', '#BangladeshEcommerce'],
-        mediaUrls: ['https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=800&auto=format&fit=crop&q=80'],
-        scheduledAt: new Date(Date.now() + 3600000 * 12).toISOString(),
-        timezone: 'Asia/Dhaka',
-        status: 'scheduled',
-        createdAt: new Date().toISOString(),
-      },
-    ];
-
-    // 14. Audit Log
-    this.data.auditLogs = [
-      {
-        id: 'log_1',
-        workspaceId: demoWorkspace.id,
-        userId: superAdminUser.id,
-        userName: superAdminUser.name,
-        action: 'WORKSPACE_INITIALIZED',
-        details: 'Initial workspace and multi-channel configuration initialized successfully.',
-        timestamp: new Date().toISOString(),
-      },
-    ];
+    // System configurations
+    this.seedAIProviders();
+    this.seedGlobalIntegrations();
+    this.seedWebsiteBranding();
+    this.seedDomainDeployment();
+    this.seedPlatformFeatures();
+    this.seedPaymentRecords();
+    this.seedAdminNotifications();
   }
 
   // --- GETTERS & QUERIES ---
@@ -932,26 +444,9 @@ class DatabaseStore {
   }
 
   public getSession(token: string) {
-    let session = this.data.sessions.find((s) => s.token === token);
-    if (!session && token.startsWith('yia_sess_')) {
-      const parts = token.split('_');
-      const userId = parts.slice(2, parts.length - 1).join('_') || parts[2];
-      if (userId) {
-        const matchedUser = this.data.users.find((u) => u.id === userId);
-        if (matchedUser) {
-          session = {
-            token,
-            userId: matchedUser.id,
-            expiresAt: Date.now() + 86400000 * 7,
-          };
-          this.data.sessions.push(session);
-          this.persist();
-          return session;
-        }
-      }
-    }
+    const session = this.data.sessions.find((s) => s.token === token);
     if (!session) return null;
-    if (session.expiresAt < Date.now()) {
+    if (session.expiresAt && session.expiresAt < Date.now()) {
       this.deleteSession(token);
       return null;
     }
@@ -1808,22 +1303,7 @@ class DatabaseStore {
   }
 
   public seedPaymentRecords() {
-    this.data.paymentRecords = [
-      {
-        id: 'pay_1001',
-        subscriptionId: 'sub_1',
-        workspaceId: 'ws_demo_store',
-        workspaceName: 'Dhaka Fashion Hub',
-        amountBdt: 2999,
-        amountUsd: 30,
-        method: 'bkash',
-        transactionReference: 'TRX987654321',
-        status: 'verified',
-        verifiedAt: new Date(Date.now() - 86400000 * 5).toISOString(),
-        verifiedBy: 'usr_superadmin',
-        createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
-      },
-    ];
+    this.data.paymentRecords = [];
   }
 
   public seedAdminNotifications() {

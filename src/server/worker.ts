@@ -30,12 +30,8 @@ class BackgroundPublishingEngine {
 
     try {
       const now = new Date();
-      // 1. Check Scheduled Social Posts
-      const allPosts = db.getScheduledPosts('ws_demo_store'); // we can also iterate all workspaces
-      const workspaces = [db.getWorkspace('ws_demo_store')].filter(Boolean);
-
       // Collect pending posts across all workspaces in db
-      const pendingPosts = (db as any).data.scheduledPosts.filter(
+      const pendingPosts = ((db as any).data.scheduledPosts || []).filter(
         (p: any) => p.status === 'scheduled' && new Date(p.scheduledAt) <= now
       );
 
@@ -135,9 +131,10 @@ class BackgroundPublishingEngine {
   }> {
     const startTime = Date.now();
     const testPostId = `diag_job_${Date.now()}`;
+    const targetWsId = db.getAllWorkspaces()[0]?.id || 'ws_system_diagnostics';
     const testPayload = {
       id: testPostId,
-      workspaceId: 'ws_demo_store',
+      workspaceId: targetWsId,
       caption: '[DIAGNOSTIC_TEST_JOB] Safe scheduler persistence verification.',
       platforms: ['facebook'] as ('facebook' | 'instagram')[],
       hashtags: ['#test', '#diagnostic'],

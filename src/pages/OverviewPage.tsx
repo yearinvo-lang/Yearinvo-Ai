@@ -64,17 +64,17 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigate }) => {
   return (
     <div className="space-y-6">
       {/* Top Banner / Welcome */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-purple-500/20 bg-gradient-to-r from-slate-900 via-purple-950/40 to-slate-900 p-6 shadow-xl">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-purple-500/30 bg-gradient-to-r from-slate-900 via-[#191238] to-slate-900 p-6 shadow-2xl shadow-purple-950/30">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-black text-white">
+            <h1 className="text-2xl font-black text-white tracking-tight">
               {activeWorkspace?.name || 'My Store'}
             </h1>
             <span className="rounded-full bg-purple-500/20 px-2.5 py-0.5 text-[11px] font-bold text-purple-300 border border-purple-500/30">
               {activeWorkspace?.businessType || 'Retail'}
             </span>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-300 mt-1">
             {isBn
               ? 'কেন্দ্রীয় মেসেজিং, এআই সেলস এবং সোশ্যাল পাবলিশিংয়ের রিয়েল-টাইম ওভারভিউ।'
               : 'Real-time overview of conversations, AI sales conversions, and scheduled content.'}
@@ -91,21 +91,21 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigate }) => {
           </button>
           <button
             onClick={() => onNavigate('inbox')}
-            className="flex items-center gap-1.5 rounded-xl bg-purple-600 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-purple-600/30 hover:bg-purple-500 transition"
+            className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-purple-600/30 hover:brightness-110 transition active:scale-95"
           >
             <MessageSquare className="h-3.5 w-3.5" />
             <span>{isBn ? 'ইনবক্স খুলুন' : 'Open Inbox'}</span>
           </button>
           <button
             onClick={() => onNavigate('scheduler')}
-            className="flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-700 transition"
+            className="flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800/90 px-3.5 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-700 hover:text-white transition"
           >
             <Calendar className="h-3.5 w-3.5 text-purple-400" />
             <span>{isBn ? 'নতুন পোস্ট শিডিউল' : 'Schedule Post'}</span>
           </button>
           <button
             onClick={loadData}
-            className="rounded-xl border border-slate-700 bg-slate-800 p-2 text-slate-300 hover:text-white transition"
+            className="rounded-xl border border-slate-700 bg-slate-800/90 p-2 text-slate-300 hover:text-white transition"
             title="Refresh Data"
           >
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin text-purple-400' : ''}`} />
@@ -116,20 +116,20 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigate }) => {
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: Conversations */}
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-5 shadow-lg">
-          <div className="flex items-center justify-between text-slate-400">
+        <div className="rounded-2xl border border-slate-200 dark:border-purple-500/20 bg-white/90 dark:bg-[#0c0a1e]/85 p-5 shadow-lg dark:shadow-purple-950/20 backdrop-blur-md hover:border-purple-500/40 transition-all">
+          <div className="flex items-center justify-between text-slate-600 dark:text-purple-300/80">
             <span className="text-xs font-bold uppercase tracking-wider">Conversations</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/10 text-purple-400">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
               <MessageSquare className="h-4 w-4" />
             </div>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-black text-white">{conv.total}</span>
+            <span className="text-2xl font-black text-slate-900 dark:text-white">{conv.total}</span>
             {conv.unread > 0 && (
-              <span className="text-xs font-bold text-rose-400">({conv.unread} unread)</span>
+              <span className="text-xs font-bold text-rose-500 dark:text-rose-400">({conv.unread} unread)</span>
             )}
           </div>
-          <div className="mt-2 text-[11px] text-slate-400 flex items-center justify-between">
+          <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-between font-medium">
             <span>Open: {conv.open}</span>
             <span>AI Handled: {conv.aiHandled}</span>
             <span>Resolved: {conv.resolved}</span>
@@ -137,60 +137,60 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigate }) => {
         </div>
 
         {/* Card 2: Orders & Confirmed Sales */}
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-5 shadow-lg">
-          <div className="flex items-center justify-between text-slate-400">
+        <div className="rounded-2xl border border-slate-200 dark:border-purple-500/20 bg-white/90 dark:bg-[#0c0a1e]/85 p-5 shadow-lg dark:shadow-purple-950/20 backdrop-blur-md hover:border-emerald-500/40 transition-all">
+          <div className="flex items-center justify-between text-slate-600 dark:text-emerald-300/80">
             <span className="text-xs font-bold uppercase tracking-wider">Confirmed Revenue</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
               <ShoppingBag className="h-4 w-4" />
             </div>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-black text-white">৳ {ord.totalRevenue.toLocaleString()}</span>
-            <span className="text-xs text-slate-400">({ord.confirmed} orders)</span>
+            <span className="text-2xl font-black text-slate-900 dark:text-white">৳ {ord.totalRevenue.toLocaleString()}</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400">({ord.confirmed} orders)</span>
           </div>
-          <div className="mt-2 text-[11px] text-emerald-400 flex items-center justify-between">
+          <div className="mt-2 text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center justify-between font-medium">
             <span>AI-Assisted: ৳ {ord.aiAssistedRevenue.toLocaleString()}</span>
-            <span className="text-slate-500">COD / bKash</span>
+            <span className="text-slate-400 dark:text-slate-500">COD / bKash</span>
           </div>
         </div>
 
         {/* Card 3: Social Media Posts */}
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-5 shadow-lg">
-          <div className="flex items-center justify-between text-slate-400">
+        <div className="rounded-2xl border border-slate-200 dark:border-purple-500/20 bg-white/90 dark:bg-[#0c0a1e]/85 p-5 shadow-lg dark:shadow-purple-950/20 backdrop-blur-md hover:border-indigo-500/40 transition-all">
+          <div className="flex items-center justify-between text-slate-600 dark:text-indigo-300/80">
             <span className="text-xs font-bold uppercase tracking-wider">Social Publishing</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
               <Calendar className="h-4 w-4" />
             </div>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-black text-white">{pub.total}</span>
-            <span className="text-xs text-purple-300">({pub.scheduled} queued)</span>
+            <span className="text-2xl font-black text-slate-900 dark:text-white">{pub.total}</span>
+            <span className="text-xs font-bold text-purple-600 dark:text-purple-300">({pub.scheduled} queued)</span>
           </div>
-          <div className="mt-2 text-[11px] text-slate-400 flex items-center justify-between">
+          <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-between font-medium">
             <span>Published: {pub.published}</span>
             {pub.failed > 0 ? (
-              <span className="text-rose-400">Failed: {pub.failed}</span>
+              <span className="text-rose-500 dark:text-rose-400">Failed: {pub.failed}</span>
             ) : (
-              <span className="text-emerald-400">0 errors</span>
+              <span className="text-emerald-600 dark:text-emerald-400">0 errors</span>
             )}
           </div>
         </div>
 
         {/* Card 4: AI Usage */}
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-5 shadow-lg">
-          <div className="flex items-center justify-between text-slate-400">
+        <div className="rounded-2xl border border-slate-200 dark:border-purple-500/20 bg-white/90 dark:bg-[#0c0a1e]/85 p-5 shadow-lg dark:shadow-purple-950/20 backdrop-blur-md hover:border-purple-500/40 transition-all">
+          <div className="flex items-center justify-between text-slate-600 dark:text-purple-300/80">
             <span className="text-xs font-bold uppercase tracking-wider">AI Sales Engine</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/10 text-purple-400">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
               <Bot className="h-4 w-4" />
             </div>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-black text-white">{aiStats.totalCalls}</span>
-            <span className="text-xs text-slate-400">queries answered</span>
+            <span className="text-2xl font-black text-slate-900 dark:text-white">{aiStats.totalCalls}</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400">queries answered</span>
           </div>
-          <div className="mt-2 text-[11px] text-slate-400 flex items-center justify-between">
+          <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-between font-medium">
             <span>Tokens: {aiStats.totalTokens.toLocaleString()}</span>
-            <span className="text-purple-400 font-mono">${aiStats.estimatedCostUsd}</span>
+            <span className="text-purple-600 dark:text-purple-400 font-mono font-bold">${aiStats.estimatedCostUsd}</span>
           </div>
         </div>
       </div>
@@ -198,32 +198,93 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigate }) => {
       {/* Two Column Section: Channel Health & Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left: Connected Channels Health */}
-        <div className="lg:col-span-2 rounded-2xl border border-slate-800 bg-slate-900/60 p-6 shadow-xl">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-4">
+        <div className="lg:col-span-2 rounded-2xl border border-slate-200 dark:border-purple-500/20 bg-white/90 dark:bg-[#0c0a1e]/85 p-6 shadow-xl dark:shadow-purple-950/20 backdrop-blur-md">
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-purple-500/15 pb-4 mb-4">
             <div>
-              <h2 className="text-base font-bold text-white">Connected Channel Health</h2>
-              <p className="text-xs text-slate-400">Active messaging webhooks and sync status</p>
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">Connected Channel Health</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Active messaging webhooks and sync status</p>
             </div>
             <button
               onClick={() => onNavigate('channels')}
-              className="text-xs font-semibold text-purple-400 hover:underline flex items-center gap-1"
+              className="text-xs font-semibold text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1"
             >
               <span>Manage Channels</span>
               <ArrowUpRight className="h-3.5 w-3.5" />
             </button>
           </div>
 
-          {channels.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-slate-800 p-8 text-center">
-              <Share2 className="mx-auto h-8 w-8 text-slate-600 mb-2" />
-              <p className="text-sm font-semibold text-slate-300">No connected channels.</p>
-              <p className="text-xs text-slate-500 mt-1">Connect your Facebook, Messenger, Instagram, or WhatsApp to start receiving customer messages.</p>
-              <button
-                onClick={() => onNavigate('channels')}
-                className="mt-4 rounded-xl bg-purple-600 px-4 py-2 text-xs font-bold text-white hover:bg-purple-500 transition"
-              >
-                Connect Channel
-              </button>
+          {channels.length === 0 || channels.every((c: any) => c.status !== 'connected') ? (
+            <div className="rounded-xl border border-dashed border-purple-500/30 p-6 bg-gradient-to-br from-slate-900/60 via-purple-950/20 to-slate-900/60">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/30">
+                  <Sparkles className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white">
+                    {isBn ? 'শুরুর গাইড: ইন্টিগ্রেশন কানেক্ট করুন' : 'Getting Started: Connect Your Integrations'}
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    {isBn
+                      ? 'রিয়েল ডেটা ও কাস্টমার বার্তা পেতে আপনার ফেসবুক ও ওয়েবসাইট যুক্ত করুন।'
+                      : 'Connect Facebook and your business website to receive genuine live customer data.'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
+                {/* Step 1: Facebook */}
+                <div className="rounded-xl border border-slate-200 dark:border-purple-500/20 bg-white/50 dark:bg-[#120f2b]/80 p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-purple-600 text-[11px] font-bold text-white">1</span>
+                    <h4 className="text-xs font-bold text-slate-900 dark:text-white">
+                      {isBn ? 'ফেসবুক পেজ ও মেসেঞ্জার' : 'Facebook Page & Messenger'}
+                    </h4>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                    {isBn
+                      ? 'চ্যানেল সেটিংস থেকে "Facebook" বা "Messenger"-এ ক্লিক করে আপনার পেজ যুক্ত করুন।'
+                      : 'Go to Channels to link your Facebook Page. Authorize access to sync live customer chats.'}
+                  </p>
+                  <button
+                    onClick={() => onNavigate('channels')}
+                    className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-purple-600 dark:text-purple-400 hover:text-purple-300"
+                  >
+                    <span>{isBn ? 'ফেসবুক কানেক্ট করুন' : 'Connect Facebook'}</span>
+                    <ArrowUpRight className="h-3 w-3" />
+                  </button>
+                </div>
+
+                {/* Step 2: Website Chat Widget */}
+                <div className="rounded-xl border border-slate-200 dark:border-purple-500/20 bg-white/50 dark:bg-[#120f2b]/80 p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-purple-600 text-[11px] font-bold text-white">2</span>
+                    <h4 className="text-xs font-bold text-slate-900 dark:text-white">
+                      {isBn ? 'বিজনেস ওয়েবসাইট লাইভ চ্যাট' : 'Business Website Live Chat'}
+                    </h4>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                    {isBn
+                      ? 'আপনার ওয়েবসাইটে চ্যাট উইজেট কোডটি যোগ করে সরাসরি ভিজিটরদের সহায়তা দিন।'
+                      : 'Embed our JavaScript snippet into your website HTML to assist store visitors 24/7.'}
+                  </p>
+                  <button
+                    onClick={() => onNavigate('channels')}
+                    className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-purple-600 dark:text-purple-400 hover:text-purple-300"
+                  >
+                    <span>{isBn ? 'উইজেট কোড পান' : 'Get Widget Code'}</span>
+                    <ArrowUpRight className="h-3 w-3" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <button
+                  onClick={() => onNavigate('channels')}
+                  className="rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-2 text-xs font-bold text-white hover:brightness-110 transition shadow-md shadow-purple-600/30"
+                >
+                  {isBn ? 'চ্যানেল পেজে যান' : 'Go to Channels Page'}
+                </button>
+              </div>
             </div>
           ) : (
             <div className="space-y-3">
@@ -232,26 +293,26 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigate }) => {
                 return (
                   <div
                     key={idx}
-                    className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950 p-3.5 hover:border-slate-700 transition"
+                    className="flex items-center justify-between rounded-xl border border-slate-200 dark:border-purple-500/20 bg-slate-50 dark:bg-[#120f28] p-3.5 hover:border-purple-500/40 transition"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 border border-slate-800 uppercase text-xs font-black text-purple-300">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white dark:bg-[#19153a] border border-slate-200 dark:border-purple-500/30 uppercase text-xs font-black text-purple-600 dark:text-purple-300">
                         {ch.type.slice(0, 2)}
                       </div>
                       <div>
-                        <div className="font-semibold text-sm text-white">{ch.name}</div>
-                        <div className="text-[11px] text-slate-400 capitalize">{ch.type} Integration</div>
+                        <div className="font-bold text-sm text-slate-900 dark:text-white">{ch.name}</div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 capitalize">{ch.type} Integration</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <span
                         className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                           isOnline
-                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                            : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                            : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
                         }`}
                       >
-                        <span className={`h-1.5 w-1.5 rounded-full ${isOnline ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+                        <span className={`h-1.5 w-1.5 rounded-full ${isOnline ? 'bg-emerald-500' : 'bg-amber-500'}`} />
                         {ch.status}
                       </span>
                     </div>
@@ -263,63 +324,63 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigate }) => {
         </div>
 
         {/* Right: Quick Launch & Guidance */}
-        <div className="rounded-2xl border border-purple-500/20 bg-gradient-to-b from-slate-900 to-slate-950 p-6 shadow-xl space-y-4">
-          <div className="flex items-center gap-2 text-purple-400">
+        <div className="rounded-2xl border border-purple-500/30 bg-white/90 dark:bg-gradient-to-b dark:from-[#0e0c25] dark:to-[#080716] p-6 shadow-xl dark:shadow-purple-950/30 backdrop-blur-md space-y-4">
+          <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400">
             <Sparkles className="h-5 w-5" />
-            <h2 className="text-base font-bold text-white">Smart Hub Actions</h2>
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">Smart Hub Actions</h2>
           </div>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-600 dark:text-slate-400">
             Quick operations designed for rapid store management and customer engagement.
           </p>
 
           <div className="space-y-2.5 pt-2">
             <button
               onClick={() => onNavigate('inbox')}
-              className="flex w-full items-center justify-between rounded-xl border border-slate-800 bg-slate-900/90 p-3 text-xs font-semibold text-slate-200 hover:border-purple-500 hover:bg-slate-800 transition"
+              className="flex w-full items-center justify-between rounded-xl border border-slate-200 dark:border-purple-500/20 bg-slate-50 dark:bg-[#13102c]/90 p-3 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/30 transition"
             >
               <span className="flex items-center gap-2">
-                <MessageSquare className="h-4 w-4 text-purple-400" />
+                <MessageSquare className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                 Reply Customer Inquiries
               </span>
-              <ArrowUpRight className="h-3.5 w-3.5 text-slate-500" />
+              <ArrowUpRight className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
             </button>
 
             <button
               onClick={() => onNavigate('products')}
-              className="flex w-full items-center justify-between rounded-xl border border-slate-800 bg-slate-900/90 p-3 text-xs font-semibold text-slate-200 hover:border-purple-500 hover:bg-slate-800 transition"
+              className="flex w-full items-center justify-between rounded-xl border border-slate-200 dark:border-purple-500/20 bg-slate-50 dark:bg-[#13102c]/90 p-3 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition"
             >
               <span className="flex items-center gap-2">
-                <ShoppingBag className="h-4 w-4 text-emerald-400" />
+                <ShoppingBag className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                 Manage Product Inventory
               </span>
-              <ArrowUpRight className="h-3.5 w-3.5 text-slate-500" />
+              <ArrowUpRight className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
             </button>
 
             <button
               onClick={() => onNavigate('ai-agent')}
-              className="flex w-full items-center justify-between rounded-xl border border-slate-800 bg-slate-900/90 p-3 text-xs font-semibold text-slate-200 hover:border-purple-500 hover:bg-slate-800 transition"
+              className="flex w-full items-center justify-between rounded-xl border border-slate-200 dark:border-purple-500/20 bg-slate-50 dark:bg-[#13102c]/90 p-3 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/30 transition"
             >
               <span className="flex items-center gap-2">
-                <Bot className="h-4 w-4 text-purple-400" />
+                <Bot className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                 Update AI Knowledge Base
               </span>
-              <ArrowUpRight className="h-3.5 w-3.5 text-slate-500" />
+              <ArrowUpRight className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
             </button>
 
             <button
               onClick={() => onNavigate('scheduler')}
-              className="flex w-full items-center justify-between rounded-xl border border-slate-800 bg-slate-900/90 p-3 text-xs font-semibold text-slate-200 hover:border-purple-500 hover:bg-slate-800 transition"
+              className="flex w-full items-center justify-between rounded-xl border border-slate-200 dark:border-purple-500/20 bg-slate-50 dark:bg-[#13102c]/90 p-3 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 transition"
             >
               <span className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-indigo-400" />
+                <Calendar className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
                 Social Media Calendar
               </span>
-              <ArrowUpRight className="h-3.5 w-3.5 text-slate-500" />
+              <ArrowUpRight className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
             </button>
           </div>
 
-          <div className="rounded-xl border border-purple-500/20 bg-purple-500/5 p-3 mt-4 text-[11px] text-slate-400">
-            <span className="font-semibold text-purple-300">💡 Pro Tip:</span> You can test the AI Sales Agent in real time by clicking the chat widget in the bottom-right corner!
+          <div className="rounded-xl border border-purple-500/30 bg-purple-500/10 p-3 mt-4 text-[11px] text-slate-700 dark:text-slate-300">
+            <span className="font-bold text-purple-700 dark:text-purple-300">💡 Pro Tip:</span> You can test the AI Sales Agent in real time by clicking the chat widget in the bottom-right corner!
           </div>
         </div>
       </div>

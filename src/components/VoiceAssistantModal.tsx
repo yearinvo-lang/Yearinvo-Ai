@@ -20,6 +20,7 @@ import {
   Copy,
   ChevronRight,
   Info,
+  ArrowLeft,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.tsx';
 
@@ -97,19 +98,18 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
     }
 
     // 2. Fallback to direct fetch with resolved token and user headers
-    const resolvedUser = user || (typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('yia_cached_user') || '{}') : null);
-    const token =
-      authToken ||
-      localStorage.getItem('yia_token') ||
-      sessionStorage.getItem('yia_token') ||
-      (resolvedUser?.id ? `yia_sess_${resolvedUser.id}_${Date.now()}` : null) ||
-      'yia_sess_usr_superadmin_' + Date.now();
+    const resolvedUser = user || (typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('yia_cached_user') || 'null') : null);
+    const token = authToken || (typeof window !== 'undefined' ? localStorage.getItem('yia_token') : null);
+
+    if (!token) {
+      throw new Error('Unauthorized: Authentication required. Please log in.');
+    }
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
       ...(options.headers as Record<string, string>),
     };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
     if (activeWorkspace?.id) headers['X-Workspace-Id'] = activeWorkspace.id;
     if (resolvedUser?.id) headers['X-User-Id'] = resolvedUser.id;
     if (resolvedUser?.email) headers['X-User-Email'] = resolvedUser.email;
@@ -142,6 +142,22 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
     }
   }, [isOpen]);
 
+  // Close modal or submodal on Escape key press
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (showEmailModal) {
+          setShowEmailModal(false);
+        } else {
+          onClose();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, showEmailModal, onClose]);
+
   const fetchTodayStats = async () => {
     setLoadingMetrics(true);
     try {
@@ -152,28 +168,23 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
       }
     } catch (e: any) {
       console.warn('Notice loading live today stats from API:', e?.message || e);
-      // Graceful fallback metrics so user always sees live report card
       const now = new Date();
       const monthsBn = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
       const dateBangla = `${now.getDate()} ${monthsBn[now.getMonth()]} ${now.getFullYear()}`;
       setLatestMetrics((prev: any) => prev || {
         date: now.toISOString().slice(0, 10),
         dateBangla,
-        totalSales: 8850,
-        totalOrders: 3,
-        completedOrders: 1,
-        confirmedOrders: 1,
-        pendingOrders: 1,
+        totalSales: 0,
+        totalOrders: 0,
+        completedOrders: 0,
+        confirmedOrders: 0,
+        pendingOrders: 0,
         processingOrders: 0,
         cancelledOrders: 0,
-        averageOrderValue: 2950,
-        cashOnDeliveryCount: 2,
-        onlinePaymentCount: 1,
-        topProducts: [
-          { name: 'Handloom Jamdani Saree - Crimson Gold', quantity: 1, revenue: 5200 },
-          { name: 'Premium Cotton Panjabi - Royal Navy', quantity: 1, revenue: 2150 },
-          { name: 'Pure Leather Bifold Wallet', quantity: 1, revenue: 1250 },
-        ],
+        averageOrderValue: 0,
+        cashOnDeliveryCount: 0,
+        onlinePaymentCount: 0,
+        topProducts: [],
         recentOrders: [],
       });
     } finally {
@@ -523,46 +534,70 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative flex flex-col w-full max-w-4xl h-[90vh] max-h-[820px] rounded-3xl border border-purple-500/30 bg-[#0a0718] text-slate-100 shadow-2xl overflow-hidden">
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+    >
+      <div className="relative flex flex-col w-full max-w-4xl h-[92vh] max-h-[840px] rounded-2xl sm:rounded-3xl border border-purple-500/30 bg-[#080614] text-slate-100 shadow-2xl overflow-hidden">
+        {/* Ambient Background Grid Pattern with Radial Vignette */}
+        <div className="pointer-events-none absolute inset-0 z-0 bg-grid-pattern opacity-50 mask-radial-vignette" />
+        <div className="pointer-events-none absolute -top-24 -left-24 w-80 h-80 bg-purple-600/20 rounded-full blur-[100px]" />
+        <div className="pointer-events-none absolute -bottom-24 -right-24 w-80 h-80 bg-indigo-600/20 rounded-full blur-[100px]" />
         
         {/* MODAL HEADER */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-purple-500/20 bg-purple-950/20 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="relative flex items-center justify-center w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-600/30">
-              <Mic className="w-5 h-5" />
+        <div className="relative z-10 flex items-center justify-between px-3 sm:px-6 py-3 sm:py-4 border-b border-purple-500/20 bg-purple-950/30 shrink-0 gap-2">
+          {/* Left: Back Button & Title */}
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+            {/* Back Button */}
+            <button
+              onClick={onClose}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-purple-500/30 bg-purple-900/40 text-purple-200 hover:bg-purple-800/60 hover:text-white transition text-xs font-semibold shrink-0 shadow-sm"
+              title={isBn ? 'ড্যাশবোর্ডে ফিরে যান (Esc)' : 'Back to Dashboard (Esc)'}
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">{isBn ? 'পেছনে যান' : 'Back'}</span>
+            </button>
+
+            <div className="relative flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-600/30 shrink-0">
+              <Mic className="w-4 h-4 sm:w-5 sm:h-5" />
               {isListening && (
-                <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5 sm:h-3 sm:w-3">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 sm:h-3 sm:w-3 bg-rose-500"></span>
                 </span>
               )}
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-white tracking-wide">
-                  YEAR INFO AI ভয়েস অ্যাসিস্ট্যান্ট
+
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <h2 className="text-xs sm:text-base font-bold text-white tracking-wide truncate">
+                  {isBn ? 'YEAR INFO AI ভয়েস অ্যাসিস্ট্যান্ট' : 'Voice Assistant'}
                 </h2>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                <span className="hidden md:inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 shrink-0">
                   Voice Sales Assistant
                 </span>
               </div>
-              <p className="text-xs text-slate-400">
-                মুখের কথায় আজকের সেলস, অর্ডার ও রিপোর্ট জানুন এবং এক ক্লিকে ইমেইলে পাঠান
+              <p className="text-[10px] sm:text-xs text-slate-400 truncate hidden sm:block">
+                {isBn ? 'মুখের কথায় আজকের সেলস, অর্ডার ও রিপোর্ট জানুন' : 'Real-time sales & order reporting by voice'}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Right Controls: Language Switch, Mute Toggle, and Prominent Cross (Close) Button */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {/* Language switch for speech */}
             <select
               value={speechLang}
               onChange={(e) => setSpeechLang(e.target.value as any)}
-              className="px-2.5 py-1.5 rounded-xl border border-purple-500/30 bg-purple-900/30 text-xs font-semibold text-purple-200 focus:outline-none"
+              className="px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-xl border border-purple-500/30 bg-purple-900/40 text-[11px] sm:text-xs font-semibold text-purple-200 focus:outline-none"
               title="Speech Recognition Language"
             >
-              <option value="bn-BD" className="bg-slate-900 text-white">বাংলা (Bangla)</option>
-              <option value="en-US" className="bg-slate-900 text-white">English (US)</option>
+              <option value="bn-BD" className="bg-slate-900 text-white">বাংলা</option>
+              <option value="en-US" className="bg-slate-900 text-white">English</option>
             </select>
 
             {/* Mute/Unmute Audio Speech */}
@@ -571,7 +606,7 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
                 if (isSpeaking) stopSpeaking();
                 setIsMuted(!isMuted);
               }}
-              className={`p-2 rounded-xl border transition ${
+              className={`p-1.5 sm:p-2 rounded-xl border transition ${
                 isMuted
                   ? 'border-slate-700 bg-slate-800 text-slate-400 hover:text-white'
                   : 'border-purple-500/40 bg-purple-600/20 text-purple-300 hover:bg-purple-600/30'
@@ -581,13 +616,18 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
               {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
             </button>
 
-            {/* Close Button */}
+            {/* Divider */}
+            <div className="h-6 w-px bg-purple-500/30 mx-0.5 sm:mx-1" />
+
+            {/* PROMINENT TOP-RIGHT 'X' CLOSE BUTTON */}
             <button
               onClick={onClose}
-              className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition"
-              title="Close Assistant"
+              className="flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white font-bold text-xs shadow-lg shadow-rose-950/60 hover:shadow-rose-600/40 border border-rose-400/40 hover:border-rose-300 transition-all duration-200 active:scale-95 shrink-0 group cursor-pointer"
+              title={isBn ? 'ভয়েস অ্যাসিস্ট্যান্ট বন্ধ করুন (Esc)' : 'Exit Voice Assistant (Esc)'}
+              aria-label="Exit Voice Assistant"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4 sm:w-4.5 sm:h-4.5 stroke-[3] group-hover:rotate-90 transition-transform duration-200" />
+              <span className="font-bold tracking-wide">{isBn ? 'বন্ধ করুন' : 'Exit'}</span>
             </button>
           </div>
         </div>

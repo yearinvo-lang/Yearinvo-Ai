@@ -16,6 +16,8 @@ import {
   ChevronDown,
   ChevronUp,
   LogIn,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { YearInfoLogo } from '../components/YearInfoLogo.tsx';
 import { useAuth } from '../context/AuthContext.tsx';
@@ -26,7 +28,7 @@ interface LandingPageProps {
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterApp }) => {
-  const { user, language, toggleLanguage, logout } = useAuth();
+  const { user, language, toggleLanguage, logout, theme, toggleTheme } = useAuth();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [branding, setBranding] = useState<any>(null);
 
@@ -74,41 +76,60 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterApp
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-purple-600 selection:text-white">
+    <div className="relative min-h-screen bg-slate-50 dark:bg-[#06050e] text-slate-900 dark:text-slate-100 selection:bg-purple-600 selection:text-white transition-colors duration-200">
+      {/* High-End Ambient Background Grid Pattern Layer */}
+      <div className="pointer-events-none fixed inset-0 z-0 bg-grid-pattern opacity-60 dark:opacity-85 mask-radial-vignette" />
+      <div className="pointer-events-none fixed top-10 left-1/2 -translate-x-1/2 w-[850px] h-[550px] bg-purple-600/15 dark:bg-purple-600/25 rounded-full blur-[160px]" />
+      <div className="pointer-events-none fixed bottom-10 right-10 w-[600px] h-[450px] bg-indigo-600/10 dark:bg-indigo-600/20 rounded-full blur-[140px]" />
+
       {/* 1. TOP NAVIGATION HEADER */}
-      <header className="sticky top-0 z-40 border-b border-purple-500/20 bg-slate-950/80 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 border-b border-slate-200/80 dark:border-purple-500/20 bg-white/80 dark:bg-[#080614]/85 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
           <YearInfoLogo size="md" showText={true} />
 
-          <nav className="hidden md:flex items-center gap-7 text-xs font-semibold uppercase tracking-wider text-slate-300">
-            <a href="#features" className="hover:text-purple-400 transition">
+          <nav className="hidden md:flex items-center gap-7 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+            <a href="#features" className="hover:text-purple-600 dark:hover:text-purple-400 transition">
               {isBn ? 'ফিচারসমূহ' : 'Features'}
             </a>
-            <a href="#integrations" className="hover:text-purple-400 transition">
+            <a href="#integrations" className="hover:text-purple-600 dark:hover:text-purple-400 transition">
               {isBn ? 'ইন্টিগ্রেশন' : 'Integrations'}
             </a>
-            <a href="#ai-agent" className="hover:text-purple-400 transition">
+            <a href="#ai-agent" className="hover:text-purple-600 dark:hover:text-purple-400 transition">
               {isBn ? 'এআই সেলস এজেন্ট' : 'AI Sales Agent'}
             </a>
-            <a href="#scheduler" className="hover:text-purple-400 transition">
+            <a href="#scheduler" className="hover:text-purple-600 dark:hover:text-purple-400 transition">
               {isBn ? 'পোস্ট শিডিউলার' : 'Post Scheduler'}
             </a>
-            <a href="#pricing" className="hover:text-purple-400 transition">
+            <a href="#pricing" className="hover:text-purple-600 dark:hover:text-purple-400 transition">
               {isBn ? 'প্রাইসিং' : 'Pricing'}
             </a>
-            <a href="#faq" className="hover:text-purple-400 transition">
+            <a href="#faq" className="hover:text-purple-600 dark:hover:text-purple-400 transition">
               {isBn ? 'প্রশ্নোত্তর' : 'FAQ'}
             </a>
           </nav>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            {/* Theme Toggle (Light / Dark) */}
+            <button
+              onClick={toggleTheme}
+              className="flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 p-2 text-slate-700 dark:text-slate-300 hover:border-purple-500 hover:text-purple-600 dark:hover:text-purple-400 transition shadow-sm"
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              aria-label="Toggle theme"
+            >
+              {theme === 'dark' ? (
+                <Sun className="h-4 w-4 text-amber-400" />
+              ) : (
+                <Moon className="h-4 w-4 text-purple-600" />
+              )}
+            </button>
+
             {/* Language Switcher */}
             <button
               onClick={toggleLanguage}
-              className="flex items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-slate-300 hover:border-purple-500 hover:text-white transition"
+              className="flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:border-purple-500 hover:text-purple-600 dark:hover:text-white transition shadow-sm"
               title="Toggle Language"
             >
-              <Globe className="h-3.5 w-3.5 text-purple-400" />
+              <Globe className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
               <span>{isBn ? 'English' : 'বাংলা'}</span>
             </button>
 

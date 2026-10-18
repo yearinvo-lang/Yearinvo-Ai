@@ -6,7 +6,9 @@ interface ChatWidgetProps {
   workspaceId?: string;
 }
 
-export const LiveChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId = 'ws_demo_store' }) => {
+export const LiveChatWidget: React.FC<ChatWidgetProps> = ({ workspaceId }) => {
+  if (!workspaceId) return null;
+
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Array<{ sender: 'visitor' | 'ai'; text: string; time: string }>>([
     {

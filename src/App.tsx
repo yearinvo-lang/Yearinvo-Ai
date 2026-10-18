@@ -22,11 +22,11 @@ import {
   ExternalLink,
   Sparkles,
   Mic,
+  ArrowLeft,
 } from 'lucide-react';
 import { AuthProvider, useAuth } from './context/AuthContext.tsx';
 import { YearInfoLogo } from './components/YearInfoLogo.tsx';
-import { LandingPage } from './pages/LandingPage.tsx';
-import { AuthModal } from './components/AuthModal.tsx';
+import { AuthPage } from './pages/AuthPage.tsx';
 import { OnboardingModal } from './components/OnboardingModal.tsx';
 import { LiveChatWidget } from './components/LiveChatWidget.tsx';
 import { VoiceAssistantModal } from './components/VoiceAssistantModal.tsx';
@@ -66,17 +66,6 @@ function MainApp() {
 
   // Navigation State
   const [currentPage, setCurrentPage] = useState<string>('overview');
-  // Always show Landing Page on initial visit or when not logged in
-  const [showLanding, setShowLanding] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return true;
-    const token = localStorage.getItem('yia_token');
-    const entered = sessionStorage.getItem('yia_entered_app');
-    // If not logged in or haven't entered the workspace in this active browser session, show Landing Page first
-    if (!token || entered !== 'true') return true;
-    return false;
-  });
-  const [authModalOpen, setAuthModalOpen] = useState<boolean>(false);
-  const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
   const [onboardingOpen, setOnboardingOpen] = useState<boolean>(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(false);
   const [voiceAssistantOpen, setVoiceAssistantOpen] = useState<boolean>(false);
@@ -239,46 +228,63 @@ function MainApp() {
     );
   }
 
-  // If user is not logged in or clicks "View Landing Page", show Public Landing Page
-  if (!user || showLanding) {
+  // If user is not authenticated, show the public Login / Create Account page only
+  if (!user) {
+    if (currentPath === '/privacy') {
+      return (
+        <div className="min-h-screen bg-slate-950 text-slate-100 p-4 sm:p-8">
+          <div className="max-w-4xl mx-auto">
+            <a href="/" className="inline-block mb-4 text-xs font-semibold text-purple-400 hover:underline">
+              ← {isBn ? 'লগইন পেজে ফিরুন' : 'Back to Login'}
+            </a>
+            <PrivacyPolicyPage />
+          </div>
+        </div>
+      );
+    }
+
+    if (currentPath === '/terms') {
+      return (
+        <div className="min-h-screen bg-slate-950 text-slate-100 p-4 sm:p-8">
+          <div className="max-w-4xl mx-auto">
+            <a href="/" className="inline-block mb-4 text-xs font-semibold text-purple-400 hover:underline">
+              ← {isBn ? 'লগইন পেজে ফিরুন' : 'Back to Login'}
+            </a>
+            <TermsOfServicePage />
+          </div>
+        </div>
+      );
+    }
+
+    if (currentPath === '/data-deletion') {
+      return (
+        <div className="min-h-screen bg-slate-950 text-slate-100 p-4 sm:p-8">
+          <div className="max-w-4xl mx-auto">
+            <a href="/" className="inline-block mb-4 text-xs font-semibold text-purple-400 hover:underline">
+              ← {isBn ? 'লগইন পেজে ফিরুন' : 'Back to Login'}
+            </a>
+            <DataDeletionPage />
+          </div>
+        </div>
+      );
+    }
+
     return (
-      <div className="relative min-h-screen">
-        <LandingPage
-          onOpenAuth={(mode) => {
-            setAuthModalMode(mode);
-            setAuthModalOpen(true);
-          }}
-          onEnterApp={() => {
-            if (user) {
-              sessionStorage.setItem('yia_entered_app', 'true');
-              setShowLanding(false);
-            } else {
-              setAuthModalMode('login');
-              setAuthModalOpen(true);
-            }
-          }}
-        />
-        <AuthModal
-          isOpen={authModalOpen}
-          initialMode={authModalMode}
-          onClose={() => setAuthModalOpen(false)}
-          onSuccess={(isNewUser) => {
-            sessionStorage.setItem('yia_entered_app', 'true');
-            setAuthModalOpen(false);
-            setShowLanding(false);
-            if (isNewUser) {
-              setOnboardingOpen(true);
-            }
-          }}
-        />
-        {/* Floating embeddable live chat widget */}
-        <LiveChatWidget workspaceId={activeWorkspace?.id || 'ws_demo_store'} />
-      </div>
+      <AuthPage
+        onSuccess={() => {
+          setCurrentPage('overview');
+        }}
+      />
     );
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200">
+    <div className="relative flex h-screen overflow-hidden bg-slate-100/80 dark:bg-[#070611] text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200">
+      {/* Radiant Background Grid Pattern with Radial Vignette */}
+      <div className="pointer-events-none fixed inset-0 z-0 bg-grid-pattern opacity-60 dark:opacity-85 mask-radial-vignette" />
+      <div className="pointer-events-none fixed top-0 left-1/4 -translate-y-1/2 w-[700px] h-[500px] bg-purple-600/10 dark:bg-purple-600/20 rounded-full blur-[140px]" />
+      <div className="pointer-events-none fixed bottom-0 right-1/4 translate-y-1/2 w-[600px] h-[400px] bg-indigo-600/10 dark:bg-indigo-600/20 rounded-full blur-[140px]" />
+
       {/* MOBILE SIDEBAR BACKDROP */}
       {mobileSidebarOpen && (
         <div
@@ -289,7 +295,7 @@ function MainApp() {
 
       {/* LEFT NAVIGATION SIDEBAR */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-slate-200 dark:border-purple-500/20 bg-white dark:bg-[#080612] transition-all duration-300 lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-slate-200/80 dark:border-purple-500/20 bg-white/95 dark:bg-[#090717]/95 backdrop-blur-xl transition-all duration-300 lg:static lg:translate-x-0 ${
           mobileSidebarOpen ? 'translate-x-0' : '-translate-x-0 lg:translate-x-0 hidden lg:flex'
         }`}
       >
@@ -305,8 +311,8 @@ function MainApp() {
         </div>
 
         {/* Workspace Switcher */}
-        <div className="p-3 border-b border-slate-100 dark:border-slate-900 shrink-0">
-          <div className="rounded-xl border border-slate-200 dark:border-purple-500/20 bg-slate-50 dark:bg-slate-900/90 p-2.5 flex items-center justify-between shadow-sm">
+        <div className="p-3 border-b border-slate-100 dark:border-purple-500/10 shrink-0">
+          <div className="rounded-xl border border-slate-200 dark:border-purple-500/30 bg-slate-50 dark:bg-[#0f0d24] p-2.5 flex items-center justify-between shadow-sm">
             <div className="truncate">
               <div className="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">Workspace</div>
               <div className="text-xs font-bold text-slate-900 dark:text-white truncate">{activeWorkspace?.name || 'Dhaka Fashion Hub'}</div>
@@ -374,20 +380,8 @@ function MainApp() {
           })}
         </nav>
 
-        {/* Sidebar Footer User & Landing Switch */}
-        <div className="p-3 border-t border-slate-200 dark:border-purple-500/20 bg-slate-50 dark:bg-slate-950/80 shrink-0 space-y-2">
-          <button
-            onClick={() => {
-              sessionStorage.removeItem('yia_entered_app');
-              setShowLanding(true);
-            }}
-            className="flex w-full items-center justify-between rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:border-purple-500 hover:text-purple-600 dark:hover:text-white transition shadow-sm"
-          >
-            <span className="flex items-center gap-2">
-              <ExternalLink className="h-3.5 w-3.5 text-purple-500 dark:text-purple-400" />
-              <span>Landing Page</span>
-            </span>
-          </button>
+        {/* Sidebar Footer User */}
+        <div className="p-3 border-t border-slate-200 dark:border-purple-500/20 bg-slate-50/80 dark:bg-[#080614]/90 shrink-0">
 
           <div className="flex items-center justify-between px-1 text-xs">
             <div className="truncate">
@@ -406,9 +400,9 @@ function MainApp() {
       </aside>
 
       {/* RIGHT MAIN CONTENT AREA */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="relative z-10 flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* TOP BAR */}
-        <header className="flex h-16 items-center justify-between border-b border-slate-200 dark:border-purple-500/20 bg-white/90 dark:bg-slate-950/80 px-4 sm:px-6 lg:px-8 backdrop-blur-xl shrink-0 transition-colors">
+        <header className="relative z-20 flex h-16 items-center justify-between border-b border-slate-200/80 dark:border-purple-500/20 bg-white/80 dark:bg-[#090717]/85 px-4 sm:px-6 lg:px-8 backdrop-blur-xl shrink-0 transition-colors shadow-sm dark:shadow-purple-950/20">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileSidebarOpen(true)}
@@ -489,8 +483,49 @@ function MainApp() {
         </header>
 
         {/* MAIN BODY VIEW */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-slate-100/70 dark:bg-slate-950 transition-colors">
-          {currentPage === 'overview' && <OverviewPage onNavigate={(page) => setCurrentPage(page)} />}
+        <main className="relative z-10 flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 transition-colors">
+          {currentPage === 'overview' && (
+            <OverviewPage
+              onNavigate={(page) => {
+                if (page === 'voice-assistant') {
+                  setVoiceAssistantOpen(true);
+                } else {
+                  setCurrentPage(page);
+                }
+              }}
+            />
+          )}
+          {currentPage === 'voice-assistant' && (
+            <div className="rounded-2xl border border-purple-500/30 bg-[#0c0a22] p-8 text-center space-y-4 shadow-xl max-w-2xl mx-auto my-8">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-purple-600/20 text-purple-400 border border-purple-500/30">
+                <Mic className="h-7 w-7 animate-pulse" />
+              </div>
+              <h2 className="text-xl font-bold text-white">
+                {isBn ? 'YEAR INFO AI ভয়েস অ্যাসিস্ট্যান্ট' : 'YEAR INFO AI Voice Assistant'}
+              </h2>
+              <p className="text-sm text-slate-400 max-w-md mx-auto">
+                {isBn
+                  ? 'ভয়েস অ্যাসিস্ট্যান্ট উইন্ডোটি চালু করতে বা ড্যাশবোর্ডে ফিরে যেতে নিচের অপশন ব্যবহার করুন।'
+                  : 'Open the voice assistant window or return to your overview dashboard.'}
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                <button
+                  onClick={() => setCurrentPage('overview')}
+                  className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/90 px-4 py-2.5 text-xs font-semibold text-slate-200 hover:bg-slate-700 transition"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  <span>{isBn ? 'ড্যাশবোর্ডে ফিরে যান' : 'Back to Dashboard'}</span>
+                </button>
+                <button
+                  onClick={() => setVoiceAssistantOpen(true)}
+                  className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow-lg shadow-purple-600/30 hover:brightness-110 transition active:scale-95"
+                >
+                  <Mic className="h-4 w-4" />
+                  <span>{isBn ? 'ভয়েস অ্যাসিস্ট্যান্ট খুলুন' : 'Open Voice Assistant'}</span>
+                </button>
+              </div>
+            </div>
+          )}
           {currentPage === 'inbox' && <InboxPage />}
           {currentPage === 'ai-agent' && <AIAgentPage />}
           {currentPage === 'customers' && <CustomersPage />}
@@ -521,7 +556,7 @@ function MainApp() {
       />
 
       {/* Floating embeddable website live chat widget */}
-      <LiveChatWidget workspaceId={activeWorkspace?.id || 'ws_demo_store'} />
+      {activeWorkspace?.id && <LiveChatWidget workspaceId={activeWorkspace.id} />}
     </div>
   );
 }

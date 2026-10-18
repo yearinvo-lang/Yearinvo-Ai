@@ -407,8 +407,8 @@ export async function firebaseSignUp(email: string, password: string, displayNam
       id: userCredential.user.uid,
       name: displayName || email.split('@')[0],
       email: userCredential.user.email,
-      role: 'admin',
-      isSuperAdmin: email === 'yearinvo@gmail.com',
+      role: 'owner',
+      isSuperAdmin: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }).catch(() => {});
@@ -469,8 +469,8 @@ export async function firebaseSignInWithGoogle() {
       name: result.user.displayName || result.user.email?.split('@')[0] || 'Google User',
       email: result.user.email,
       avatarUrl: result.user.photoURL || '',
-      role: 'admin',
-      isSuperAdmin: result.user.email === 'yearinvo@gmail.com',
+      role: 'owner',
+      isSuperAdmin: false,
       updatedAt: new Date().toISOString(),
     }).catch(() => {});
   }
@@ -494,8 +494,8 @@ export async function firebaseSignInWithFacebook() {
       name: result.user.displayName || result.user.email?.split('@')[0] || 'Facebook User',
       email: result.user.email,
       avatarUrl: result.user.photoURL || '',
-      role: 'admin',
-      isSuperAdmin: result.user.email === 'yearinvo@gmail.com',
+      role: 'owner',
+      isSuperAdmin: false,
       updatedAt: new Date().toISOString(),
     }).catch(() => {});
   }
