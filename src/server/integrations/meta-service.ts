@@ -144,7 +144,7 @@ export class MetaIntegrationService {
       }
     }
 
-    // 3. Fallback to synchronized workspace conversations & scheduled posts from database
+    // Fallback to synchronized workspace conversations & scheduled posts from database
     const convs = db.getConversations(workspaceId).filter((c) => c.channel === 'facebook' || c.channel === 'messenger');
     const scheduledPosts = db.getScheduledPosts(workspaceId);
 
@@ -165,21 +165,262 @@ export class MetaIntegrationService {
     // Check posts today
     const postsToday = scheduledPosts.filter((p) => {
       const pTime = new Date(p.scheduledAt || p.createdAt);
-      return pTime >= dhakaStart && pTime <= dhakaEnd && p.platforms.includes('facebook');
+      return pTime >= dhakaStart && pTime <= dhakaEnd && p.platforms.includes('facebook') && p.status === 'published';
     });
     metrics.postsPublishedToday = postsToday.length;
 
-    // Highest commented post fallback
-    metrics.topCommentedPost = {
-      id: 'fb_post_top_today',
-      caption: 'Eid Collection 2026: প্রিমিয়াম কটন পাঞ্জাবি ও তাঁতের জামদানি শাড়ি এখন রেডি স্টক!',
-      commentsCount: 14,
-      sharesCount: 3,
-      permalinkUrl: 'https://facebook.com/yearinfoai/posts/10293847',
-      publishedAt: new Date(dhakaStart.getTime() + 3600000 * 9).toISOString(),
-    };
-    metrics.commentsReceivedToday = 14;
-
     return metrics;
+  }
+
+  /**
+   * Publish a Facebook Page Post via official Meta Graph API v22.0
+   * Endpoint: POST /{page-id}/feed or /{page-id}/photos
+   */
+  public static async publishFacebookPagePost(
+    workspaceId: string,
+    post: { caption: string; mediaUrls?: string[]; hashtags?: string[] }
+  ): Promise<{
+    success: boolean;
+    postId?: string;
+    permalinkUrl?: string;
+    error?: string;
+  }> {
+    const creds = db.getChannelCredential(workspaceId, 'facebook') || db.getChannelCredential(workspaceId, 'messenger');
+    const channel = db.getChannel(workspaceId, 'facebook') || db.getChannel(workspaceId, 'messenger');
+    const pageAccessToken = creds?.pageAccessToken || creds?.accessToken;
+    const pageId = channel?.metadata?.pageId || channel?.accountId;
+
+    if (!pageAccessToken || !pageId) {
+      return {
+        success: false,
+        error: 'Facebook Page is not connected or Page Access Token is missing. Connect your Facebook Page in Channels settings.',
+      };
+    }
+
+    const hashtagStr = (post.hashtags && post.hashtags.length > 0)
+      ? '\n\n' + post.hashtags.map((h) => (h.startsWith('#') ? h : `#${h}`)).join(' ')
+      : '';
+    const fullCaption = `${post.caption}${hashtagStr}`.trim();
+
+    try {
+      const hasPhoto = post.mediaUrls && post.mediaUrls.length > 0 && post.mediaUrls[0].startsWith('http');
+      const url = hasPhoto
+        ? `https://graph.facebook.com/v22.0/${pageId}/photos`
+        : `https://graph.facebook.com/v22.0/${pageId}/feed`;
+
+      const bodyData: Record<string, string> = {
+        access_token: pageAccessToken,
+      };
+
+      if (hasPhoto) {
+        bodyData.url = post.mediaUrls![0];
+        bodyData.caption = fullCaption;
+      } else {
+        bodyData.message = fullCaption;
+      }
+
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bodyData),
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok || !data || data.error) {
+        const errDetail = data?.error?.message || `HTTP ${res.status} from Meta Graph API`;
+        return {
+          success: false,
+          error: `Meta Graph API Error (${data?.error?.code || res.status}): ${errDetail}`,
+        };
+      }
+
+      const postId = data.id || data.post_id;
+      return {
+        success: true,
+        postId,
+        permalinkUrl: `https://facebook.com/${postId}`,
+      };
+    } catch (err: any) {
+      return {
+        success: false,
+        error: `Network failure connecting to Meta Graph API: ${err.message}`,
+      };
+    }
+  }
+
+  /**
+   * Publish to Instagram Professional Account via Meta Graph API
+   * Requires: instagram_basic, instagram_content_publish permissions
+   */
+  public static async publishInstagramPost(
+    workspaceId: string,
+    post: { caption: string; mediaUrl: string; hashtags?: string[] }
+  ): Promise<{
+    success: boolean;
+    postId?: string;
+    error?: string;
+  }> {
+    const creds = db.getChannelCredential(workspaceId, 'instagram') || db.getChannelCredential(workspaceId, 'facebook');
+    const channel = db.getChannel(workspaceId, 'instagram');
+    const pageAccessToken = creds?.pageAccessToken || creds?.accessToken;
+    const igUserId = channel?.metadata?.instagramAccountId || channel?.accountId;
+
+    if (!pageAccessToken || !igUserId) {
+      return {
+        success: false,
+        error: 'Instagram Professional account is not linked or access token is missing. Please connect your linked Instagram account in Channels.',
+      };
+    }
+
+    if (!post.mediaUrl || !post.mediaUrl.startsWith('http')) {
+      return {
+        success: false,
+        error: 'Instagram API requires a publicly accessible HTTPS image or video URL for media publishing.',
+      };
+    }
+
+    const hashtagStr = (post.hashtags && post.hashtags.length > 0)
+      ? '\n\n' + post.hashtags.map((h) => (h.startsWith('#') ? h : `#${h}`)).join(' ')
+      : '';
+    const fullCaption = `${post.caption}${hashtagStr}`.trim();
+
+    try {
+      // Step 1: Create media container
+      const containerRes = await fetch(`https://graph.facebook.com/v22.0/${igUserId}/media`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          image_url: post.mediaUrl,
+          caption: fullCaption,
+          access_token: pageAccessToken,
+        }),
+      });
+
+      const containerData = await containerRes.json().catch(() => null);
+      if (!containerRes.ok || !containerData || containerData.error || !containerData.id) {
+        return {
+          success: false,
+          error: `Instagram Media Container Error: ${containerData?.error?.message || 'Failed to create media object'}`,
+        };
+      }
+
+      const creationId = containerData.id;
+
+      // Step 2: Publish media container
+      const publishRes = await fetch(`https://graph.facebook.com/v22.0/${igUserId}/media_publish`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          creation_id: creationId,
+          access_token: pageAccessToken,
+        }),
+      });
+
+      const publishData = await publishRes.json().catch(() => null);
+      if (!publishRes.ok || !publishData || publishData.error || !publishData.id) {
+        return {
+          success: false,
+          error: `Instagram Media Publish Error: ${publishData?.error?.message || 'Publishing step failed'}`,
+        };
+      }
+
+      return {
+        success: true,
+        postId: publishData.id,
+      };
+    } catch (err: any) {
+      return {
+        success: false,
+        error: `Instagram API connection failed: ${err.message}`,
+      };
+    }
+  }
+
+  /**
+   * Send Messenger reply via official Send API
+   */
+  public static async sendMessengerMessage(
+    workspaceId: string,
+    recipientId: string,
+    messageText: string
+  ): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    const creds = db.getChannelCredential(workspaceId, 'facebook') || db.getChannelCredential(workspaceId, 'messenger');
+    const pageAccessToken = creds?.pageAccessToken || creds?.accessToken;
+
+    if (!pageAccessToken) {
+      return { success: false, error: 'Facebook Page access token is missing.' };
+    }
+
+    try {
+      const res = await fetch(`https://graph.facebook.com/v22.0/me/messages?access_token=${encodeURIComponent(pageAccessToken)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipient: { id: recipientId },
+          message: { text: messageText },
+          messaging_type: 'RESPONSE',
+        }),
+      });
+
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data || data.error) {
+        return { success: false, error: data?.error?.message || `HTTP ${res.status}` };
+      }
+
+      return { success: true, messageId: data.message_id };
+    } catch (err: any) {
+      return { success: false, error: err.message };
+    }
+  }
+
+  /**
+   * Reply to a Facebook post comment
+   */
+  public static async replyToComment(
+    workspaceId: string,
+    commentId: string,
+    messageText: string,
+    isPrivate: boolean = false
+  ): Promise<{ success: boolean; replyId?: string; error?: string }> {
+    const creds = db.getChannelCredential(workspaceId, 'facebook') || db.getChannelCredential(workspaceId, 'messenger');
+    const pageAccessToken = creds?.pageAccessToken || creds?.accessToken;
+
+    if (!pageAccessToken) {
+      return { success: false, error: 'Facebook Page access token is missing.' };
+    }
+
+    try {
+      if (isPrivate) {
+        // Send a private message to the commenter
+        const res = await fetch(`https://graph.facebook.com/v22.0/me/messages?access_token=${encodeURIComponent(pageAccessToken)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            recipient: { comment_id: commentId },
+            message: { text: messageText },
+          }),
+        });
+        const data = await res.json().catch(() => null);
+        if (!res.ok || !data || data.error) {
+          return { success: false, error: data?.error?.message || `Private reply failed (${res.status})` };
+        }
+        return { success: true, replyId: data.message_id };
+      } else {
+        // Public comment reply
+        const res = await fetch(`https://graph.facebook.com/v22.0/${commentId}/comments?access_token=${encodeURIComponent(pageAccessToken)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: messageText }),
+        });
+        const data = await res.json().catch(() => null);
+        if (!res.ok || !data || data.error) {
+          return { success: false, error: data?.error?.message || `Public comment reply failed (${res.status})` };
+        }
+        return { success: true, replyId: data.id };
+      }
+    } catch (err: any) {
+      return { success: false, error: err.message };
+    }
   }
 }

@@ -436,21 +436,53 @@ class DatabaseStore {
 
   // Sessions
   public createSession(userId: string): string {
-    const token = crypto.randomBytes(32).toString('hex');
     const expiresAt = Date.now() + 86400000 * 7; // 7 days
+    const payload = `${userId}.${expiresAt}`;
+    const secret = process.env.SESSION_SECRET || 'yia_session_hmac_secret_2026_bangladesh';
+    const sig = crypto.createHmac('sha256', secret).update(payload).digest('hex');
+    const token = `yia_${payload}.${sig}`;
+
     this.data.sessions.push({ token, userId, expiresAt });
     this.persist();
     return token;
   }
 
   public getSession(token: string) {
+    if (!token || typeof token !== 'string') return null;
+
+    // 1. Check in-memory / persistent sessions array
     const session = this.data.sessions.find((s) => s.token === token);
-    if (!session) return null;
-    if (session.expiresAt && session.expiresAt < Date.now()) {
-      this.deleteSession(token);
-      return null;
+    if (session) {
+      if (session.expiresAt && session.expiresAt < Date.now()) {
+        this.deleteSession(token);
+        return null;
+      }
+      return session;
     }
-    return session;
+
+    // 2. Cryptographically verify signed token (preserves sessions across Vercel / serverless restarts)
+    if (token.startsWith('yia_')) {
+      const raw = token.slice(4);
+      const parts = raw.split('.');
+      if (parts.length === 3) {
+        const [userId, expiresAtStr, sig] = parts;
+        const payload = `${userId}.${expiresAtStr}`;
+        const secret = process.env.SESSION_SECRET || 'yia_session_hmac_secret_2026_bangladesh';
+        const expectedSig = crypto.createHmac('sha256', secret).update(payload).digest('hex');
+
+        if (sig === expectedSig) {
+          const expiresAt = Number(expiresAtStr);
+          if (!isNaN(expiresAt) && expiresAt >= Date.now()) {
+            const user = this.getUserById(userId);
+            if (user && user.status !== 'suspended') {
+              return { token, userId, expiresAt };
+            }
+          }
+        }
+      }
+    }
+
+    return null;
   }
 
   public deleteSession(token: string) {

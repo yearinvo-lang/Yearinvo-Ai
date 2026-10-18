@@ -158,7 +158,7 @@ export interface Product {
   createdAt: string;
 }
 
-export type OrderStatus = 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+export type OrderStatus = 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'returned' | 'delivery_failed';
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
 
 export interface OrderItem {
@@ -188,6 +188,12 @@ export interface Order {
   status: OrderStatus;
   paymentStatus: PaymentStatus;
   paymentMethod: 'cash_on_delivery' | 'bkash' | 'nagad' | 'bank_transfer' | 'card';
+  channel?: 'facebook' | 'messenger' | 'whatsapp' | 'instagram' | 'website' | 'manual';
+  courierProvider?: CourierProvider;
+  courierConsignmentId?: string;
+  courierTrackingCode?: string;
+  courierTrackingUrl?: string;
+  courierDispatchedAt?: string;
   conversationId?: string;
   aiAssisted: boolean;
   notes?: string;

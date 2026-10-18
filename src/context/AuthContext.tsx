@@ -11,7 +11,7 @@ interface AuthContextType {
   loading: boolean;
   language: 'en' | 'bn';
   theme: 'dark' | 'light';
-  login: (email: string, password?: string, firebaseUid?: string, fbUserObj?: any) => Promise<{ success: boolean; error?: string }>;
+  login: (email: string, password?: string, firebaseUid?: string, fbUserObj?: any, rememberMe?: boolean) => Promise<{ success: boolean; error?: string }>;
   register: (data: { name: string; email: string; password: string; businessName?: string; phone?: string; uid?: string; fbUser?: any }) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   setActiveWorkspace: (ws: Workspace) => void;
@@ -37,6 +37,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return (localStorage.getItem('yia_theme') as 'dark' | 'light') || 'dark';
   });
 
+  const getStoredToken = (): string | null => {
+    if (typeof window === 'undefined') return null;
+    const isRemembered = localStorage.getItem('yia_remember') === 'true';
+    if (isRemembered) {
+      return localStorage.getItem('yia_token') || sessionStorage.getItem('yia_token');
+    }
+    return sessionStorage.getItem('yia_token');
+  };
+
   const parseJsonResponse = async (res: Response) => {
     const contentType = res.headers.get('content-type') || '';
     if (contentType.includes('application/json')) {
@@ -56,7 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const apiRequest = async (url: string, options: RequestInit = {}) => {
     const headers = new Headers(options.headers || {});
-    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('yia_token') : null);
+    const activeToken = token || getStoredToken();
 
     if (activeToken) {
       headers.set('Authorization', `Bearer ${activeToken}`);
@@ -74,17 +83,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       headers.set('Content-Type', 'application/json');
     }
 
-    const res = await fetch(url, { ...options, headers });
+    const fetchOptions: RequestInit = {
+      ...options,
+      headers,
+      credentials: options.credentials || 'include',
+    };
+
+    const res = await fetch(url, fetchOptions);
     const data = await parseJsonResponse(res);
+
     if (!res.ok) {
-      if (res.status === 401) {
-        // Session expired or revoked
+      // Only revoke session if the core session endpoint specifically rejects the session
+      if (res.status === 401 && (url === '/api/auth/me' || url.includes('/api/auth/me'))) {
         setUser(null);
         setToken(null);
         if (typeof window !== 'undefined') {
           localStorage.removeItem('yia_token');
+          localStorage.removeItem('yia_remember');
           localStorage.removeItem('yia_cached_user');
           localStorage.removeItem('yia_cached_workspace');
+          sessionStorage.removeItem('yia_token');
+          sessionStorage.removeItem('yia_cached_user');
+          sessionStorage.removeItem('yia_cached_workspace');
         }
       }
       const errMsg = (data && data.error) ? data.error : `Server request error (${res.status})`;
@@ -94,7 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const refreshUserData = async () => {
-    const savedToken = localStorage.getItem('yia_token');
+    const savedToken = getStoredToken();
     if (!savedToken) {
       setUser(null);
       setWorkspaces([]);
@@ -107,163 +127,88 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const data = await apiRequest('/api/auth/me');
       if (data && data.user) {
         setUser(data.user);
-        localStorage.setItem('yia_cached_user', JSON.stringify(data.user));
         const wsList = data.workspaces || [];
         setWorkspaces(wsList);
         const resolvedWs = data.activeWorkspace || wsList[0] || null;
         if (resolvedWs) {
           setActiveWorkspaceState(resolvedWs);
-          localStorage.setItem('yia_cached_workspace', JSON.stringify(resolvedWs));
         }
       } else {
-        // If server says unauthorized or invalid session, clear local state
         setUser(null);
         setToken(null);
         localStorage.removeItem('yia_token');
-        localStorage.removeItem('yia_cached_user');
-        localStorage.removeItem('yia_cached_workspace');
+        localStorage.removeItem('yia_remember');
+        sessionStorage.removeItem('yia_token');
       }
     } catch {
-      // On 401 or network error, if not valid, clear user session
-      setUser(null);
-      setToken(null);
-      localStorage.removeItem('yia_token');
-      localStorage.removeItem('yia_cached_user');
-      localStorage.removeItem('yia_cached_workspace');
+      // Keep state on network error
     } finally {
       setLoading(false);
     }
   };
 
-  // Sync with real Firebase Authentication state changes
+  // 1. Initial Session Bootstrap on App Mount: Runs strictly ONCE
+  // Only attempts session restoration if user previously checked "Remember Me" or has active tab session
   useEffect(() => {
     let isMounted = true;
 
-    const unsubscribe = onAuthStateChanged(firebaseAuth, async (fbUser) => {
-      if (!isMounted) return;
-
-      if (fbUser) {
-        // Real authenticated user in Firebase
-        let existingToken = localStorage.getItem('yia_token');
-        if (!existingToken) {
-          try {
-            const syncRes = await fetch('/api/auth/firebase-sync', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                uid: fbUser.uid,
-                email: fbUser.email,
-                name: fbUser.displayName,
-                avatarUrl: fbUser.photoURL,
-              }),
-            });
-            const syncData = await syncRes.json().catch(() => null);
-            if (syncData && syncData.token) {
-              const freshToken = String(syncData.token);
-              existingToken = freshToken;
-              localStorage.setItem('yia_token', freshToken);
-              setToken(freshToken);
-            }
-          } catch {}
-        }
-
-        if (existingToken) {
-          setToken(existingToken);
-          try {
-            const res = await fetch('/api/auth/me', {
-              headers: {
-                Authorization: `Bearer ${existingToken}`,
-                'Content-Type': 'application/json',
-              },
-            });
-            const data = await res.json().catch(() => null);
-            if (isMounted && data && data.user) {
-              setUser(data.user);
-              localStorage.setItem('yia_cached_user', JSON.stringify(data.user));
-              const wsList = data.workspaces || [];
-              setWorkspaces(wsList);
-              const resolvedWs = data.activeWorkspace || wsList[0] || null;
-              if (resolvedWs) {
-                setActiveWorkspaceState(resolvedWs);
-                localStorage.setItem('yia_cached_workspace', JSON.stringify(resolvedWs));
-              }
-            } else if (isMounted) {
-              setUser(null);
-              setToken(null);
-              localStorage.removeItem('yia_token');
-              localStorage.removeItem('yia_cached_user');
-              localStorage.removeItem('yia_cached_workspace');
-            }
-          } catch {
-            if (isMounted) {
-              setUser(null);
-              setToken(null);
-              localStorage.removeItem('yia_token');
-              localStorage.removeItem('yia_cached_user');
-              localStorage.removeItem('yia_cached_workspace');
-            }
-          } finally {
-            if (isMounted) setLoading(false);
-          }
-        } else {
-          if (isMounted) setLoading(false);
-        }
-      } else {
-        // No Firebase user is signed in
-        const savedToken = localStorage.getItem('yia_token');
-        if (savedToken) {
-          try {
-            const res = await fetch('/api/auth/me', {
-              headers: {
-                Authorization: `Bearer ${savedToken}`,
-                'Content-Type': 'application/json',
-              },
-            });
-            const data = await res.json().catch(() => null);
-            if (isMounted && data && data.user) {
-              setUser(data.user);
-              localStorage.setItem('yia_cached_user', JSON.stringify(data.user));
-              setWorkspaces(data.workspaces || []);
-              setActiveWorkspaceState(data.activeWorkspace || data.workspaces[0] || null);
-            } else if (isMounted) {
-              // Token is invalid/expired, reset state to force Login Page
-              setUser(null);
-              setToken(null);
-              setWorkspaces([]);
-              setActiveWorkspaceState(null);
-              localStorage.removeItem('yia_token');
-              localStorage.removeItem('yia_cached_user');
-              localStorage.removeItem('yia_cached_workspace');
-            }
-          } catch {
-            if (isMounted) {
-              setUser(null);
-              setToken(null);
-              setWorkspaces([]);
-              setActiveWorkspaceState(null);
-              localStorage.removeItem('yia_token');
-              localStorage.removeItem('yia_cached_user');
-              localStorage.removeItem('yia_cached_workspace');
-            }
-          } finally {
-            if (isMounted) setLoading(false);
-          }
-        } else {
-          // Brand new visitor, not logged in
+    const bootstrapAuth = async () => {
+      const savedToken = getStoredToken();
+      if (!savedToken) {
+        if (isMounted) {
           setUser(null);
           setToken(null);
-          setWorkspaces([]);
-          setActiveWorkspaceState(null);
-          localStorage.removeItem('yia_cached_user');
-          localStorage.removeItem('yia_cached_workspace');
-          if (isMounted) setLoading(false);
+          setLoading(false);
+        }
+        return;
+      }
+
+      setToken(savedToken);
+
+      try {
+        const res = await fetch('/api/auth/me', {
+          headers: {
+            Authorization: `Bearer ${savedToken}`,
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+        });
+
+        if (res.ok) {
+          const data = await parseJsonResponse(res);
+          if (isMounted && data && data.user) {
+            setUser(data.user);
+            setToken(savedToken);
+            const wsList = data.workspaces || [];
+            setWorkspaces(wsList);
+            const resolvedWs = data.activeWorkspace || wsList[0] || null;
+            if (resolvedWs) {
+              setActiveWorkspaceState(resolvedWs);
+            }
+          }
+        } else if (res.status === 401) {
+          // Token expired or invalid
+          if (isMounted) {
+            setUser(null);
+            setToken(null);
+            localStorage.removeItem('yia_token');
+            localStorage.removeItem('yia_remember');
+            sessionStorage.removeItem('yia_token');
+          }
+        }
+      } catch (err) {
+        // Offline / network glitch — retain session if token was signed
+      } finally {
+        if (isMounted) {
+          setLoading(false);
         }
       }
-    });
+    };
+
+    bootstrapAuth();
 
     return () => {
       isMounted = false;
-      unsubscribe();
     };
   }, []);
 
@@ -302,29 +247,77 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setActiveWorkspaceState(localWorkspace);
   };
 
-  const login = async (email: string, password?: string, firebaseUid?: string, fbUserObj?: any) => {
+  const login = async (email: string, password?: string, firebaseUid?: string, fbUserObj?: any, rememberMe: boolean = false) => {
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, firebaseUid }),
+        credentials: 'include',
+        body: JSON.stringify({ email, password, firebaseUid, rememberMe }),
       }).catch(() => null);
 
       if (res && res.ok) {
         const data = await parseJsonResponse(res);
-        if (data && data.user) {
+        if (data && data.user && data.token) {
           setUser(data.user);
           setToken(data.token);
-          localStorage.setItem('yia_token', data.token);
-          localStorage.setItem('yia_cached_user', JSON.stringify(data.user));
-          setWorkspaces(data.workspaces || []);
-          setActiveWorkspaceState(data.activeWorkspace || data.workspaces[0] || null);
+
+          if (rememberMe) {
+            localStorage.setItem('yia_token', data.token);
+            localStorage.setItem('yia_remember', 'true');
+            sessionStorage.setItem('yia_token', data.token);
+          } else {
+            sessionStorage.setItem('yia_token', data.token);
+            localStorage.removeItem('yia_token');
+            localStorage.removeItem('yia_remember');
+          }
+
+          const wsList = data.workspaces || [];
+          setWorkspaces(wsList);
+          const resolvedWs = data.activeWorkspace || wsList[0] || null;
+          if (resolvedWs) {
+            setActiveWorkspaceState(resolvedWs);
+          }
           return { success: true };
         }
       }
 
       // If server is 404 (e.g. static hosting on Vercel) or unreachable, but real Firebase user was authenticated
       if (fbUserObj || firebaseUid) {
+        try {
+          const syncRes = await fetch('/api/auth/firebase-sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              uid: firebaseUid || fbUserObj?.uid,
+              email,
+              name: fbUserObj?.displayName || email.split('@')[0],
+              avatarUrl: fbUserObj?.photoURL,
+            }),
+          });
+          const syncData = await syncRes.json().catch(() => null);
+          if (syncData && syncData.token && syncData.user) {
+            setUser(syncData.user);
+            setToken(syncData.token);
+            if (rememberMe) {
+              localStorage.setItem('yia_token', syncData.token);
+              localStorage.setItem('yia_remember', 'true');
+            } else {
+              sessionStorage.setItem('yia_token', syncData.token);
+              localStorage.removeItem('yia_token');
+              localStorage.removeItem('yia_remember');
+            }
+            const wsList = syncData.workspaces || [];
+            setWorkspaces(wsList);
+            const resolvedWs = syncData.activeWorkspace || wsList[0] || null;
+            if (resolvedWs) {
+              setActiveWorkspaceState(resolvedWs);
+            }
+            return { success: true };
+          }
+        } catch {}
+
         createClientSession(
           fbUserObj || { uid: firebaseUid, email },
           `${email.split('@')[0]}'s Workspace`
@@ -360,6 +353,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(inputData),
       }).catch(() => null);
 
@@ -368,8 +362,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (data && data.user) {
           setUser(data.user);
           setToken(data.token);
-          localStorage.setItem('yia_token', data.token);
-          localStorage.setItem('yia_cached_user', JSON.stringify(data.user));
+          sessionStorage.setItem('yia_token', data.token);
           setWorkspaces(data.workspaces || [data.workspace]);
           setActiveWorkspaceState(data.workspace);
           return { success: true };
@@ -424,8 +417,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setWorkspaces([]);
     setActiveWorkspaceState(null);
     localStorage.removeItem('yia_token');
+    localStorage.removeItem('yia_remember');
     localStorage.removeItem('yia_cached_user');
     localStorage.removeItem('yia_cached_workspace');
+    sessionStorage.removeItem('yia_token');
+    sessionStorage.removeItem('yia_cached_user');
+    sessionStorage.removeItem('yia_cached_workspace');
     if (typeof window !== 'undefined') {
       sessionStorage.removeItem('yia_entered_app');
     }

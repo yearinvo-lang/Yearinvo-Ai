@@ -31,19 +31,35 @@ if (process.env.VERCEL !== '1' && !process.env.NOW_REGION) {
   backgroundScheduler.start();
 }
 
+// Parse incoming cookies
+function parseCookies(header?: string): Record<string, string> {
+  const map: Record<string, string> = {};
+  if (!header) return map;
+  header.split(';').forEach((c) => {
+    const parts = c.split('=');
+    if (parts.length >= 2) {
+      map[parts.shift()!.trim()] = decodeURIComponent(parts.join('='));
+    }
+  });
+  return map;
+}
+
 // Secure Authentication Middleware (Enforces real user login & data isolation)
 function authMiddleware(req: Request, res: Response, next: NextFunction): void {
   const authHeader = req.headers.authorization;
   const workspaceHeader = (req.headers['x-workspace-id'] || req.headers['x-workspace']) as string;
+  const cookies = parseCookies(req.headers.cookie);
+  const cookieToken = cookies['yia_token'];
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    res.status(401).json({ error: 'Unauthorized: Authentication required. Please log in.' });
-    return;
+  let token = '';
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.split(' ')[1]?.trim();
+  } else if (cookieToken) {
+    token = cookieToken.trim();
   }
 
-  const token = authHeader.split(' ')[1]?.trim();
   if (!token) {
-    res.status(401).json({ error: 'Unauthorized: Missing session token.' });
+    res.status(401).json({ error: 'Unauthorized: Authentication required. Please log in.' });
     return;
   }
 
@@ -187,6 +203,7 @@ app.post('/api/auth/register', (req: Request, res: Response) => {
     });
 
     const token = db.createSession(userId);
+    res.setHeader('Set-Cookie', `yia_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${7 * 86400}`);
 
     const safeUser = {
       id: newUser.id,
@@ -212,7 +229,7 @@ app.post('/api/auth/register', (req: Request, res: Response) => {
 
 app.post('/api/auth/login', (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, rememberMe = false } = req.body;
     if (!email || !password) {
       res.status(400).json({ error: 'Both email address and password are required.' });
       return;
@@ -242,6 +259,10 @@ app.post('/api/auth/login', (req: Request, res: Response) => {
     }
 
     const token = db.createSession(user.id);
+    const cookieHeader = rememberMe
+      ? `yia_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${7 * 86400}`
+      : `yia_token=${token}; Path=/; HttpOnly; SameSite=Lax`;
+    res.setHeader('Set-Cookie', cookieHeader);
     const workspaces = db.getWorkspacesForUser(user.id);
 
     const safeUser = {
@@ -311,6 +332,7 @@ app.post('/api/auth/firebase-sync', (req: Request, res: Response) => {
     }
 
     const token = db.createSession(user.id);
+    res.setHeader('Set-Cookie', `yia_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${7 * 86400}`);
     const workspaces = db.getWorkspacesForUser(user.id);
 
     const safeUser = {
@@ -371,12 +393,15 @@ app.get('/api/auth/me', authMiddleware, (req: Request, res: Response) => {
 
 app.post('/api/auth/logout', (req: Request, res: Response) => {
   const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.split(' ')[1]?.trim();
-    if (token) {
-      db.deleteSession(token);
-    }
+  const cookies = parseCookies(req.headers.cookie);
+  const token = (authHeader && authHeader.startsWith('Bearer '))
+    ? authHeader.split(' ')[1]?.trim()
+    : cookies['yia_token']?.trim();
+
+  if (token) {
+    db.deleteSession(token);
   }
+  res.setHeader('Set-Cookie', 'yia_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0');
   res.json({ success: true, message: 'Session terminated successfully.' });
 });
 
@@ -1801,6 +1826,90 @@ app.put('/api/orders/:id/status', authMiddleware, (req: Request, res: Response) 
   res.json(updated);
 });
 
+// Dispatch approved order to Steadfast Courier
+app.post('/api/orders/:id/dispatch-courier', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id;
+    const wsId = (req as any).workspaceId;
+    const order = db.getOrder(id);
+
+    if (!order) {
+      res.status(404).json({ error: 'Order not found' });
+      return;
+    }
+
+    const isSuper = Boolean((req as any).user?.isSuperAdmin || (req as any).user?.role === 'superadmin');
+    if (order.workspaceId !== wsId && !isSuper) {
+      res.status(403).json({ error: 'Forbidden: Access denied to this order.' });
+      return;
+    }
+
+    // Require order to be confirmed or approved before dispatch
+    const { note, overrideCodAmount } = req.body;
+    if (order.status === 'pending') {
+      // Auto-confirm upon explicit owner dispatch action
+      db.updateOrder(order.id, { status: 'confirmed' });
+    }
+
+    const bookingResult = await CourierIntegrationService.createSteadfastBooking(wsId, order.id, {
+      note,
+      overrideCodAmount,
+    });
+
+    if (!bookingResult.success) {
+      res.status(400).json({ error: bookingResult.error || 'Courier dispatch failed' });
+      return;
+    }
+
+    const updatedOrder = db.getOrder(order.id);
+    res.json({
+      success: true,
+      message: bookingResult.message,
+      trackingCode: bookingResult.trackingCode,
+      trackingUrl: bookingResult.trackingUrl,
+      consignmentId: bookingResult.consignmentId,
+      order: updatedOrder,
+      delivery: bookingResult.delivery,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to dispatch order to courier' });
+  }
+});
+
+// Check live Steadfast status by tracking code
+app.get('/api/courier/steadfast/status/:trackingCode', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const wsId = (req as any).workspaceId;
+    const trackingCode = req.params.trackingCode;
+    const result = await CourierIntegrationService.getSteadfastStatus(trackingCode, wsId);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to check courier status' });
+  }
+});
+
+// Get Steadfast merchant balance
+app.get('/api/courier/steadfast/balance', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const wsId = (req as any).workspaceId;
+    const result = await CourierIntegrationService.getSteadfastBalance(wsId);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to fetch Steadfast balance' });
+  }
+});
+
+// Sync all in-transit shipments for workspace
+app.post('/api/courier/steadfast/sync-all', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const wsId = (req as any).workspaceId;
+    const result = await CourierIntegrationService.syncWorkspaceShipments(wsId);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to sync shipments' });
+  }
+});
+
 // ==========================================
 // 7.1 VOICE SALES ASSISTANT & EMAIL REPORTS
 // ==========================================
@@ -2027,7 +2136,31 @@ app.post('/api/business-manager/test-integration', authMiddleware, async (req: R
     }
 
     if (serviceKey === 'courier') {
-      res.json({ success: true, status: 'configured', message: 'Steadfast & Pathao multi-courier tracking active.' });
+      const { isConfigured, apiKey } = CourierIntegrationService.getSteadfastCredentials(wsId);
+      if (!isConfigured) {
+        res.json({
+          success: false,
+          status: 'unconfigured',
+          message: 'Steadfast Courier API credentials missing. Set STEADFAST_API_KEY and STEADFAST_SECRET_KEY.',
+        });
+        return;
+      }
+
+      const bal = await CourierIntegrationService.getSteadfastBalance(wsId);
+      if (bal.success) {
+        res.json({
+          success: true,
+          status: 'configured',
+          message: `Steadfast Courier API verified successfully. Key: ${apiKey?.slice(0, 4)}... Current merchant balance: ৳${bal.currentBalance?.toLocaleString()} BDT.`,
+          balance: bal.currentBalance,
+        });
+      } else {
+        res.json({
+          success: false,
+          status: 'failed',
+          message: `Steadfast Courier API returned: ${bal.error}`,
+        });
+      }
       return;
     }
 
@@ -2228,7 +2361,7 @@ app.delete('/api/posts/:id', authMiddleware, (req: Request, res: Response) => {
   res.json({ success: true });
 });
 
-app.post('/api/posts/:id/publish-now', authMiddleware, (req: Request, res: Response) => {
+app.post('/api/posts/:id/publish-now', authMiddleware, async (req: Request, res: Response) => {
   const id = req.params.id;
   const post = db.getScheduledPosts((req as any).workspaceId).find((p) => p.id === id);
   if (!post) {
@@ -2236,28 +2369,68 @@ app.post('/api/posts/:id/publish-now', authMiddleware, (req: Request, res: Respo
     return;
   }
 
-  // Verify connected channels
-  const channels = db.getChannels(post.workspaceId);
-  const activeChannels = channels.filter((c) => post.platforms.includes(c.type as any) && c.status === 'connected');
+  const postResults: { platform: string; postId: string; permalinkUrl?: string }[] = [];
+  const errors: string[] = [];
 
-  if (activeChannels.length === 0) {
+  for (const platform of post.platforms) {
+    if (platform === 'facebook') {
+      const fbResult = await MetaIntegrationService.publishFacebookPagePost(post.workspaceId, {
+        caption: post.caption,
+        mediaUrls: post.mediaUrls,
+        hashtags: post.hashtags,
+      });
+
+      if (fbResult.success && fbResult.postId) {
+        postResults.push({
+          platform: 'facebook',
+          postId: fbResult.postId,
+          permalinkUrl: fbResult.permalinkUrl,
+        });
+      } else {
+        errors.push(`Facebook: ${fbResult.error || 'Failed to publish to Facebook Page'}`);
+      }
+    } else if (platform === 'instagram') {
+      const igResult = await MetaIntegrationService.publishInstagramPost(post.workspaceId, {
+        caption: post.caption,
+        mediaUrl: post.mediaUrls?.[0] || '',
+        hashtags: post.hashtags,
+      });
+
+      if (igResult.success && igResult.postId) {
+        postResults.push({
+          platform: 'instagram',
+          postId: igResult.postId,
+        });
+      } else {
+        errors.push(`Instagram: ${igResult.error || 'Failed to publish to Instagram'}`);
+      }
+    }
+  }
+
+  if (errors.length > 0 && postResults.length === 0) {
+    // Complete failure: NEVER mark as published if the real API call failed
     const failed = db.updateScheduledPost(id, {
       status: 'failed',
-      errorMessage: 'Publishing failed: No connected channels for selected platforms (Facebook/Instagram). Connect in Channels settings.',
+      errorMessage: errors.join('; '),
     });
-    res.json(failed);
+    res.status(400).json({ error: errors.join('; '), post: failed });
     return;
   }
 
-  const postResults = post.platforms.map((platform) => ({
-    platform,
-    postId: `${platform}_direct_${Date.now()}`,
-  }));
-
   const updated = db.updateScheduledPost(id, {
-    status: 'published',
+    status: errors.length > 0 ? ('failed' as any) : 'published',
     externalPostIds: postResults,
-    errorMessage: undefined,
+    errorMessage: errors.length > 0 ? `Partial errors: ${errors.join('; ')}` : undefined,
+  });
+
+  db.logAudit({
+    id: `audit_pub_${Date.now()}`,
+    workspaceId: post.workspaceId,
+    userId: (req as any).user.id,
+    userName: (req as any).user.name,
+    action: 'POST_PUBLISHED',
+    details: `Published post ${post.id} to ${postResults.map((p) => p.platform).join(', ')}. Post IDs: ${postResults.map((p) => p.postId).join(', ')}`,
+    timestamp: new Date().toISOString(),
   });
 
   res.json(updated);

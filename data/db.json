@@ -144,6 +144,30 @@
       "createdAt": "2026-10-18T15:17:20.805Z",
       "passwordHash": "b996984c13e889e4c7836efbe8167d4ade5758e5251a3efc64ded1191edb2f15e5d0c2ce53f20a3dbf10769be5c0dba0f3f0e2997fcc46757bd60fa13da34169",
       "salt": "7577027ee0e1b2c8f88378b2fa6212d1"
+    },
+    {
+      "id": "usr_1792342447486_phl23",
+      "name": "Session Test User",
+      "email": "realuser_persisted@example.com",
+      "businessName": "Session Test User's Business",
+      "phone": "",
+      "role": "owner",
+      "isSuperAdmin": false,
+      "createdAt": "2026-10-18T16:54:07.486Z",
+      "passwordHash": "a5d68e5bf42c2340633dd648a939ec341c48ac23f03a147488316e5d07f38fe0331d5b628539e8f3fe748ccc89261e4fc8260d93e2dc46f253aa2b11f8229d9b",
+      "salt": "1c6cbd285bd9cea2759996eaacde1082"
+    },
+    {
+      "id": "usr_1792343516617_6hxd",
+      "name": "AutoLogout Test",
+      "email": "autologout_test_user@example.com",
+      "businessName": "Test AutoLogout Co",
+      "phone": "",
+      "role": "owner",
+      "isSuperAdmin": false,
+      "createdAt": "2026-10-18T17:11:56.617Z",
+      "passwordHash": "a19b47ce7d2c624c1ea74f2339e840ca0e50050a0bc0ea9a09a7d5c6f0dc67adeb210ff299c028f36baa38e88f5a6ada23361e6f2f35657b722944c53ff2ad1e",
+      "salt": "31d9dddd9a83c452f3743802b4fa5d8b"
     }
   ],
   "sessions": [
@@ -161,6 +185,31 @@
       "token": "2a501ffb49c83a522165035e731eb8c7ce33ce33e6fb2cc3b5d2100f38d64ccc",
       "userId": "usr_1792336640805_c5a1g",
       "expiresAt": 1792941440837
+    },
+    {
+      "token": "fc7f9fd4829bab4d873fa1d80d75a49c3d9d439b62280a0fd196a42dc23cc081",
+      "userId": "usr_1792342447486_phl23",
+      "expiresAt": 1792947247489
+    },
+    {
+      "token": "yia_VJ631cgLoURvIrHz7m8y3vr3HqL2.1792947600568.8a302c3fc5eedc62b67eb7d478b182a5cd53232717bae60bfdda6ebca9ead9bd",
+      "userId": "VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "expiresAt": 1792947600568
+    },
+    {
+      "token": "yia_VJ631cgLoURvIrHz7m8y3vr3HqL2.1792947600894.9ca27a8c119d85d72ca533c95948b19215dde56f89723858d63da790be68eb36",
+      "userId": "VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "expiresAt": 1792947600894
+    },
+    {
+      "token": "yia_usr_1792343516617_6hxd.1792948316620.b9710a49b8fab5342759ccd14c8eb1195d4f4209a99ad4fca3e9004742d4aae1",
+      "userId": "usr_1792343516617_6hxd",
+      "expiresAt": 1792948316620
+    },
+    {
+      "token": "yia_usr_1792343516617_6hxd.1792948316637.8c2e0ee68c4367835fb636d4416167e7de2acd3b16ab92b4232e12ddec289291",
+      "userId": "usr_1792343516617_6hxd",
+      "expiresAt": 1792948316637
     }
   ],
   "workspaces": [
@@ -311,6 +360,30 @@
       "timezone": "Asia/Dhaka",
       "language": "both",
       "createdAt": "2026-10-18T15:17:20.806Z"
+    },
+    {
+      "id": "ws_1792342447487_hubv1y",
+      "name": "Session Test User's Business",
+      "slug": "session-test-user-s-business-7487",
+      "ownerId": "usr_1792342447486_phl23",
+      "businessType": "Retail & E-commerce",
+      "phone": "",
+      "currency": "BDT",
+      "timezone": "Asia/Dhaka",
+      "language": "both",
+      "createdAt": "2026-10-18T16:54:07.487Z"
+    },
+    {
+      "id": "ws_1792343516618_2zipiq",
+      "name": "Test AutoLogout Co",
+      "slug": "test-autologout-co-6618",
+      "ownerId": "usr_1792343516617_6hxd",
+      "businessType": "Retail & E-commerce",
+      "phone": "",
+      "currency": "BDT",
+      "timezone": "Asia/Dhaka",
+      "language": "both",
+      "createdAt": "2026-10-18T17:11:56.618Z"
     }
   ],
   "workspaceMembers": [
@@ -372,6 +445,16 @@
     {
       "workspaceId": "ws_1792336640806_jcsll",
       "userId": "usr_1792336640805_c5a1g",
+      "role": "owner"
+    },
+    {
+      "workspaceId": "ws_1792342447487_hubv1y",
+      "userId": "usr_1792342447486_phl23",
+      "role": "owner"
+    },
+    {
+      "workspaceId": "ws_1792343516618_2zipiq",
+      "userId": "usr_1792343516617_6hxd",
       "role": "owner"
     }
   ],
@@ -879,6 +962,90 @@
       "metadata": {
         "widgetKey": "yia_widget_ws_1792336640806_jcsll"
       }
+    },
+    {
+      "id": "ch_facebook_ws_1792342447487_hubv1y",
+      "workspaceId": "ws_1792342447487_hubv1y",
+      "type": "facebook",
+      "name": "Facebook Pages",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_messenger_ws_1792342447487_hubv1y",
+      "workspaceId": "ws_1792342447487_hubv1y",
+      "type": "messenger",
+      "name": "Facebook Messenger",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_instagram_ws_1792342447487_hubv1y",
+      "workspaceId": "ws_1792342447487_hubv1y",
+      "type": "instagram",
+      "name": "Instagram",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_whatsapp_ws_1792342447487_hubv1y",
+      "workspaceId": "ws_1792342447487_hubv1y",
+      "type": "whatsapp",
+      "name": "WhatsApp Business",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_livechat_ws_1792342447487_hubv1y",
+      "workspaceId": "ws_1792342447487_hubv1y",
+      "type": "livechat",
+      "name": "Website Live Chat",
+      "status": "not_connected",
+      "metadata": {
+        "widgetKey": "yia_widget_ws_1792342447487_hubv1y"
+      }
+    },
+    {
+      "id": "ch_facebook_ws_1792343516618_2zipiq",
+      "workspaceId": "ws_1792343516618_2zipiq",
+      "type": "facebook",
+      "name": "Facebook Pages",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_messenger_ws_1792343516618_2zipiq",
+      "workspaceId": "ws_1792343516618_2zipiq",
+      "type": "messenger",
+      "name": "Facebook Messenger",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_instagram_ws_1792343516618_2zipiq",
+      "workspaceId": "ws_1792343516618_2zipiq",
+      "type": "instagram",
+      "name": "Instagram",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_whatsapp_ws_1792343516618_2zipiq",
+      "workspaceId": "ws_1792343516618_2zipiq",
+      "type": "whatsapp",
+      "name": "WhatsApp Business",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_livechat_ws_1792343516618_2zipiq",
+      "workspaceId": "ws_1792343516618_2zipiq",
+      "type": "livechat",
+      "name": "Website Live Chat",
+      "status": "not_connected",
+      "metadata": {
+        "widgetKey": "yia_widget_ws_1792343516618_2zipiq"
+      }
     }
   ],
   "customers": [
@@ -899,9 +1066,41 @@
         "Live Chat Visitor"
       ],
       "createdAt": "2026-10-09T17:15:17.313Z"
+    },
+    {
+      "id": "cust_live_1792342920461",
+      "workspaceId": "ws_VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "name": "Online Visitor",
+      "primaryChannel": "livechat",
+      "channelIdentifiers": [
+        {
+          "channelType": "livechat",
+          "externalId": "visitor_tu6ua"
+        }
+      ],
+      "totalOrders": 0,
+      "totalSpent": 0,
+      "tags": [
+        "Live Chat Visitor"
+      ],
+      "createdAt": "2026-10-18T17:02:00.461Z"
     }
   ],
   "conversations": [
+    {
+      "id": "conv_live_1792342920462",
+      "workspaceId": "ws_VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "customerId": "cust_live_1792342920461",
+      "customerName": "Online Visitor",
+      "channel": "livechat",
+      "channelName": "Live Chat",
+      "status": "open",
+      "unreadCount": 1,
+      "lastMessageText": "পাঞ্জাবির দাম ও সাইজ কত?",
+      "lastMessageAt": "2026-10-18T17:02:16.058Z",
+      "aiActive": true,
+      "createdAt": "2026-10-18T17:02:00.462Z"
+    },
     {
       "id": "conv_live_1791566117314",
       "workspaceId": "ws_1791563585423",
@@ -966,6 +1165,46 @@
       "senderName": "Online Visitor",
       "content": "tumi tahole ki koro aikhane",
       "timestamp": "2026-10-09T17:16:02.648Z",
+      "deliveryStatus": "delivered"
+    },
+    {
+      "id": "msg_live_1792342920464",
+      "conversationId": "conv_live_1792342920462",
+      "workspaceId": "ws_VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "senderType": "customer",
+      "senderName": "Online Visitor",
+      "content": "hi",
+      "timestamp": "2026-10-18T17:02:00.464Z",
+      "deliveryStatus": "delivered"
+    },
+    {
+      "id": "msg_live_1792342923901",
+      "conversationId": "conv_live_1792342920462",
+      "workspaceId": "ws_VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "senderType": "customer",
+      "senderName": "Online Visitor",
+      "content": "kmn aso",
+      "timestamp": "2026-10-18T17:02:03.901Z",
+      "deliveryStatus": "delivered"
+    },
+    {
+      "id": "msg_live_1792342931294",
+      "conversationId": "conv_live_1792342920462",
+      "workspaceId": "ws_VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "senderType": "customer",
+      "senderName": "Online Visitor",
+      "content": "ata kono kotha",
+      "timestamp": "2026-10-18T17:02:11.294Z",
+      "deliveryStatus": "delivered"
+    },
+    {
+      "id": "msg_live_1792342936058",
+      "conversationId": "conv_live_1792342920462",
+      "workspaceId": "ws_VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "senderType": "customer",
+      "senderName": "Online Visitor",
+      "content": "পাঞ্জাবির দাম ও সাইজ কত?",
+      "timestamp": "2026-10-18T17:02:16.058Z",
       "deliveryStatus": "delivered"
     }
   ],
@@ -1236,6 +1475,50 @@
       "enableDirectOrderCreation": true,
       "customGreetingBn": "আসসালামু আলাইকুম! Real User's Business-এ আপনাকে স্বাগতম। আমি কীভাবে সহযোগিতা করতে পারি?",
       "customGreetingEn": "Welcome to Real User's Business! How may I help you today?"
+    },
+    {
+      "workspaceId": "ws_1792342447487_hubv1y",
+      "enabled": false,
+      "model": "gemini-3.8-flash",
+      "brandVoice": "friendly",
+      "languageMode": "auto_detect",
+      "autoReplyChannels": [],
+      "businessHoursOnly": false,
+      "businessHoursStart": "09:00",
+      "businessHoursEnd": "22:00",
+      "humanTakeoverKeywords": [
+        "human",
+        "agent",
+        "support",
+        "manush",
+        "kotha bolbo"
+      ],
+      "confidenceThreshold": 0.75,
+      "enableDirectOrderCreation": true,
+      "customGreetingBn": "আসসালামু আলাইকুম! Session Test User's Business-এ আপনাকে স্বাগতম। আমি কীভাবে সহযোগিতা করতে পারি?",
+      "customGreetingEn": "Welcome to Session Test User's Business! How may I help you today?"
+    },
+    {
+      "workspaceId": "ws_1792343516618_2zipiq",
+      "enabled": false,
+      "model": "gemini-3.8-flash",
+      "brandVoice": "friendly",
+      "languageMode": "auto_detect",
+      "autoReplyChannels": [],
+      "businessHoursOnly": false,
+      "businessHoursStart": "09:00",
+      "businessHoursEnd": "22:00",
+      "humanTakeoverKeywords": [
+        "human",
+        "agent",
+        "support",
+        "manush",
+        "kotha bolbo"
+      ],
+      "confidenceThreshold": 0.75,
+      "enableDirectOrderCreation": true,
+      "customGreetingBn": "আসসালামু আলাইকুম! Test AutoLogout Co-এ আপনাকে স্বাগতম। আমি কীভাবে সহযোগিতা করতে পারি?",
+      "customGreetingEn": "Welcome to Test AutoLogout Co! How may I help you today?"
     }
   ],
   "knowledgeItems": [],
@@ -1449,6 +1732,38 @@
       "startedAt": "2026-10-18T15:17:20.807Z",
       "expiresAt": "2026-11-17T15:17:20.807Z",
       "requestedAt": "2026-10-18T15:17:20.807Z",
+      "currentUsage": {
+        "conversationsThisMonth": 0,
+        "aiRepliesThisMonth": 0,
+        "scheduledPostsThisMonth": 0
+      }
+    },
+    {
+      "id": "sub_1792342447488",
+      "workspaceId": "ws_1792342447487_hubv1y",
+      "workspaceName": "Session Test User's Business",
+      "planId": "plan_starter",
+      "planName": "Starter",
+      "status": "active",
+      "startedAt": "2026-10-18T16:54:07.488Z",
+      "expiresAt": "2026-11-17T16:54:07.488Z",
+      "requestedAt": "2026-10-18T16:54:07.488Z",
+      "currentUsage": {
+        "conversationsThisMonth": 0,
+        "aiRepliesThisMonth": 0,
+        "scheduledPostsThisMonth": 0
+      }
+    },
+    {
+      "id": "sub_1792343516619",
+      "workspaceId": "ws_1792343516618_2zipiq",
+      "workspaceName": "Test AutoLogout Co",
+      "planId": "plan_starter",
+      "planName": "Starter",
+      "status": "active",
+      "startedAt": "2026-10-18T17:11:56.619Z",
+      "expiresAt": "2026-11-17T17:11:56.619Z",
+      "requestedAt": "2026-10-18T17:11:56.619Z",
       "currentUsage": {
         "conversationsThisMonth": 0,
         "aiRepliesThisMonth": 0,

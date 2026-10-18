@@ -50,6 +50,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [phone, setPhone] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
 
   // Password visibility
   const [showPassword, setShowPassword] = useState(false);
@@ -89,7 +90,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
 
     try {
       // Step A: Attempt server-side login (which checks DB password hashes first)
-      const serverRes = await login(cleanEmail, password).catch(() => null);
+      const serverRes = await login(cleanEmail, password, undefined, undefined, rememberMe).catch(() => null);
 
       if (serverRes && serverRes.success) {
         if (onSuccess) onSuccess();
@@ -110,7 +111,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
 
       // Step C: If Firebase authentication succeeded, sync with backend session
       if (fbUser) {
-        const syncRes = await login(cleanEmail, password, fbUser.uid, fbUser);
+        const syncRes = await login(cleanEmail, password, fbUser.uid, fbUser, rememberMe);
         if (syncRes.success) {
           if (onSuccess) onSuccess();
         } else {
@@ -539,6 +540,18 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs text-slate-300 py-1">
+                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className="rounded border-slate-700 bg-slate-950 text-purple-600 focus:ring-purple-500 w-4 h-4 cursor-pointer accent-purple-600"
+                      />
+                      <span>{isBn ? 'এই ডিভাইসে লগইন সেভ রাখুন (Remember Me)' : 'Keep me logged in on this device'}</span>
+                    </label>
                   </div>
 
                   <button

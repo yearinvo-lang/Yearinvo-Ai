@@ -120,6 +120,9 @@ export const OrdersPage: React.FC = () => {
     }
   };
 
+  const [dispatchingId, setDispatchingId] = useState<string | null>(null);
+  const [dispatchMsg, setDispatchMsg] = useState<{ id: string; success: boolean; text: string } | null>(null);
+
   const filteredOrders = orders.filter((o) => {
     const matchesSearch =
       o.orderNumber.toLowerCase().includes(search.toLowerCase()) ||
@@ -128,6 +131,25 @@ export const OrdersPage: React.FC = () => {
     const matchesStatus = statusFilter === 'all' || o.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+  const handleDispatchOrder = async (orderId: string) => {
+    setDispatchingId(orderId);
+    setDispatchMsg(null);
+    try {
+      const res = await apiRequest(`/api/orders/${orderId}/dispatch-courier`, {
+        method: 'POST',
+        body: JSON.stringify({}),
+      });
+      if (res.success && res.order) {
+        setOrders((prev) => prev.map((o) => (o.id === orderId ? res.order : o)));
+        setDispatchMsg({ id: orderId, success: true, text: `Booked! Tracking: ${res.trackingCode}` });
+      }
+    } catch (err: any) {
+      setDispatchMsg({ id: orderId, success: false, text: err.message || 'Dispatch failed' });
+    } finally {
+      setDispatchingId(null);
+    }
+  };
 
   const getStatusBadge = (st: string) => {
     switch (st) {
@@ -139,8 +161,12 @@ export const OrdersPage: React.FC = () => {
         return <span className="rounded-full bg-indigo-500/10 px-2.5 py-0.5 text-xs font-bold text-indigo-400 border border-indigo-500/20">Shipped</span>;
       case 'delivered':
         return <span className="rounded-full bg-teal-500/10 px-2.5 py-0.5 text-xs font-bold text-teal-400 border border-teal-500/20">Delivered</span>;
+      case 'returned':
+        return <span className="rounded-full bg-orange-500/10 px-2.5 py-0.5 text-xs font-bold text-orange-400 border border-orange-500/20">Returned</span>;
+      case 'delivery_failed':
+        return <span className="rounded-full bg-rose-500/10 px-2.5 py-0.5 text-xs font-bold text-rose-400 border border-rose-500/20">Failed Delivery</span>;
       case 'cancelled':
-        return <span className="rounded-full bg-rose-500/10 px-2.5 py-0.5 text-xs font-bold text-rose-400 border border-rose-500/20">Cancelled</span>;
+        return <span className="rounded-full bg-slate-500/10 px-2.5 py-0.5 text-xs font-bold text-slate-400 border border-slate-500/20">Cancelled</span>;
       default:
         return <span className="rounded-full bg-amber-500/10 px-2.5 py-0.5 text-xs font-bold text-amber-400 border border-amber-500/20">Pending</span>;
     }
@@ -264,20 +290,57 @@ export const OrdersPage: React.FC = () => {
                     </td>
                     <td className="py-3 px-4">
                       {getStatusBadge(o.status)}
+                      {o.courierTrackingCode && (
+                        <div className="mt-1">
+                          <a
+                            href={o.courierTrackingUrl || `https://steadfast.com.bd/tracking/${o.courierTrackingCode}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 rounded bg-indigo-500/10 px-2 py-0.5 text-[10px] font-mono text-cyan-300 border border-indigo-500/20 hover:underline"
+                            title="View tracking on official Steadfast portal"
+                          >
+                            <Truck className="w-2.5 h-2.5 text-indigo-400" />
+                            <span>{o.courierTrackingCode}</span>
+                          </a>
+                        </div>
+                      )}
                     </td>
                     <td className="py-3 px-4 text-right">
-                      <select
-                        value={o.status}
-                        onChange={(e) => handleUpdateStatus(o.id, e.target.value)}
-                        className="rounded-lg border border-slate-700 bg-slate-950 px-2 py-1 text-[11px] text-slate-200 focus:border-purple-500 focus:outline-none"
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="confirmed">Confirmed</option>
-                        <option value="processing">Processing</option>
-                        <option value="shipped">Shipped</option>
-                        <option value="delivered">Delivered</option>
-                        <option value="cancelled">Cancelled</option>
-                      </select>
+                      <div className="flex flex-col items-end gap-1.5">
+                        <select
+                          value={o.status}
+                          onChange={(e) => handleUpdateStatus(o.id, e.target.value)}
+                          className="rounded-lg border border-slate-700 bg-slate-950 px-2 py-1 text-[11px] text-slate-200 focus:border-purple-500 focus:outline-none"
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="confirmed">Confirmed</option>
+                          <option value="processing">Processing</option>
+                          <option value="shipped">Shipped</option>
+                          <option value="delivered">Delivered</option>
+                          <option value="returned">Returned</option>
+                          <option value="delivery_failed">Failed Delivery</option>
+                          <option value="cancelled">Cancelled</option>
+                        </select>
+
+                        {!o.courierTrackingCode && o.status !== 'cancelled' && (
+                          <button
+                            type="button"
+                            onClick={() => handleDispatchOrder(o.id)}
+                            disabled={dispatchingId === o.id}
+                            className="inline-flex items-center gap-1 rounded-lg bg-purple-600/20 border border-purple-500/40 px-2 py-1 text-[10px] font-bold text-purple-300 hover:bg-purple-600/40 transition disabled:opacity-50"
+                            title="Book shipment with Steadfast Courier"
+                          >
+                            <Truck className="w-3 h-3 text-purple-400" />
+                            <span>{dispatchingId === o.id ? 'Booking...' : 'Book Steadfast'}</span>
+                          </button>
+                        )}
+
+                        {dispatchMsg && dispatchMsg.id === o.id && (
+                          <div className={`text-[10px] ${dispatchMsg.success ? 'text-emerald-400' : 'text-rose-400'}`}>
+                            {dispatchMsg.text}
+                          </div>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

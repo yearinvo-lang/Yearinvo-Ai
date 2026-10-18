@@ -1,4 +1,5 @@
 import { db } from './db.ts';
+import { MetaIntegrationService } from './integrations/meta-service.ts';
 
 class BackgroundPublishingEngine {
   private intervalId: NodeJS.Timeout | null = null;
@@ -39,30 +40,57 @@ class BackgroundPublishingEngine {
         console.log(`[Scheduler Engine] Processing scheduled post ID: ${post.id} for platforms: ${post.platforms.join(', ')}`);
         db.updateScheduledPost(post.id, { status: 'publishing' });
 
-        // Check if connected channels exist for workspace
-        const channels = db.getChannels(post.workspaceId);
-        const supportedChannels = channels.filter((c) => post.platforms.includes(c.type as any) && c.status === 'connected');
+        const postResults: { platform: string; postId: string; permalinkUrl?: string }[] = [];
+        const errors: string[] = [];
 
-        if (supportedChannels.length === 0) {
-          // Channel disconnected or needs setup
+        for (const platform of post.platforms) {
+          if (platform === 'facebook') {
+            const fbResult = await MetaIntegrationService.publishFacebookPagePost(post.workspaceId, {
+              caption: post.caption,
+              mediaUrls: post.mediaUrls,
+              hashtags: post.hashtags,
+            });
+
+            if (fbResult.success && fbResult.postId) {
+              postResults.push({
+                platform: 'facebook',
+                postId: fbResult.postId,
+                permalinkUrl: fbResult.permalinkUrl,
+              });
+            } else {
+              errors.push(`Facebook: ${fbResult.error || 'Failed to publish to Facebook Page'}`);
+            }
+          } else if (platform === 'instagram') {
+            const igResult = await MetaIntegrationService.publishInstagramPost(post.workspaceId, {
+              caption: post.caption,
+              mediaUrl: post.mediaUrls?.[0] || '',
+              hashtags: post.hashtags,
+            });
+
+            if (igResult.success && igResult.postId) {
+              postResults.push({
+                platform: 'instagram',
+                postId: igResult.postId,
+              });
+            } else {
+              errors.push(`Instagram: ${igResult.error || 'Failed to publish to Instagram'}`);
+            }
+          }
+        }
+
+        if (errors.length > 0 && postResults.length === 0) {
+          // Never mark as published if the real API call failed
           db.updateScheduledPost(post.id, {
             status: 'failed',
-            errorMessage: 'Publishing failed: No connected and authorized Facebook Page or Instagram account found for this workspace. Please connect channel in Settings.',
+            errorMessage: errors.join('; '),
           });
           continue;
         }
 
-        // Simulate publishing via official Graph API endpoints
-        // In real execution with verified credentials, would call Graph API: POST /{page-id}/feed or /{ig-user-id}/media
-        const postResults = post.platforms.map((platform: string) => ({
-          platform,
-          postId: `${platform}_pub_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-        }));
-
         db.updateScheduledPost(post.id, {
           status: 'published',
           externalPostIds: postResults,
-          errorMessage: undefined,
+          errorMessage: errors.length > 0 ? `Partial errors: ${errors.join('; ')}` : undefined,
         });
 
         db.logAudit({
@@ -71,13 +99,13 @@ class BackgroundPublishingEngine {
           userId: 'system_scheduler',
           userName: 'Background Scheduler',
           action: 'POST_PUBLISHED',
-          details: `Successfully published scheduled post to ${post.platforms.join(', ')}.`,
+          details: `Successfully published scheduled post to ${postResults.map((p) => p.platform).join(', ')}. Post IDs: ${postResults.map((p) => p.postId).join(', ')}`,
           timestamp: new Date().toISOString(),
         });
       }
 
       // 2. Check WhatsApp Scheduled Messages
-      const pendingMessages = (db as any).data.scheduledMessages.filter(
+      const pendingMessages = ((db as any).data.scheduledMessages || []).filter(
         (m: any) => m.status === 'scheduled' && new Date(m.scheduledAt) <= now
       );
 
@@ -86,15 +114,42 @@ class BackgroundPublishingEngine {
         db.updateScheduledMessage(msg.id, { status: 'sending' });
 
         const waChannel = db.getChannels(msg.workspaceId).find((c) => c.type === 'whatsapp' && c.status === 'connected');
+        const cred = db.getChannelCredential(msg.workspaceId, 'whatsapp');
+        const token = cred?.accessToken || process.env.WHATSAPP_API_TOKEN;
+        const phoneId = cred?.phoneNumberId || waChannel?.accountId || process.env.WHATSAPP_PHONE_NUMBER_ID;
 
-        if (!waChannel) {
+        if (!waChannel || !token || !phoneId) {
           db.updateScheduledMessage(msg.id, {
             status: 'failed',
           });
-        } else {
-          db.updateScheduledMessage(msg.id, {
-            status: 'sent',
+          continue;
+        }
+
+        try {
+          const cleanPhone = msg.recipientPhone.replace(/[^0-9]/g, '');
+          const waRes = await fetch(`https://graph.facebook.com/v22.0/${phoneId}/messages`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              messaging_product: 'whatsapp',
+              recipient_type: 'individual',
+              to: cleanPhone,
+              type: 'text',
+              text: { body: msg.messageContent },
+            }),
           });
+
+          const waData = await waRes.json().catch(() => null);
+          if (waRes.ok && waData?.messages?.[0]?.id) {
+            db.updateScheduledMessage(msg.id, { status: 'sent' });
+          } else {
+            db.updateScheduledMessage(msg.id, { status: 'failed' });
+          }
+        } catch (waErr) {
+          db.updateScheduledMessage(msg.id, { status: 'failed' });
         }
       }
     } catch (err) {
