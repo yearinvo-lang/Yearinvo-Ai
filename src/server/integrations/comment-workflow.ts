@@ -1,6 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 import { db } from '../db.ts';
 import { MetaIntegrationService } from './meta-service.ts';
+import { AIGateway, sanitizeErrorMessage } from '../ai-gateway.ts';
 
 export type CommentCategory =
   | 'purchase_intent'
@@ -82,20 +83,25 @@ export class CommentToSalesWorkflow {
     if (classification.category === 'purchase_intent' || classification.category === 'price_inquiry') {
       leadCreated = true;
       // Record or update customer profile as active sales lead
-      const existingCust = authorId ? db.getCustomers(workspaceId).find((c) => c.channelId === authorId) : null;
+      const existingCust = authorId ? db.getCustomers(workspaceId).find((c) => c.channelIdentifiers?.some((ci) => ci.externalId === authorId)) : null;
       if (!existingCust && authorId) {
         db.createCustomer({
           id: `cust_lead_${Date.now()}`,
           workspaceId,
           name: authorName,
           phone: '',
-          channel: platform === 'instagram' ? 'instagram' : 'facebook',
-          channelId: authorId,
+          primaryChannel: platform === 'instagram' ? 'instagram' : 'facebook',
+          channelIdentifiers: [
+            {
+              channelType: platform === 'instagram' ? 'instagram' : 'facebook',
+              externalId: authorId,
+              username: authorName,
+            },
+          ],
           totalOrders: 0,
           totalSpent: 0,
           tags: ['social_lead', classification.category],
           createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
         });
       }
     }
@@ -145,18 +151,13 @@ export class CommentToSalesWorkflow {
     suggestedPublicReply: string;
     suggestedPrivateFollowUp?: string;
   }> {
-    const geminiKey = process.env.GEMINI_API_KEY || db.getAIProviderCredential('prov_gemini');
+    try {
+      const catalogSummary = products
+        .slice(0, 10)
+        .map((p) => `- ${p.name} (Bengali: ${p.nameBengali || p.name}): ৳${p.discountPrice || p.price} BDT, Stock: ${p.stock}`)
+        .join('\n');
 
-    if (geminiKey) {
-      try {
-        const ai = new GoogleGenAI({ apiKey: geminiKey });
-
-        const catalogSummary = products
-          .slice(0, 10)
-          .map((p) => `- ${p.name} (Bengali: ${p.nameBengali || p.name}): ৳${p.discountPrice || p.price} BDT, Stock: ${p.stock}`)
-          .join('\n');
-
-        const prompt = `You are YEAR INFO AI's Social Comment-to-Sales intelligence engine for "${workspace?.name || 'Retail Store'}".
+      const prompt = `You are YEAR INFO AI's Social Comment-to-Sales intelligence engine for "${workspace?.name || 'Retail Store'}".
 Analyze the following social media post comment.
 
 COMMENT: "${commentText}"
@@ -183,28 +184,26 @@ Return JSON in this format ONLY:
   "privateFollowUp": "private follow up here"
 }`;
 
-        const res = await ai.models.generateContent({
-          model: 'gemini-3.8-flash',
-          contents: prompt,
-          config: {
-            temperature: 0.1,
-            responseMimeType: 'application/json',
-          },
-        });
+      const gwResult = await AIGateway.execute({
+        task: 'comment_classification',
+        prompt,
+        workspaceId: workspace?.id || 'default',
+        temperature: 0.1,
+        jsonOutput: true,
+      });
 
-        const raw = res.text?.trim();
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          return {
-            category: parsed.category || 'general_discussion',
-            confidence: parsed.confidence || 0.9,
-            suggestedPublicReply: parsed.publicReply || '',
-            suggestedPrivateFollowUp: parsed.privateFollowUp,
-          };
-        }
-      } catch (err: any) {
-        console.warn('Gemini comment classification error (falling back to rule engine):', err.message);
+      const parsed = gwResult.rawJson || (gwResult.text ? JSON.parse(gwResult.text.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim()) : null);
+      if (parsed) {
+        return {
+          category: parsed.category || 'general_discussion',
+          confidence: parsed.confidence || 0.9,
+          suggestedPublicReply: parsed.publicReply || '',
+          suggestedPrivateFollowUp: parsed.privateFollowUp,
+        };
       }
+    } catch (err: any) {
+      const cleanErr = sanitizeErrorMessage(err);
+      console.warn('[Comment Workflow] AIGateway comment classification unavailable (falling back to rule engine):', cleanErr);
     }
 
     // Deterministic Rule Engine Fallback

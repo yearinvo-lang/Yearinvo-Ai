@@ -445,7 +445,7 @@ export interface PlatformFeatureFlags {
 
 export interface AdminNotification {
   id: string;
-  type: 'api_failure' | 'provider_error' | 'sub_expiring' | 'post_failure' | 'webhook_failure' | 'domain_issue' | 'usage_spike' | 'voice_report_sent';
+  type: 'api_failure' | 'provider_error' | 'sub_expiring' | 'post_failure' | 'webhook_failure' | 'domain_issue' | 'usage_spike' | 'voice_report_sent' | 'customer_complaint';
   severity: 'info' | 'warning' | 'error';
   title: string;
   message: string;
@@ -674,3 +674,16 @@ export interface ConsequentialActionRequest {
   status: 'pending_confirmation' | 'confirmed' | 'rejected' | 'executed';
   createdAt: string;
 }
+
+export interface AIAssistantAction {
+  id: string;
+  type: 'navigate' | 'schedule_post' | 'update_product' | 'update_order' | 'dispatch_courier';
+  title: string;
+  description: string;
+  targetPage?: string;
+  params?: Record<string, any>;
+  requiresConfirmation: boolean;
+  status?: 'proposed' | 'confirmed' | 'executed' | 'cancelled';
+  payload?: any;
+}
+

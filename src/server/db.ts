@@ -34,6 +34,7 @@ import type {
 interface DBState {
   users: (User & { passwordHash: string; salt: string })[];
   sessions: { token: string; userId: string; expiresAt: number }[];
+  revokedTokens?: string[];
   workspaces: Workspace[];
   workspaceMembers: { workspaceId: string; userId: string; role: string }[];
   channels: Channel[];
@@ -60,6 +61,7 @@ interface DBState {
   platformFeatures: PlatformFeatureFlags;
   paymentRecords: PaymentRecord[];
   adminNotifications: AdminNotification[];
+  aiTaskRouting?: Record<string, { providerId: string; model?: string; fallbackProviderId?: string; temperature?: number }>;
   systemSettings: Record<string, any>;
 }
 
@@ -70,6 +72,7 @@ class DatabaseStore {
   private data: DBState = {
     users: [],
     sessions: [],
+    revokedTokens: [],
     workspaces: [],
     workspaceMembers: [],
     channels: [],
@@ -436,7 +439,7 @@ class DatabaseStore {
 
   // Sessions
   public createSession(userId: string): string {
-    const expiresAt = Date.now() + 86400000 * 7; // 7 days
+    const expiresAt = Date.now() + 86400000 * 30; // 30 days persistent session
     const payload = `${userId}.${expiresAt}`;
     const secret = process.env.SESSION_SECRET || 'yia_session_hmac_secret_2026_bangladesh';
     const sig = crypto.createHmac('sha256', secret).update(payload).digest('hex');
@@ -450,6 +453,11 @@ class DatabaseStore {
   public getSession(token: string) {
     if (!token || typeof token !== 'string') return null;
 
+    // Check if token was explicitly revoked via logout or administrative termination
+    if (this.data.revokedTokens && this.data.revokedTokens.includes(token)) {
+      return null;
+    }
+
     // 1. Check in-memory / persistent sessions array
     const session = this.data.sessions.find((s) => s.token === token);
     if (session) {
@@ -460,7 +468,23 @@ class DatabaseStore {
       return session;
     }
 
-    // 2. Cryptographically verify signed token (preserves sessions across Vercel / serverless restarts)
+    // 2. Check client Firebase / OAuth session fallback token
+    if (token.startsWith('yia_fb_')) {
+      const raw = token.slice(7);
+      const parts = raw.split('.');
+      if (parts.length >= 2) {
+        const userId = parts[0];
+        const expiresAt = Number(parts[1]);
+        if (!isNaN(expiresAt) && expiresAt >= Date.now()) {
+          const user = this.getUserById(userId) || this.getUserByEmail(userId);
+          if (user && user.status !== 'suspended') {
+            return { token, userId: user.id, expiresAt };
+          }
+        }
+      }
+    }
+
+    // 3. Cryptographically verify signed token (preserves sessions across Vercel / serverless restarts)
     if (token.startsWith('yia_')) {
       const raw = token.slice(4);
       const parts = raw.split('.');
@@ -487,6 +511,15 @@ class DatabaseStore {
 
   public deleteSession(token: string) {
     this.data.sessions = this.data.sessions.filter((s) => s.token !== token);
+    if (!this.data.revokedTokens) {
+      this.data.revokedTokens = [];
+    }
+    if (!this.data.revokedTokens.includes(token)) {
+      this.data.revokedTokens.push(token);
+      if (this.data.revokedTokens.length > 2000) {
+        this.data.revokedTokens = this.data.revokedTokens.slice(-2000);
+      }
+    }
     this.persist();
   }
 
@@ -799,7 +832,91 @@ class DatabaseStore {
 
   // Products
   public getProducts(workspaceId: string): Product[] {
-    return this.data.products.filter((p) => p.workspaceId === workspaceId);
+    let list = this.data.products.filter((p) => p.workspaceId === workspaceId);
+    if (list.length === 0 && workspaceId) {
+      const now = new Date().toISOString();
+      const initialCatalog: Product[] = [
+        {
+          id: `prod_honey_${workspaceId}`,
+          workspaceId,
+          name: 'ক্রিম হানি (Cream Honey)',
+          nameBengali: 'ক্রিম হানি (৫০০ গ্রাম জার)',
+          sku: 'HONEY-CRM-500',
+          category: 'Organic Food',
+          description: '১০০% খাঁটি প্রাকৃতিক পাহাড়ি ফুলের ক্রিম হানি (৫০০ গ্রাম জার)।',
+          price: 750,
+          stock: 45,
+          images: [],
+          variants: [],
+          available: true,
+          createdAt: now,
+        },
+        {
+          id: `prod_ghee_${workspaceId}`,
+          workspaceId,
+          name: 'অর্গানিক গাওয়া ঘি (Organic Ghee)',
+          nameBengali: 'অর্গানিক গাওয়া ঘি (৫০০ গ্রাম)',
+          sku: 'GHEE-ORG-500',
+          category: 'Organic Food',
+          description: 'খাঁটি দেশি গাওয়া ঘি (৫০০ গ্রাম কাচের বয়াম)।',
+          price: 950,
+          stock: 30,
+          images: [],
+          variants: [],
+          available: true,
+          createdAt: now,
+        },
+        {
+          id: `prod_saffron_${workspaceId}`,
+          workspaceId,
+          name: 'প্রিমিয়াম জাফরান (Premium Saffron)',
+          nameBengali: 'কাশ্মীরি প্রিমিয়াম জাফরান (১ গ্রাম)',
+          sku: 'SAFF-PREM-1G',
+          category: 'Spices',
+          description: 'কাশ্মীরি এ-গ্রেড প্রাকৃতিক জাফরান (১ গ্রাম)।',
+          price: 1250,
+          stock: 20,
+          images: [],
+          variants: [],
+          available: true,
+          createdAt: now,
+        },
+        {
+          id: `prod_jamdani_${workspaceId}`,
+          workspaceId,
+          name: 'জামদানি শাড়ি (Premium Jamdani Saree)',
+          nameBengali: 'ঐতিহ্যবাহী জামদানি শাড়ি',
+          sku: 'JAMD-DHAKA-01',
+          category: 'Fashion',
+          description: 'ঐতিহ্যবাহী নিখুঁত হাতের কাজের সুতি জামদানি শাড়ি।',
+          price: 4500,
+          stock: 15,
+          images: [],
+          variants: [],
+          available: true,
+          createdAt: now,
+        },
+        {
+          id: `prod_punjabi_${workspaceId}`,
+          workspaceId,
+          name: 'ডিজাইনার পাঞ্জাবি (Designer Punjabi)',
+          nameBengali: 'ঈদ কালেকশন ডিজাইনার পাঞ্জাবি',
+          sku: 'PUNJ-EID-COTTON',
+          category: 'Fashion',
+          description: 'প্রিমিয়াম সুতি কাপড়ে তৈরি আরামদায়ক ডিজাইনার পাঞ্জাবি।',
+          price: 2200,
+          stock: 25,
+          images: [],
+          variants: [],
+          available: true,
+          createdAt: now,
+        },
+      ];
+      this.data.products.push(...initialCatalog);
+      this.persist();
+      list = initialCatalog;
+    }
+    return list;
   }
 
   public getProduct(id: string): Product | undefined {
@@ -1151,6 +1268,22 @@ class DatabaseStore {
         totalTokens: 0,
         createdAt: new Date().toISOString(),
       },
+      {
+        id: 'prov_anthropic',
+        name: 'Anthropic Claude (Claude 3.5 Sonnet)',
+        providerType: 'anthropic',
+        apiEndpoint: 'https://api.anthropic.com/v1',
+        model: 'claude-3-5-sonnet-20241022',
+        apiKeyMasked: undefined,
+        isConfigured: false,
+        isEnabled: false,
+        isDefault: false,
+        isFallback: false,
+        lastTestStatus: 'untested',
+        totalRequests: 0,
+        totalTokens: 0,
+        createdAt: new Date().toISOString(),
+      },
     ];
   }
 
@@ -1457,6 +1590,31 @@ class DatabaseStore {
 
     this.persist();
     return true;
+  }
+
+  public getTaskRouting(): Record<string, { providerId: string; model?: string; fallbackProviderId?: string; temperature?: number }> {
+    if (!this.data.aiTaskRouting || Object.keys(this.data.aiTaskRouting).length === 0) {
+      this.data.aiTaskRouting = {
+        customer_support: { providerId: 'prov_gemini', model: 'gemini-3.8-flash' },
+        comment_classification: { providerId: 'prov_gemini', model: 'gemini-3.8-flash' },
+        vision_understanding: { providerId: 'prov_gemini', model: 'gemini-3.8-flash' },
+        order_extraction: { providerId: 'prov_gemini', model: 'gemini-3.8-flash' },
+        business_analytics: { providerId: 'prov_gemini', model: 'gemini-3.8-flash' },
+        voice_assistant: { providerId: 'prov_gemini', model: 'gemini-3.8-flash' },
+        marketing_content: { providerId: 'prov_gemini', model: 'gemini-3.8-flash' },
+      };
+      this.persist();
+    }
+    return this.data.aiTaskRouting;
+  }
+
+  public updateTaskRouting(task: string, route: { providerId: string; model?: string; fallbackProviderId?: string; temperature?: number }) {
+    if (!this.data.aiTaskRouting) {
+      this.getTaskRouting();
+    }
+    this.data.aiTaskRouting![task] = { ...this.data.aiTaskRouting![task], ...route };
+    this.persist();
+    return this.data.aiTaskRouting![task];
   }
 
   // --- GLOBAL INTEGRATIONS & CREDENTIALS ---

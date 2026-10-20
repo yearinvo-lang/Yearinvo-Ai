@@ -1,6 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 import { db } from './db.ts';
 import type { AIProviderConfig } from '../types/index.ts';
+import { AIGateway, sanitizeErrorMessage } from './ai-gateway.ts';
 
 interface GenerateResponseInput {
   workspaceId: string;
@@ -25,6 +26,8 @@ export async function testAIProviderConnection(
   modelOutput?: string;
   error?: string;
 }> {
+  return AIGateway.testProvider(providerId, testKey, testModel, testEndpoint);
+  // @ts-ignore
   const provider = db.getAIProvider(providerId);
   const pType = provider?.providerType || 'gemini';
   const effectiveKey = testKey || db.getAIProviderCredential(providerId) || (pType === 'gemini' ? process.env.GEMINI_API_KEY : undefined);
@@ -386,58 +389,21 @@ Generate your response as the AI Sales Agent now:
 
   let providerUsed: AIProviderConfig | null = null;
 
-  if (defaultProvider && defaultProvider.isEnabled) {
-    try {
-      const result = await invokeSpecificProvider(
-        defaultProvider,
-        promptText,
-        systemInstruction,
-        workspaceId,
-        conversationId,
-        customerMessage
-      );
-      responseText = result.text;
-      providerUsed = defaultProvider;
-    } catch (err: any) {
-      console.error(`Default AI Provider (${defaultProvider.name}) failed:`, err.message);
-
-      // Try Fallback Provider if enabled
-      if (fallbackProvider && fallbackProvider.isEnabled) {
-        try {
-          console.log(`Routing to fallback AI Provider (${fallbackProvider.name})...`);
-          const result = await invokeSpecificProvider(
-            fallbackProvider,
-            promptText,
-            systemInstruction,
-            workspaceId,
-            conversationId,
-            customerMessage
-          );
-          responseText = result.text;
-          providerUsed = fallbackProvider;
-        } catch (fallbackErr: any) {
-          console.error(`Fallback AI Provider (${fallbackProvider.name}) also failed:`, fallbackErr.message);
-          db.createAdminNotification({
-            id: `notif_${Date.now()}`,
-            type: 'provider_error',
-            severity: 'error',
-            title: 'AI Providers Failed',
-            message: `Primary (${defaultProvider.name}) and Fallback (${fallbackProvider.name}) both failed: ${fallbackErr.message}`,
-            read: false,
-            createdAt: new Date().toISOString(),
-          });
-        }
-      } else {
-        db.createAdminNotification({
-          id: `notif_${Date.now()}`,
-          type: 'provider_error',
-          severity: 'warning',
-          title: `AI Provider Error: ${defaultProvider.name}`,
-          message: `Request failed: ${err.message}. Deterministic fallback knowledge served.`,
-          read: false,
-          createdAt: new Date().toISOString(),
-        });
-      }
+  try {
+    const gwResult = await AIGateway.execute({
+      task: 'customer_support',
+      prompt: promptText,
+      systemInstruction,
+      workspaceId,
+      conversationId,
+    });
+    responseText = gwResult.text;
+    providerUsed = db.getAIProvider(gwResult.providerId) || defaultProvider || null;
+  } catch (err: any) {
+    const cleanErr = sanitizeErrorMessage(err);
+    console.warn('[AI Sales Agent] Gateway unavailable, serving grounded deterministic answer:', cleanErr);
+    if (fallbackProvider && fallbackProvider.isEnabled) {
+      providerUsed = fallbackProvider;
     }
   }
 

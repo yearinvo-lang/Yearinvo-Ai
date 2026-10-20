@@ -264,7 +264,7 @@ export class MetaIntegrationService {
     const creds = db.getChannelCredential(workspaceId, 'instagram') || db.getChannelCredential(workspaceId, 'facebook');
     const channel = db.getChannel(workspaceId, 'instagram');
     const pageAccessToken = creds?.pageAccessToken || creds?.accessToken;
-    const igUserId = channel?.metadata?.instagramAccountId || channel?.accountId;
+    const igUserId = (channel?.metadata as any)?.instagramAccountId || channel?.metadata?.igAccountId || channel?.accountId;
 
     if (!pageAccessToken || !igUserId) {
       return {

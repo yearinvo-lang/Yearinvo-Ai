@@ -224,7 +224,7 @@ export function DailyBusinessDashboard({
             className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-purple-600/30 hover:scale-[1.02] active:scale-[0.98] transition"
           >
             <Mic className="h-4 w-4 text-purple-200 animate-pulse" />
-            <span>{isBn ? 'ভয়েস রিপোর্ট চান' : 'Ask Voice Assistant'}</span>
+            <span>{isBn ? 'এআই রিপোর্ট চান' : 'Ask AI Assistant'}</span>
           </button>
 
           {/* Setup Checklist */}

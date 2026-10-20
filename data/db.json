@@ -110,9 +110,9 @@
     },
     {
       "id": "VJ631cgLoURvIrHz7m8y3vr3HqL2",
-      "name": "user_VJ631cgL",
-      "email": "user_VJ631cgL@example.com",
-      "businessName": "user_VJ631cgL's Workspace",
+      "name": "YearInvo",
+      "email": "yearinvo@gmail.com",
+      "businessName": "YearInvo Hub",
       "role": "owner",
       "isSuperAdmin": false,
       "status": "active",
@@ -168,6 +168,18 @@
       "createdAt": "2026-10-18T17:11:56.617Z",
       "passwordHash": "a19b47ce7d2c624c1ea74f2339e840ca0e50050a0bc0ea9a09a7d5c6f0dc67adeb210ff299c028f36baa38e88f5a6ada23361e6f2f35657b722944c53ff2ad1e",
       "salt": "31d9dddd9a83c452f3743802b4fa5d8b"
+    },
+    {
+      "id": "usr_1792431441617_6ziud",
+      "name": "Voice QA Tester",
+      "email": "voice_qa_test@yearinfo.ai",
+      "businessName": "Honey & Organic Hub",
+      "phone": "",
+      "role": "owner",
+      "isSuperAdmin": false,
+      "createdAt": "2026-10-19T17:37:21.617Z",
+      "passwordHash": "71eb90768440ba0c1d2f2971c2a13a3ac5c6dbb5eee89439201be8428d6cb7bda38acf1f1e0812d2865351078e66eaa2daed61e7ed5ba173729e644ab1493ed1",
+      "salt": "9e2416362f4aae0c09bc51a5aef3afb3"
     }
   ],
   "sessions": [
@@ -210,6 +222,71 @@
       "token": "yia_usr_1792343516617_6hxd.1792948316637.8c2e0ee68c4367835fb636d4416167e7de2acd3b16ab92b4232e12ddec289291",
       "userId": "usr_1792343516617_6hxd",
       "expiresAt": 1792948316637
+    },
+    {
+      "token": "yia_usr_1792343516617_6hxd.1793031756311.ba859081558b840b920f14740891c02d5bbcf6eabed5a1db137bb6780253b072",
+      "userId": "usr_1792343516617_6hxd",
+      "expiresAt": 1793031756311
+    },
+    {
+      "token": "yia_usr_1792343516617_6hxd.1793031816391.699af194a7f0320f74340de11836353915654bc701c900125711b2b0e8091006",
+      "userId": "usr_1792343516617_6hxd",
+      "expiresAt": 1793031816391
+    },
+    {
+      "token": "yia_usr_1792343516617_6hxd.1793031828354.765a11364620299e12beb6baeda56f99f218d0716ebffce0d3bc86fdd58b54d4",
+      "userId": "usr_1792343516617_6hxd",
+      "expiresAt": 1793031828354
+    },
+    {
+      "token": "yia_VJ631cgLoURvIrHz7m8y3vr3HqL2.1793035970551.70317289a16ff06fa3f67ed72905113f6628c634c3e515d2e958939d54a60c0e",
+      "userId": "VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "expiresAt": 1793035970551
+    },
+    {
+      "token": "yia_usr_1792431441617_6ziud.1795023441620.e8089a84c38e94c6703cec92344e0b2ba7a684d5536a3db4435f93fd1cc918f8",
+      "userId": "usr_1792431441617_6ziud",
+      "expiresAt": 1795023441620
+    },
+    {
+      "token": "yia_usr_1792431441617_6ziud.1795023452563.8a5660ebf5163e60cd85ad251e243947f6b5d035e7a8e226049d100b19e0e99e",
+      "userId": "usr_1792431441617_6ziud",
+      "expiresAt": 1795023452563
+    },
+    {
+      "token": "yia_usr_1792431441617_6ziud.1795023469647.9e9f7f8d0b224379746dd43f4cc8ec3b1f6d9e7ff9790ddaf521aab82889109d",
+      "userId": "usr_1792431441617_6ziud",
+      "expiresAt": 1795023469647
+    },
+    {
+      "token": "yia_VJ631cgLoURvIrHz7m8y3vr3HqL2.1795093958765.63a83857615c16efc1790dd75f4be6d76de90d851e9fd32213097b0825fbafce",
+      "userId": "VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "expiresAt": 1795093958765
+    },
+    {
+      "token": "yia_VJ631cgLoURvIrHz7m8y3vr3HqL2.1795093966152.7d6d0f091c41c685e66f324c5e4ddc446ab44d17d0acb9b5411aeb023ba38a9a",
+      "userId": "VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "expiresAt": 1795093966152
+    },
+    {
+      "token": "yia_VJ631cgLoURvIrHz7m8y3vr3HqL2.1795093983950.b2236d08f62383bceddefa485bb33c88ed715bac4c506508a00764cf7c5f6d2d",
+      "userId": "VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "expiresAt": 1795093983950
+    },
+    {
+      "token": "yia_VJ631cgLoURvIrHz7m8y3vr3HqL2.1795093992172.2d7caeaf068635ee22f3e0e8c381ef1ae0254956ed351513a7e9ac24cd3c5847",
+      "userId": "VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "expiresAt": 1795093992172
+    },
+    {
+      "token": "yia_VJ631cgLoURvIrHz7m8y3vr3HqL2.1795093999088.8e9923655e9d129a9aad49e0e1827bee0b19c20f4bed4661026c415dafc2858b",
+      "userId": "VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "expiresAt": 1795093999088
+    },
+    {
+      "token": "yia_VJ631cgLoURvIrHz7m8y3vr3HqL2.1795094006924.e07348a78b597d10cd30a22fe86c37140ee148b9ffb9f7f0e30e70595d62391b",
+      "userId": "VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "expiresAt": 1795094006924
     }
   ],
   "workspaces": [
@@ -339,7 +416,7 @@
     },
     {
       "id": "ws_VJ631cgLoURvIrHz7m8y3vr3HqL2",
-      "name": "user_VJ631cgL's Workspace",
+      "name": "YearInvo Hub",
       "slug": "user-vj631cgl-s-workspace-HqL2",
       "ownerId": "VJ631cgLoURvIrHz7m8y3vr3HqL2",
       "businessType": "Retail & E-commerce",
@@ -384,6 +461,18 @@
       "timezone": "Asia/Dhaka",
       "language": "both",
       "createdAt": "2026-10-18T17:11:56.618Z"
+    },
+    {
+      "id": "ws_1792431441618_a5df0s",
+      "name": "Honey & Organic Hub",
+      "slug": "honey---organic-hub-1618",
+      "ownerId": "usr_1792431441617_6ziud",
+      "businessType": "Retail & E-commerce",
+      "phone": "",
+      "currency": "BDT",
+      "timezone": "Asia/Dhaka",
+      "language": "both",
+      "createdAt": "2026-10-19T17:37:21.618Z"
     }
   ],
   "workspaceMembers": [
@@ -455,6 +544,11 @@
     {
       "workspaceId": "ws_1792343516618_2zipiq",
       "userId": "usr_1792343516617_6hxd",
+      "role": "owner"
+    },
+    {
+      "workspaceId": "ws_1792431441618_a5df0s",
+      "userId": "usr_1792431441617_6ziud",
       "role": "owner"
     }
   ],
@@ -1046,6 +1140,48 @@
       "metadata": {
         "widgetKey": "yia_widget_ws_1792343516618_2zipiq"
       }
+    },
+    {
+      "id": "ch_facebook_ws_1792431441618_a5df0s",
+      "workspaceId": "ws_1792431441618_a5df0s",
+      "type": "facebook",
+      "name": "Facebook Pages",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_messenger_ws_1792431441618_a5df0s",
+      "workspaceId": "ws_1792431441618_a5df0s",
+      "type": "messenger",
+      "name": "Facebook Messenger",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_instagram_ws_1792431441618_a5df0s",
+      "workspaceId": "ws_1792431441618_a5df0s",
+      "type": "instagram",
+      "name": "Instagram",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_whatsapp_ws_1792431441618_a5df0s",
+      "workspaceId": "ws_1792431441618_a5df0s",
+      "type": "whatsapp",
+      "name": "WhatsApp Business",
+      "status": "not_connected",
+      "metadata": {}
+    },
+    {
+      "id": "ch_livechat_ws_1792431441618_a5df0s",
+      "workspaceId": "ws_1792431441618_a5df0s",
+      "type": "livechat",
+      "name": "Website Live Chat",
+      "status": "not_connected",
+      "metadata": {
+        "widgetKey": "yia_widget_ws_1792431441618_a5df0s"
+      }
     }
   ],
   "customers": [
@@ -1209,7 +1345,158 @@
     }
   ],
   "internalNotes": [],
-  "products": [],
+  "products": [
+    {
+      "id": "prod_honey_ws_1791561279007",
+      "workspaceId": "ws_1791561279007",
+      "name": "ক্রিম হানি (Cream Honey)",
+      "nameBengali": "ক্রিম হানি (৫০০ গ্রাম জার)",
+      "sku": "HONEY-CRM-500",
+      "category": "Organic Food",
+      "description": "১০০% খাঁটি প্রাকৃতিক পাহাড়ি ফুলের ক্রিম হানি (৫০০ গ্রাম জার)।",
+      "price": 750,
+      "stock": 43,
+      "images": [],
+      "variants": [],
+      "available": true,
+      "createdAt": "2026-10-20T12:39:48.978Z"
+    },
+    {
+      "id": "prod_ghee_ws_1791561279007",
+      "workspaceId": "ws_1791561279007",
+      "name": "অর্গানিক গাওয়া ঘি (Organic Ghee)",
+      "nameBengali": "অর্গানিক গাওয়া ঘি (৫০০ গ্রাম)",
+      "sku": "GHEE-ORG-500",
+      "category": "Organic Food",
+      "description": "খাঁটি দেশি গাওয়া ঘি (৫০০ গ্রাম কাচের বয়াম)।",
+      "price": 950,
+      "stock": 30,
+      "images": [],
+      "variants": [],
+      "available": true,
+      "createdAt": "2026-10-20T12:39:48.978Z"
+    },
+    {
+      "id": "prod_saffron_ws_1791561279007",
+      "workspaceId": "ws_1791561279007",
+      "name": "প্রিমিয়াম জাফরান (Premium Saffron)",
+      "nameBengali": "কাশ্মীরি প্রিমিয়াম জাফরান (১ গ্রাম)",
+      "sku": "SAFF-PREM-1G",
+      "category": "Spices",
+      "description": "কাশ্মীরি এ-গ্রেড প্রাকৃতিক জাফরান (১ গ্রাম)।",
+      "price": 1250,
+      "stock": 20,
+      "images": [],
+      "variants": [],
+      "available": true,
+      "createdAt": "2026-10-20T12:39:48.978Z"
+    },
+    {
+      "id": "prod_jamdani_ws_1791561279007",
+      "workspaceId": "ws_1791561279007",
+      "name": "জামদানি শাড়ি (Premium Jamdani Saree)",
+      "nameBengali": "ঐতিহ্যবাহী জামদানি শাড়ি",
+      "sku": "JAMD-DHAKA-01",
+      "category": "Fashion",
+      "description": "ঐতিহ্যবাহী নিখুঁত হাতের কাজের সুতি জামদানি শাড়ি।",
+      "price": 4500,
+      "stock": 15,
+      "images": [],
+      "variants": [],
+      "available": true,
+      "createdAt": "2026-10-20T12:39:48.978Z"
+    },
+    {
+      "id": "prod_punjabi_ws_1791561279007",
+      "workspaceId": "ws_1791561279007",
+      "name": "ডিজাইনার পাঞ্জাবি (Designer Punjabi)",
+      "nameBengali": "ঈদ কালেকশন ডিজাইনার পাঞ্জাবি",
+      "sku": "PUNJ-EID-COTTON",
+      "category": "Fashion",
+      "description": "প্রিমিয়াম সুতি কাপড়ে তৈরি আরামদায়ক ডিজাইনার পাঞ্জাবি।",
+      "price": 2200,
+      "stock": 25,
+      "images": [],
+      "variants": [],
+      "available": true,
+      "createdAt": "2026-10-20T12:39:48.978Z"
+    },
+    {
+      "id": "prod_honey_ws_VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "workspaceId": "ws_VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "name": "ক্রিম হানি (Cream Honey)",
+      "nameBengali": "ক্রিম হানি (৫০০ গ্রাম জার)",
+      "sku": "HONEY-CRM-500",
+      "category": "Organic Food",
+      "description": "১০০% খাঁটি প্রাকৃতিক পাহাড়ি ফুলের ক্রিম হানি (৫০০ গ্রাম জার)।",
+      "price": 750,
+      "stock": 45,
+      "images": [],
+      "variants": [],
+      "available": true,
+      "createdAt": "2026-10-20T13:13:04.032Z"
+    },
+    {
+      "id": "prod_ghee_ws_VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "workspaceId": "ws_VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "name": "অর্গানিক গাওয়া ঘি (Organic Ghee)",
+      "nameBengali": "অর্গানিক গাওয়া ঘি (৫০০ গ্রাম)",
+      "sku": "GHEE-ORG-500",
+      "category": "Organic Food",
+      "description": "খাঁটি দেশি গাওয়া ঘি (৫০০ গ্রাম কাচের বয়াম)।",
+      "price": 950,
+      "stock": 30,
+      "images": [],
+      "variants": [],
+      "available": true,
+      "createdAt": "2026-10-20T13:13:04.032Z"
+    },
+    {
+      "id": "prod_saffron_ws_VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "workspaceId": "ws_VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "name": "প্রিমিয়াম জাফরান (Premium Saffron)",
+      "nameBengali": "কাশ্মীরি প্রিমিয়াম জাফরান (১ গ্রাম)",
+      "sku": "SAFF-PREM-1G",
+      "category": "Spices",
+      "description": "কাশ্মীরি এ-গ্রেড প্রাকৃতিক জাফরান (১ গ্রাম)।",
+      "price": 1250,
+      "stock": 20,
+      "images": [],
+      "variants": [],
+      "available": true,
+      "createdAt": "2026-10-20T13:13:04.032Z"
+    },
+    {
+      "id": "prod_jamdani_ws_VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "workspaceId": "ws_VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "name": "জামদানি শাড়ি (Premium Jamdani Saree)",
+      "nameBengali": "ঐতিহ্যবাহী জামদানি শাড়ি",
+      "sku": "JAMD-DHAKA-01",
+      "category": "Fashion",
+      "description": "ঐতিহ্যবাহী নিখুঁত হাতের কাজের সুতি জামদানি শাড়ি।",
+      "price": 4500,
+      "stock": 15,
+      "images": [],
+      "variants": [],
+      "available": true,
+      "createdAt": "2026-10-20T13:13:04.032Z"
+    },
+    {
+      "id": "prod_punjabi_ws_VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "workspaceId": "ws_VJ631cgLoURvIrHz7m8y3vr3HqL2",
+      "name": "ডিজাইনার পাঞ্জাবি (Designer Punjabi)",
+      "nameBengali": "ঈদ কালেকশন ডিজাইনার পাঞ্জাবি",
+      "sku": "PUNJ-EID-COTTON",
+      "category": "Fashion",
+      "description": "প্রিমিয়াম সুতি কাপড়ে তৈরি আরামদায়ক ডিজাইনার পাঞ্জাবি।",
+      "price": 2200,
+      "stock": 25,
+      "images": [],
+      "variants": [],
+      "available": true,
+      "createdAt": "2026-10-20T13:13:04.032Z"
+    }
+  ],
   "orders": [],
   "aiSettings": [
     {
@@ -1451,8 +1738,8 @@
       ],
       "confidenceThreshold": 0.75,
       "enableDirectOrderCreation": true,
-      "customGreetingBn": "আসসালামু আলাইকুম! user_VJ631cgL's Workspace-এ আপনাকে স্বাগতম। আমি কীভাবে সহযোগিতা করতে পারি?",
-      "customGreetingEn": "Welcome to user_VJ631cgL's Workspace! How may I help you today?"
+      "customGreetingBn": "আসসালামু আলাইকুম! YearInvo Hub-এ আপনাকে স্বাগতম। আমি কীভাবে সহযোগিতা করতে পারি?",
+      "customGreetingEn": "Welcome to YearInvo Hub! How may I help you today?"
     },
     {
       "workspaceId": "ws_1792336640806_jcsll",
@@ -1519,6 +1806,28 @@
       "enableDirectOrderCreation": true,
       "customGreetingBn": "আসসালামু আলাইকুম! Test AutoLogout Co-এ আপনাকে স্বাগতম। আমি কীভাবে সহযোগিতা করতে পারি?",
       "customGreetingEn": "Welcome to Test AutoLogout Co! How may I help you today?"
+    },
+    {
+      "workspaceId": "ws_1792431441618_a5df0s",
+      "enabled": false,
+      "model": "gemini-3.8-flash",
+      "brandVoice": "friendly",
+      "languageMode": "auto_detect",
+      "autoReplyChannels": [],
+      "businessHoursOnly": false,
+      "businessHoursStart": "09:00",
+      "businessHoursEnd": "22:00",
+      "humanTakeoverKeywords": [
+        "human",
+        "agent",
+        "support",
+        "manush",
+        "kotha bolbo"
+      ],
+      "confidenceThreshold": 0.75,
+      "enableDirectOrderCreation": true,
+      "customGreetingBn": "আসসালামু আলাইকুম! Honey & Organic Hub-এ আপনাকে স্বাগতম। আমি কীভাবে সহযোগিতা করতে পারি?",
+      "customGreetingEn": "Welcome to Honey & Organic Hub! How may I help you today?"
     }
   ],
   "knowledgeItems": [],
@@ -1769,9 +2078,34 @@
         "aiRepliesThisMonth": 0,
         "scheduledPostsThisMonth": 0
       }
+    },
+    {
+      "id": "sub_1792431441619",
+      "workspaceId": "ws_1792431441618_a5df0s",
+      "workspaceName": "Honey & Organic Hub",
+      "planId": "plan_starter",
+      "planName": "Starter",
+      "status": "active",
+      "startedAt": "2026-10-19T17:37:21.619Z",
+      "expiresAt": "2026-11-18T17:37:21.619Z",
+      "requestedAt": "2026-10-19T17:37:21.619Z",
+      "currentUsage": {
+        "conversationsThisMonth": 0,
+        "aiRepliesThisMonth": 0,
+        "scheduledPostsThisMonth": 0
+      }
     }
   ],
   "auditLogs": [
+    {
+      "id": "audit_ai_test_1792427016928",
+      "userId": "usr_1792343516617_6hxd",
+      "userName": "AutoLogout Test",
+      "action": "AI_PROVIDER_TESTED",
+      "details": "Connection test on provider \"prov_gemini\": Failed (173ms)",
+      "timestamp": "2026-10-19T16:23:36.928Z",
+      "status": "failure"
+    },
     {
       "id": "audit_disc_1792336640850",
       "workspaceId": "ws_1792336640806_jcsll",
@@ -1803,11 +2137,11 @@
       "isDefault": true,
       "isFallback": false,
       "lastTestStatus": "failed",
-      "lastTestedAt": "2026-10-09T17:30:16.917Z",
+      "lastTestedAt": "2026-10-19T16:23:36.927Z",
       "totalRequests": 142,
       "totalTokens": 58200,
       "createdAt": "2026-10-09T15:54:18.491Z",
-      "lastError": "No API credential configured. Please provide a valid API key to test connection."
+      "lastError": "Default API key restricted (PERMISSION_DENIED). Please provide your custom Gemini API key in Settings."
     },
     {
       "id": "prov_openai",
@@ -2112,5 +2446,38 @@
       "updatedAt": "2026-10-16T16:25:04.901Z"
     }
   ],
-  "consequentialActions": []
+  "consequentialActions": [],
+  "aiTaskRouting": {
+    "customer_support": {
+      "providerId": "prov_gemini",
+      "model": "gemini-3.8-flash"
+    },
+    "comment_classification": {
+      "providerId": "prov_gemini",
+      "model": "gemini-3.8-flash"
+    },
+    "vision_understanding": {
+      "providerId": "prov_gemini",
+      "model": "gemini-3.8-flash"
+    },
+    "order_extraction": {
+      "providerId": "prov_gemini",
+      "model": "gemini-3.8-flash"
+    },
+    "business_analytics": {
+      "providerId": "prov_gemini",
+      "model": "gemini-3.8-flash"
+    },
+    "voice_assistant": {
+      "providerId": "prov_gemini",
+      "model": "gemini-3.8-flash"
+    },
+    "marketing_content": {
+      "providerId": "prov_gemini",
+      "model": "gemini-3.8-flash"
+    }
+  },
+  "revokedTokens": [
+    "yia_usr_1792431441617_6ziud.1795023600174.2924bc2d05b5c60128102c960236a0b7e26f323051f09f60ec2ecd92c19138ce"
+  ]
 }

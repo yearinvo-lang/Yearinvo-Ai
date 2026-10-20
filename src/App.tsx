@@ -75,7 +75,7 @@ function MainApp() {
   // Navigation items per Master Plan Section 19
   const navItems = [
     { id: 'overview', label: isBn ? 'ওভারভিউ' : 'Overview', icon: LayoutDashboard },
-    { id: 'voice-assistant', label: isBn ? 'ভয়েস অ্যাসিস্ট্যান্ট' : 'Voice Assistant', icon: Mic, highlight: true, badge: 'Voice' },
+    { id: 'voice-assistant', label: isBn ? 'এআই অ্যাসিস্ট্যান্ট' : 'AI Assistant', icon: Mic, highlight: true, badge: 'AI Voice' },
     { id: 'inbox', label: isBn ? 'সেন্ট্রাল ইনবক্স' : 'Central Inbox', icon: MessageSquare, badge: 'Live' },
     { id: 'ai-agent', label: isBn ? 'এআই সেলস এজেন্ট' : 'AI Sales Agent', icon: Bot, highlight: true },
     { id: 'customers', label: isBn ? 'কাস্টমারস' : 'Customers', icon: Users },
@@ -87,7 +87,7 @@ function MainApp() {
     { id: 'channels', label: isBn ? 'কানেক্টেড চ্যানেল' : 'Connected Channels', icon: Share2 },
     { id: 'team', label: isBn ? 'টিম ও মেম্বারস' : 'Team', icon: Users },
     { id: 'subscription', label: isBn ? 'সাবস্ক্রিপশন ও বিলিং' : 'Subscription & Billing', icon: CreditCard },
-    ...(user?.isSuperAdmin || user?.role === 'superadmin'
+    ...(user?.isSuperAdmin || user?.role === 'superadmin' || user?.role === 'owner' || user?.role === 'admin'
       ? [{ id: 'admin-portal', label: isBn ? 'ওনার কন্ট্রোল সেন্টার' : 'Owner Control Center', icon: ShieldAlert, adminOnly: true, badge: 'Owner' }]
       : []),
     { id: 'settings', label: isBn ? 'সেটিংস' : 'Settings', icon: Settings },
@@ -418,17 +418,17 @@ function MainApp() {
           </div>
 
           <div className="flex items-center gap-2.5">
-            {/* Voice Assistant Header Trigger Button */}
+            {/* AI Assistant Header Trigger Button */}
             <button
               onClick={() => setVoiceAssistantOpen(true)}
               className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-3 py-1.5 text-xs font-bold text-white shadow-md shadow-purple-600/30 hover:brightness-110 transition active:scale-95"
-              title="Open Voice Assistant"
+              title="Open AI Assistant"
             >
               <div className="relative flex items-center justify-center">
                 <Mic className="h-3.5 w-3.5" />
                 <span className="absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
               </div>
-              <span className="hidden sm:inline">{isBn ? 'ভয়েস অ্যাসিস্ট্যান্ট' : 'Voice Assistant'}</span>
+              <span className="hidden sm:inline">{isBn ? 'এআই অ্যাসিস্ট্যান্ট' : 'AI Assistant'}</span>
             </button>
 
             {/* Theme Toggle (Light / Dark) */}
@@ -501,12 +501,12 @@ function MainApp() {
                 <Mic className="h-7 w-7 animate-pulse" />
               </div>
               <h2 className="text-xl font-bold text-white">
-                {isBn ? 'YEAR INFO AI ভয়েস অ্যাসিস্ট্যান্ট' : 'YEAR INFO AI Voice Assistant'}
+                {isBn ? 'YEAR INFO AI এআই অ্যাসিস্ট্যান্ট' : 'YEAR INFO AI Business Assistant'}
               </h2>
               <p className="text-sm text-slate-400 max-w-md mx-auto">
                 {isBn
-                  ? 'ভয়েস অ্যাসিস্ট্যান্ট উইন্ডোটি চালু করতে বা ড্যাশবোর্ডে ফিরে যেতে নিচের অপশন ব্যবহার করুন।'
-                  : 'Open the voice assistant window or return to your overview dashboard.'}
+                  ? 'এআই অ্যাসিস্ট্যান্ট ওয়ার্কস্পেস চালু করতে বা ড্যাশবোর্ডে ফিরে যেতে নিচের অপশন ব্যবহার করুন।'
+                  : 'Open the AI assistant workspace or return to your overview dashboard.'}
               </p>
               <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
                 <button
@@ -521,7 +521,7 @@ function MainApp() {
                   className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow-lg shadow-purple-600/30 hover:brightness-110 transition active:scale-95"
                 >
                   <Mic className="h-4 w-4" />
-                  <span>{isBn ? 'ভয়েস অ্যাসিস্ট্যান্ট খুলুন' : 'Open Voice Assistant'}</span>
+                  <span>{isBn ? 'এআই অ্যাসিস্ট্যান্ট খুলুন' : 'Open AI Assistant'}</span>
                 </button>
               </div>
             </div>

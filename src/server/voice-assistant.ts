@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
 import { db } from './db.ts';
 import { GoogleGenAI } from '@google/genai';
+import { AIGateway, sanitizeErrorMessage } from './ai-gateway.ts';
 import type { Order, OrderItem } from '../types/index.ts';
 
 export interface TodaySalesMetrics {
@@ -183,13 +184,10 @@ export async function processVoiceQuery(
     intent = 'general';
   }
 
-  // Check if Gemini API is available for enhanced natural conversational answer
+  // Check if AI Gateway is available for enhanced natural conversational answer
   let geminiOutput: string | null = null;
-  const geminiKey = process.env.GEMINI_API_KEY;
-  if (geminiKey) {
-    try {
-      const client = new GoogleGenAI({ apiKey: geminiKey });
-      const prompt = `You are YEAR INFO AI's executive voice sales assistant for a Bangladesh eCommerce brand.
+  try {
+    const prompt = `You are YEAR INFO AI's executive voice sales assistant for a Bangladesh eCommerce brand.
 Context data for TODAY (${metrics.dateBangla} / ${metrics.date}):
 - Total Sales Revenue: ৳${metrics.totalSales} BDT
 - Total Orders: ${metrics.totalOrders}
@@ -206,21 +204,20 @@ Provide a direct, conversational, natural answer in Bengali (or English if the u
 Tone: Professional, friendly, helpful, concise for text-to-speech voice playback.
 Include exact numbers from the data. Do not make up any numbers.`;
 
-      const response = await client.models.generateContent({
-        model: 'gemini-3.8-flash',
-        contents: prompt,
-        config: {
-          temperature: 0.2,
-          maxOutputTokens: 250,
-        },
-      });
+    const gwResult = await AIGateway.execute({
+      task: 'voice_assistant',
+      prompt,
+      workspaceId,
+      temperature: 0.2,
+      maxTokens: 250,
+    });
 
-      if (response.text?.trim()) {
-        geminiOutput = response.text.trim();
-      }
-    } catch (e) {
-      console.warn('Gemini query processing error (using deterministic fallback):', e);
+    if (gwResult.text?.trim()) {
+      geminiOutput = gwResult.text.trim();
     }
+  } catch (e: any) {
+    const cleanErr = sanitizeErrorMessage(e);
+    console.warn('[Voice Assistant] AI model unavailable (serving verified grounded answer):', cleanErr);
   }
 
   // Deterministic Bengali speech & display generation (rock-solid, immediate)

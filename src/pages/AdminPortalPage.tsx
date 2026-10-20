@@ -57,6 +57,25 @@ import {
   AdminNotification,
 } from '../types/index.ts';
 
+function formatProviderError(err?: string): string {
+  if (!err) return '';
+  try {
+    const parsed = JSON.parse(err);
+    if (parsed.error?.message) {
+      if (parsed.error?.code === 403 || parsed.error?.status === 'PERMISSION_DENIED') {
+        return 'Default sandbox key restricted (PERMISSION_DENIED). Please enter your custom Gemini API key or switch provider.';
+      }
+      return parsed.error.message;
+    }
+  } catch {
+    // not JSON
+  }
+  if (/PERMISSION_DENIED|denied access/i.test(err)) {
+    return 'Default sandbox key restricted (PERMISSION_DENIED). Please enter your custom Gemini API key or switch provider.';
+  }
+  return err;
+}
+
 export const AdminPortalPage: React.FC = () => {
   const { user, apiRequest } = useAuth();
 
@@ -97,6 +116,7 @@ export const AdminPortalPage: React.FC = () => {
   const [notifications, setNotifications] = useState<AdminNotification[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [systemSettings, setSystemSettings] = useState<any>(null);
+  const [taskRouting, setTaskRouting] = useState<Record<string, any>>({});
 
   // Sub-tabs & filter states
   const [userSearch, setUserSearch] = useState('');
@@ -251,6 +271,7 @@ export const AdminPortalPage: React.FC = () => {
         apiRequest('/api/admin/notifications').catch(() => []),
         apiRequest('/api/admin/audit-logs').catch(() => []),
         apiRequest('/api/admin/system').catch(() => null),
+        apiRequest('/api/admin/ai-routing').catch(() => ({})),
       ]);
 
       if (overview) setOverviewData(overview);
@@ -269,6 +290,9 @@ export const AdminPortalPage: React.FC = () => {
       if (notifs) setNotifications(notifs);
       if (logs) setAuditLogs(logs);
       if (system) setSystemSettings(system);
+      // @ts-ignore
+      const routing = arguments ? arguments[13] : null;
+      apiRequest('/api/admin/ai-routing').then((r) => { if (r) setTaskRouting(r); }).catch(() => {});
     } catch (e: any) {
       console.error('Error loading Owner Control Center data:', e);
       setActionErrorMsg(e.message || 'Failed to authenticate and load Owner Control Center.');
@@ -378,6 +402,19 @@ export const AdminPortalPage: React.FC = () => {
       loadAllData();
     } catch (e: any) {
       setActionErrorMsg(e.message || 'Failed to switch primary provider');
+    }
+  };
+
+  const handleUpdateTaskRoute = async (task: string, providerId: string, model?: string) => {
+    try {
+      const updated = await apiRequest(`/api/admin/ai-routing/${task}`, {
+        method: 'PUT',
+        body: JSON.stringify({ providerId, model }),
+      });
+      setTaskRouting((prev) => ({ ...prev, [task]: updated }));
+      triggerFeedback(`Task "${task}" updated to ${providerId}`);
+    } catch (e: any) {
+      setActionErrorMsg(e.message || 'Failed to update task route');
     }
   };
 
@@ -2106,7 +2143,7 @@ export const AdminPortalPage: React.FC = () => {
 
                     {prov.lastError && (
                       <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-2 text-[11px] text-rose-300">
-                        {prov.lastError}
+                        {formatProviderError(prov.lastError)}
                       </div>
                     )}
 
@@ -2179,6 +2216,71 @@ export const AdminPortalPage: React.FC = () => {
                 </div>
               );
             })}
+          </div>
+
+          {/* PER-TASK MODEL ROUTING SECTION (Section 15.5) */}
+          <div className="mt-8 rounded-2xl border border-slate-800 bg-slate-900/80 p-6 space-y-5 shadow-2xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+              <div>
+                <h3 className="font-bold text-base text-white flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-purple-400" />
+                  <span>Per-Task AI Model Routing (Multi-LLM Gateway)</span>
+                </h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  Assign specialized AI models to distinct business tasks. When a provider encounters rate limits or errors, requests automatically failover.
+                </p>
+              </div>
+              <span className="self-start sm:self-auto rounded-full bg-purple-500/10 border border-purple-500/30 px-3 py-1 text-[11px] font-mono text-purple-300">
+                Central Gateway Active
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[
+                { id: 'customer_support', name: 'Sales & Customer Inquiries', desc: 'Central inbox real-time conversations in Bengali & English.' },
+                { id: 'comment_classification', name: 'Facebook & Instagram Comments', desc: 'Comment category classification and public/private response drafting.' },
+                { id: 'order_extraction', name: 'Order Intent & Extraction', desc: 'Structured JSON order extraction from chats with duplicate safeguards.' },
+                { id: 'business_analytics', name: 'Business Analytics & Reports', desc: 'Real-time sales, order, and courier status query intelligence.' },
+                { id: 'voice_assistant', name: 'AI Assistant & Spoken Audio', desc: 'Voice query understanding, strategic business advice, and natural vocal replies.' },
+                { id: 'vision_understanding', name: 'Product Vision Understanding', desc: 'Customer image analysis and product catalog matching.' },
+                { id: 'marketing_content', name: 'Post Scheduler & Content', desc: 'Automated social media marketing captions and post generation.' },
+              ].map((taskItem) => {
+                const currentRoute = taskRouting[taskItem.id] || { providerId: 'prov_gemini', model: 'gemini-3.8-flash' };
+                const currentProvider = aiProviders.find((p) => p.id === currentRoute.providerId);
+
+                return (
+                  <div key={taskItem.id} className="rounded-xl border border-slate-800 bg-slate-950 p-4 flex flex-col justify-between space-y-3">
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-xs text-white">{taskItem.name}</span>
+                        <span className="text-[10px] font-mono text-purple-400 bg-purple-950/60 px-2 py-0.5 rounded border border-purple-800/40">
+                          {currentProvider?.name.split(' ')[0] || 'Default'}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 mt-1">{taskItem.desc}</p>
+                    </div>
+
+                    <div className="space-y-1.5 pt-2 border-t border-slate-800/80">
+                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Assigned Provider</label>
+                      <select
+                        value={currentRoute.providerId || 'prov_gemini'}
+                        onChange={(e) => handleUpdateTaskRoute(taskItem.id, e.target.value)}
+                        className="w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs text-white focus:border-purple-500 focus:outline-none"
+                      >
+                        <option value="prov_gemini">Google Gemini (Default)</option>
+                        {aiProviders
+                          .filter((p) => p.id !== 'prov_gemini')
+                          .map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.name} ({p.model})
+                            </option>
+                          ))}
+                      </select>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}

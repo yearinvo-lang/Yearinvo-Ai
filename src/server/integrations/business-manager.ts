@@ -331,4 +331,46 @@ export class BusinessManagerService {
       speechText,
     };
   }
+
+  /**
+   * Calculate 7-day rolling performance comparison
+   */
+  public static getWeeklyPerformance(workspaceId: string) {
+    const allOrders = db.getOrders(workspaceId);
+    const now = Date.now();
+    const sevenDaysMs = 7 * 86400000;
+
+    const past7DaysOrders = allOrders.filter((o) => {
+      const t = new Date(o.createdAt).getTime();
+      return t >= (now - sevenDaysMs) && t <= now;
+    });
+
+    const prev7DaysOrders = allOrders.filter((o) => {
+      const t = new Date(o.createdAt).getTime();
+      return t >= (now - 2 * sevenDaysMs) && t < (now - sevenDaysMs);
+    });
+
+    const past7DaysSales = past7DaysOrders.reduce((sum, o) => sum + o.total, 0);
+    const prev7DaysSales = prev7DaysOrders.reduce((sum, o) => sum + o.total, 0);
+
+    const growthPercent = prev7DaysSales > 0
+      ? Math.round(((past7DaysSales - prev7DaysSales) / prev7DaysSales) * 100)
+      : (past7DaysSales > 0 ? 100 : 0);
+
+    const ordersGrowthPercent = prev7DaysOrders.length > 0
+      ? Math.round(((past7DaysOrders.length - prev7DaysOrders.length) / prev7DaysOrders.length) * 100)
+      : (past7DaysOrders.length > 0 ? 100 : 0);
+
+    return {
+      past7DaysSales,
+      past7DaysOrdersCount: past7DaysOrders.length,
+      prev7DaysSales,
+      prev7DaysOrdersCount: prev7DaysOrders.length,
+      growthPercent,
+      ordersGrowthPercent,
+      deliveredPast7Days: past7DaysOrders.filter((o) => o.status === 'delivered').length,
+      pendingPast7Days: past7DaysOrders.filter((o) => o.status === 'pending').length,
+    };
+  }
 }
+

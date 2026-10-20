@@ -67,6 +67,7 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
   // Today's latest sales metrics
   const [latestMetrics, setLatestMetrics] = useState<any>(null);
   const [loadingMetrics, setLoadingMetrics] = useState(false);
+  const [mobileTab, setMobileTab] = useState<'chat' | 'metrics'>('chat');
 
   // Email modal / form states
   const [showEmailModal, setShowEmailModal] = useState(false);
@@ -540,16 +541,16 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
           onClose();
         }
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/85 backdrop-blur-md animate-in fade-in duration-200 overflow-hidden"
     >
-      <div className="relative flex flex-col w-full max-w-4xl h-[92vh] max-h-[840px] rounded-2xl sm:rounded-3xl border border-purple-500/30 bg-[#080614] text-slate-100 shadow-2xl overflow-hidden">
+      <div className="relative flex flex-col w-full max-w-5xl h-[calc(100vh-64px)] max-h-[calc(100vh-64px)] rounded-2xl sm:rounded-3xl border border-purple-500/30 bg-[#080614] text-slate-100 shadow-2xl overflow-hidden my-auto">
         {/* Ambient Background Grid Pattern with Radial Vignette */}
         <div className="pointer-events-none absolute inset-0 z-0 bg-grid-pattern opacity-50 mask-radial-vignette" />
         <div className="pointer-events-none absolute -top-24 -left-24 w-80 h-80 bg-purple-600/20 rounded-full blur-[100px]" />
         <div className="pointer-events-none absolute -bottom-24 -right-24 w-80 h-80 bg-indigo-600/20 rounded-full blur-[100px]" />
         
         {/* MODAL HEADER */}
-        <div className="relative z-10 flex items-center justify-between px-3 sm:px-6 py-3 sm:py-4 border-b border-purple-500/20 bg-purple-950/30 shrink-0 gap-2">
+        <div className="relative z-10 flex items-center justify-between px-3 sm:px-6 py-3 sm:py-3.5 border-b border-purple-500/20 bg-purple-950/30 shrink-0 gap-2">
           {/* Left: Back Button & Title */}
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             {/* Back Button */}
@@ -575,10 +576,10 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <h2 className="text-xs sm:text-base font-bold text-white tracking-wide truncate">
-                  {isBn ? 'YEAR INFO AI ভয়েস অ্যাসিস্ট্যান্ট' : 'Voice Assistant'}
+                  {isBn ? 'YEAR INFO AI এআই অ্যাসিস্ট্যান্ট' : 'AI Assistant'}
                 </h2>
                 <span className="hidden md:inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 shrink-0">
-                  Voice Sales Assistant
+                  AI Business Assistant
                 </span>
               </div>
               <p className="text-[10px] sm:text-xs text-slate-400 truncate hidden sm:block">
@@ -623,8 +624,8 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
             <button
               onClick={onClose}
               className="flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white font-bold text-xs shadow-lg shadow-rose-950/60 hover:shadow-rose-600/40 border border-rose-400/40 hover:border-rose-300 transition-all duration-200 active:scale-95 shrink-0 group cursor-pointer"
-              title={isBn ? 'ভয়েস অ্যাসিস্ট্যান্ট বন্ধ করুন (Esc)' : 'Exit Voice Assistant (Esc)'}
-              aria-label="Exit Voice Assistant"
+              title={isBn ? 'এআই অ্যাসিস্ট্যান্ট বন্ধ করুন (Esc)' : 'Exit AI Assistant (Esc)'}
+              aria-label="Exit AI Assistant"
             >
               <X className="w-4 h-4 sm:w-4.5 sm:h-4.5 stroke-[3] group-hover:rotate-90 transition-transform duration-200" />
               <span className="font-bold tracking-wide">{isBn ? 'বন্ধ করুন' : 'Exit'}</span>
@@ -632,11 +633,39 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
           </div>
         </div>
 
+        {/* MOBILE VIEW TOGGLE TABS (Visible below lg) */}
+        <div className="flex lg:hidden items-center border-b border-purple-500/20 bg-[#0c091d] px-3 py-2 shrink-0">
+          <div className="grid grid-cols-2 w-full gap-2">
+            <button
+              onClick={() => setMobileTab('chat')}
+              className={`flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl text-xs font-bold transition ${
+                mobileTab === 'chat'
+                  ? 'bg-purple-600/30 border border-purple-500/50 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200 bg-slate-900/40'
+              }`}
+            >
+              <Mic className="w-3.5 h-3.5 text-purple-400" />
+              <span>{isBn ? 'ভয়েস ও চ্যাট' : 'Voice & Chat'}</span>
+            </button>
+            <button
+              onClick={() => setMobileTab('metrics')}
+              className={`flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl text-xs font-bold transition ${
+                mobileTab === 'metrics'
+                  ? 'bg-purple-600/30 border border-purple-500/50 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200 bg-slate-900/40'
+              }`}
+            >
+              <TrendingUp className="w-3.5 h-3.5 text-purple-400" />
+              <span>{isBn ? 'লাইভ সেলস রিপোর্ট' : 'Live Report'}</span>
+            </button>
+          </div>
+        </div>
+
         {/* MAIN BODY: 2 COLUMN SPLIT ON LARGE SCREENS */}
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden min-h-0">
+        <div className="flex-1 flex-grow grid grid-cols-1 lg:grid-cols-12 overflow-hidden min-h-0">
           
           {/* LEFT COLUMN: CONVERSATION & VOICE INPUT (lg:col-span-7) */}
-          <div className="lg:col-span-7 flex flex-col border-r border-purple-500/20 min-h-0">
+          <div className={`${mobileTab === 'chat' ? 'flex' : 'hidden'} lg:flex lg:col-span-7 flex-col flex-grow border-r border-purple-500/20 min-h-0 h-full`}>
             
             {/* SPEECH PERMISSION / ERROR BANNER */}
             {speechError && (
@@ -656,7 +685,7 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
             )}
 
             {/* MESSAGES SCROLL AREA */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
+            <div className="flex-1 flex-grow overflow-y-auto p-4 sm:p-5 space-y-4 min-h-0">
               {messages.map((msg) => {
                 const isAssistant = msg.sender === 'assistant';
                 return (
@@ -668,7 +697,7 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
                       {isAssistant ? (
                         <>
                           <Sparkles className="w-3 h-3 text-purple-400" />
-                          <span className="font-semibold text-purple-300">Voice Assistant</span>
+                          <span className="font-semibold text-purple-300">AI Assistant</span>
                         </>
                       ) : (
                         <>
@@ -735,14 +764,18 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
             </div>
 
             {/* QUICK QUESTION CHIPS (Exact user requested phrases) */}
-            <div className="px-4 py-2 border-t border-purple-500/10 bg-purple-950/10 shrink-0">
-              <div className="text-[10px] uppercase font-bold text-slate-400 mb-1.5 flex items-center gap-1">
+            <div className="px-3 sm:px-4 py-1.5 border-t border-purple-500/10 bg-purple-950/20 shrink-0">
+              <div className="text-[10px] uppercase font-bold text-slate-400 mb-1 flex items-center gap-1">
                 <span>দ্রুত জিজ্ঞাসা করুন (Quick Prompts):</span>
               </div>
-              <div className="flex flex-wrap gap-1.5 overflow-x-auto pb-1 max-h-24">
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-purple-900/60">
                 {[
                   'আজকের কতটুকু সেল হলো?',
-                  'আসসালামু আলাইকুম',
+                  'আজকে কতটি অর্ডার এসেছে?',
+                  'আজকে কতটি অর্ডার ডেলিভারি হয়েছে?',
+                  'আমাদের ক্রিম হানির দাম কত?',
+                  'আমাদের সবচেয়ে বেশি বিক্রি হওয়া পণ্য কোনটি?',
+                  'কেমন আছো?',
                   'বাংলাদেশের রাজধানী কী?',
                   '২৭৫ গুণ ১৬ কত?',
                   'What is artificial intelligence?',
@@ -755,7 +788,7 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
                   <button
                     key={promptText}
                     onClick={() => handleSendQuery(promptText)}
-                    className="px-2.5 py-1 rounded-xl border border-purple-500/30 bg-purple-900/30 hover:bg-purple-600/30 hover:border-purple-400 text-[11px] font-semibold text-purple-200 transition text-left shrink-0"
+                    className="whitespace-nowrap px-2.5 py-1 rounded-xl border border-purple-500/30 bg-purple-900/30 hover:bg-purple-600/30 hover:border-purple-400 text-[11px] font-semibold text-purple-200 transition text-left shrink-0 active:scale-95"
                   >
                     💬 {promptText}
                   </button>
@@ -775,7 +808,7 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
                       ? 'bg-rose-600 text-white shadow-rose-600/40 animate-pulse'
                       : 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:brightness-110 shadow-purple-600/30'
                   }`}
-                  title={isListening ? 'Stop Listening' : 'Speak to Voice Assistant'}
+                  title={isListening ? 'Stop Listening' : 'Speak to AI Assistant'}
                 >
                   <div className="flex items-center gap-2">
                     {isListening ? (
@@ -844,7 +877,7 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
           </div>
 
           {/* RIGHT COLUMN: LIVE SALES REPORT CARD & EMAIL DISPATCH (lg:col-span-5) */}
-          <div className="lg:col-span-5 flex flex-col bg-[#0d0920] overflow-y-auto p-5 space-y-4">
+          <div className={`${mobileTab === 'metrics' ? 'flex' : 'hidden'} lg:flex lg:col-span-5 flex-col flex-grow bg-[#0d0920] overflow-y-auto p-4 sm:p-5 space-y-4 min-h-0 h-full`}>
             
             {/* CARD TITLE & REFRESH */}
             <div className="flex items-center justify-between pb-3 border-b border-purple-500/20 shrink-0">

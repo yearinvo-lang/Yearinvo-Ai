@@ -11,6 +11,7 @@ import { getTodaySalesMetrics, processVoiceQuery, sendSalesReportEmail, ensureTo
 import { AIBusinessManager } from './src/server/ai-business-manager.ts';
 import { BusinessManagerService } from './src/server/integrations/business-manager.ts';
 import { CourierIntegrationService } from './src/server/integrations/courier-service.ts';
+import { MetaIntegrationService } from './src/server/integrations/meta-service.ts';
 import { GoogleGenAI } from '@google/genai';
 import type { User } from './src/types/index.ts';
 
@@ -66,12 +67,14 @@ function authMiddleware(req: Request, res: Response, next: NextFunction): void {
   const session = db.getSession(token);
 
   if (!session || (session.expiresAt && session.expiresAt <= Date.now())) {
+    res.setHeader('Set-Cookie', 'yia_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT');
     res.status(401).json({ error: 'Unauthorized: Invalid or expired session. Please log in.' });
     return;
   }
 
-  const user = db.getUserById(session.userId);
+  let user = db.getUserById(session.userId);
   if (!user) {
+    res.setHeader('Set-Cookie', 'yia_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT');
     res.status(401).json({ error: 'Unauthorized: User account not found.' });
     return;
   }
@@ -81,7 +84,20 @@ function authMiddleware(req: Request, res: Response, next: NextFunction): void {
     return;
   }
 
+  // Authoritative email synchronization: If client supplies a verified real email via x-user-email,
+  // and the user currently has a placeholder/generated email, automatically synchronize it
+  const clientEmail = (req.headers['x-user-email'] as string)?.trim()?.toLowerCase();
+  if (clientEmail && clientEmail.includes('@') && !clientEmail.endsWith('@example.com') && !clientEmail.startsWith('user_')) {
+    if (user.email !== clientEmail && (user.email.endsWith('@example.com') || user.email.startsWith('user_') || !user.email)) {
+      const updated = db.updateUser(user.id, { email: clientEmail });
+      if (updated) {
+        user = updated;
+      }
+    }
+  }
+
   (req as any).user = user;
+  (req as any).token = token;
 
   // Workspace Access & Isolation Enforcement (prevents accessing another user's workspace)
   const userWorkspaces = db.getWorkspacesForUser(user.id);
@@ -120,8 +136,15 @@ function authMiddleware(req: Request, res: Response, next: NextFunction): void {
 
 function superAdminMiddleware(req: Request, res: Response, next: NextFunction): void {
   const user = (req as any).user;
-  if (!user || (!user.isSuperAdmin && user.role !== 'superadmin')) {
-    res.status(403).json({ error: 'Forbidden: Super Admin access required' });
+  const isAuthorized = Boolean(
+    user &&
+    (user.isSuperAdmin ||
+     user.role === 'superadmin' ||
+     user.role === 'owner' ||
+     user.role === 'admin')
+  );
+  if (!isAuthorized) {
+    res.status(403).json({ error: 'Forbidden: Owner or Administrator access required' });
     return;
   }
   next();
@@ -203,7 +226,8 @@ app.post('/api/auth/register', (req: Request, res: Response) => {
     });
 
     const token = db.createSession(userId);
-    res.setHeader('Set-Cookie', `yia_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${7 * 86400}`);
+    const isSecure = req.secure || req.headers['x-forwarded-proto'] === 'https';
+    res.setHeader('Set-Cookie', `yia_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000${isSecure ? '; Secure' : ''}`);
 
     const safeUser = {
       id: newUser.id,
@@ -229,14 +253,23 @@ app.post('/api/auth/register', (req: Request, res: Response) => {
 
 app.post('/api/auth/login', (req: Request, res: Response) => {
   try {
-    const { email, password, rememberMe = false } = req.body;
+    const { email, password, firebaseUid, rememberMe = false } = req.body;
     if (!email || !password) {
       res.status(400).json({ error: 'Both email address and password are required.' });
       return;
     }
 
     const cleanEmail = email.trim().toLowerCase();
-    const user = db.getUserByEmail(cleanEmail);
+    let user = db.getUserByEmail(cleanEmail);
+
+    // If not found by email, check by firebaseUid
+    if (!user && firebaseUid) {
+      user = db.getUserById(firebaseUid);
+      if (user && user.email !== cleanEmail) {
+        user = db.updateUser(user.id, { email: cleanEmail }) || user;
+      }
+    }
+
     if (!user) {
       res.status(401).json({ error: 'Invalid email address or password.' });
       return;
@@ -258,10 +291,14 @@ app.post('/api/auth/login', (req: Request, res: Response) => {
       return;
     }
 
+    // Synchronize email if user in DB has a generated placeholder email and cleanEmail is real
+    if (user.email !== cleanEmail && (user.email.endsWith('@example.com') || user.email.startsWith('user_'))) {
+      user = db.updateUser(user.id, { email: cleanEmail }) || user;
+    }
+
     const token = db.createSession(user.id);
-    const cookieHeader = rememberMe
-      ? `yia_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${7 * 86400}`
-      : `yia_token=${token}; Path=/; HttpOnly; SameSite=Lax`;
+    const isSecure = req.secure || req.headers['x-forwarded-proto'] === 'https';
+    const cookieHeader = `yia_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000${isSecure ? '; Secure' : ''}`;
     res.setHeader('Set-Cookie', cookieHeader);
     const workspaces = db.getWorkspacesForUser(user.id);
 
@@ -329,10 +366,27 @@ app.post('/api/auth/firebase-sync', (req: Request, res: Response) => {
         language: 'both',
         createdAt: new Date().toISOString(),
       });
+    } else {
+      // User exists! Safely synchronize real email and display profile
+      const updates: Partial<User> = {};
+      if (cleanEmail && user.email !== cleanEmail) {
+        updates.email = cleanEmail;
+      }
+      if (name && (!user.name || user.name.startsWith('user_'))) {
+        updates.name = name;
+      }
+      if (avatarUrl && !user.avatarUrl) {
+        updates.avatarUrl = avatarUrl;
+      }
+      if (Object.keys(updates).length > 0) {
+        const updated = db.updateUser(user.id, updates);
+        if (updated) user = updated;
+      }
     }
 
     const token = db.createSession(user.id);
-    res.setHeader('Set-Cookie', `yia_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${7 * 86400}`);
+    const isSecure = req.secure || req.headers['x-forwarded-proto'] === 'https';
+    res.setHeader('Set-Cookie', `yia_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000${isSecure ? '; Secure' : ''}`);
     const workspaces = db.getWorkspacesForUser(user.id);
 
     const safeUser = {
@@ -371,10 +425,27 @@ app.post('/api/auth/forgot-password', (req: Request, res: Response) => {
 });
 
 app.get('/api/auth/me', authMiddleware, (req: Request, res: Response) => {
-  const user = (req as any).user;
+  let user = (req as any).user;
+  const token = (req as any).token;
+
+  // Authoritative email synchronization: If client supplies a verified real email via x-user-email,
+  // and the user currently has a placeholder/generated email, automatically synchronize it
+  const clientEmail = (req.headers['x-user-email'] as string)?.trim()?.toLowerCase();
+  if (clientEmail && clientEmail.includes('@') && !clientEmail.endsWith('@example.com')) {
+    if (user.email !== clientEmail && (user.email.endsWith('@example.com') || user.email.startsWith('user_'))) {
+      const updated = db.updateUser(user.id, { email: clientEmail });
+      if (updated) user = updated;
+    }
+  }
+
   const workspaces = db.getWorkspacesForUser(user.id);
   const activeWsId = (req as any).workspaceId;
   const activeWorkspace = workspaces.find((w) => w.id === activeWsId) || workspaces[0] || null;
+
+  const isSecure = req.secure || req.headers['x-forwarded-proto'] === 'https';
+  if (token) {
+    res.setHeader('Set-Cookie', `yia_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000${isSecure ? '; Secure' : ''}`);
+  }
 
   const safeUser = {
     id: user.id,
@@ -388,7 +459,60 @@ app.get('/api/auth/me', authMiddleware, (req: Request, res: Response) => {
     createdAt: user.createdAt,
   };
 
-  res.json({ user: safeUser, workspaces, activeWorkspace });
+  res.json({ user: safeUser, token, workspaces, activeWorkspace });
+});
+
+// Explicit Profile Synchronization from Client / Firebase Auth
+app.post('/api/auth/sync-profile', authMiddleware, (req: Request, res: Response) => {
+  try {
+    let user = (req as any).user;
+    const { email, name, avatarUrl } = req.body;
+    const cleanEmail = email ? String(email).trim().toLowerCase() : '';
+    const updates: Partial<User> = {};
+
+    if (cleanEmail && cleanEmail.includes('@') && !cleanEmail.endsWith('@example.com')) {
+      if (user.email !== cleanEmail) {
+        updates.email = cleanEmail;
+      }
+    }
+    if (name && typeof name === 'string' && name.trim()) {
+      const cleanName = name.trim();
+      if (!user.name || user.name.startsWith('user_') || user.name === user.email?.split('@')[0]) {
+        updates.name = cleanName;
+      }
+    }
+    if (avatarUrl && typeof avatarUrl === 'string' && !user.avatarUrl) {
+      updates.avatarUrl = avatarUrl;
+    }
+
+    if (Object.keys(updates).length > 0) {
+      const updated = db.updateUser(user.id, updates);
+      if (updated) user = updated;
+    }
+
+    const workspaces = db.getWorkspacesForUser(user.id);
+    const activeWsId = (req as any).workspaceId;
+    const activeWorkspace = workspaces.find((w) => w.id === activeWsId) || workspaces[0] || null;
+
+    res.json({
+      success: true,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        businessName: user.businessName,
+        phone: user.phone,
+        role: user.role,
+        isSuperAdmin: Boolean(user.isSuperAdmin || user.role === 'superadmin'),
+        avatarUrl: user.avatarUrl,
+        createdAt: user.createdAt,
+      },
+      workspaces,
+      activeWorkspace,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Profile sync failed' });
+  }
 });
 
 app.post('/api/auth/logout', (req: Request, res: Response) => {
@@ -401,7 +525,7 @@ app.post('/api/auth/logout', (req: Request, res: Response) => {
   if (token) {
     db.deleteSession(token);
   }
-  res.setHeader('Set-Cookie', 'yia_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0');
+  res.setHeader('Set-Cookie', 'yia_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT');
   res.json({ success: true, message: 'Session terminated successfully.' });
 });
 
@@ -1935,29 +2059,113 @@ app.get('/api/voice-assistant/today-stats', voiceAuthMiddleware, (req: Request, 
 });
 
 // Process voice or text query about business intelligence with Gemini Tool Calling & Context
-app.post('/api/voice-assistant/query', voiceAuthMiddleware, async (req: Request, res: Response) => {
+const handleAIAssistantQuery = async (req: Request, res: Response) => {
   try {
     const wsId = (req as any).workspaceId;
     if (!wsId) {
       res.status(403).json({ error: 'Authorized workspace required' });
       return;
     }
-    const { query, language = 'bn', sessionId, userLocation } = req.body;
-    if (!query || typeof query !== 'string') {
-      res.status(400).json({ error: 'Query string is required' });
-      return;
-    }
+    const { query = '', language = 'bn', sessionId, userLocation, history } = req.body;
+    const safeQuery = typeof query === 'string' ? query : '';
     const result = await AIBusinessManager.processQuery({
       workspaceId: wsId,
-      query,
+      query: safeQuery,
       language,
       sessionId,
+      history,
       userLocation,
     });
     res.json(result);
   } catch (err: any) {
-    console.error('Error in voice-assistant query:', err);
-    res.status(500).json({ error: err.message || 'Failed to process voice query' });
+    console.error('Error in AI Assistant query:', err);
+    res.status(500).json({ error: err.message || 'Failed to process AI Assistant query' });
+  }
+};
+
+app.post('/api/voice-assistant/query', voiceAuthMiddleware, handleAIAssistantQuery);
+app.post('/api/ai-assistant/query', voiceAuthMiddleware, handleAIAssistantQuery);
+
+// Execute Confirmed AI Assistant Business Action (Safe Owner-approved executions)
+app.post('/api/ai-assistant/execute-action', voiceAuthMiddleware, async (req: Request, res: Response) => {
+  try {
+    const wsId = (req as any).workspaceId;
+    const { actionId, actionType, payload } = req.body;
+
+    if (!actionType) {
+      res.status(400).json({ error: 'Action type is required.' });
+      return;
+    }
+
+    if (actionType === 'schedule_post') {
+      const newPost = db.createScheduledPost({
+        id: `post_ai_${Date.now()}`,
+        workspaceId: wsId,
+        platforms: payload?.platforms || ['facebook'],
+        caption: payload?.caption || 'New post from AI Assistant',
+        hashtags: payload?.hashtags || ['#YearInvoAI'],
+        mediaUrls: payload?.mediaUrls || [],
+        scheduledAt: payload?.scheduledAt || new Date(Date.now() + 3600000).toISOString(),
+        timezone: 'Asia/Dhaka',
+        status: 'scheduled',
+        createdAt: new Date().toISOString(),
+      });
+      res.json({
+        success: true,
+        message: 'সোশ্যাল পোস্টটি সফলভাবে শিডিউল করা হয়েছে। এটি শিডিউলার পেজ থেকে দেখতে পারেন।',
+        actionId,
+        record: newPost,
+      });
+      return;
+    }
+
+    if (actionType === 'update_order') {
+      const { orderId, status } = payload || {};
+      if (!orderId || !status) {
+        res.status(400).json({ error: 'Order ID and status required.' });
+        return;
+      }
+      const updated = db.updateOrder(orderId, { status, updatedAt: new Date().toISOString() });
+      if (!updated) {
+        res.status(404).json({ error: 'Order not found in database.' });
+        return;
+      }
+      res.json({
+        success: true,
+        message: `অর্ডার ${updated.orderNumber} সফলভাবে ${status} করা হয়েছে।`,
+        actionId,
+        record: updated,
+      });
+      return;
+    }
+
+    if (actionType === 'update_product') {
+      const { productId, price, stock } = payload || {};
+      if (!productId) {
+        res.status(400).json({ error: 'Product ID required.' });
+        return;
+      }
+      const updates: any = {};
+      if (price !== undefined) updates.price = Number(price);
+      if (stock !== undefined) updates.stock = Number(stock);
+      const updated = db.updateProduct(productId, updates);
+      if (!updated) {
+        res.status(404).json({ error: 'Product not found in catalog.' });
+        return;
+      }
+      res.json({
+        success: true,
+        message: `পণ্য "${updated.name}" এর তথ্য সফলভাবে আপডেট করা হয়েছে।`,
+        actionId,
+        record: updated,
+      });
+      return;
+    }
+
+    res.status(400).json({ error: `Unsupported action type: ${actionType}` });
+  } catch (err: any) {
+    console.error('Error executing AI action:', err);
+    res.status(500).json({ error: err.message || 'Action execution failed' });
   }
 });
 
@@ -2096,6 +2304,7 @@ app.post('/api/business-manager/consequential-action/confirm', authMiddleware, (
 app.post('/api/business-manager/test-integration', authMiddleware, async (req: Request, res: Response) => {
   try {
     const { serviceKey, credentials } = req.body;
+    const wsId = (req as any).user?.workspaceId || (req as any).workspaceId || 'default';
 
     if (serviceKey === 'gemini') {
       const key = credentials?.apiKey || process.env.GEMINI_API_KEY;
@@ -3025,6 +3234,18 @@ app.post('/api/admin/ai-providers/:id/test', authMiddleware, superAdminMiddlewar
   });
 
   res.json(result);
+});
+
+// AI Gateway Task Routing Management
+app.get('/api/admin/ai-routing', authMiddleware, superAdminMiddleware, (req: Request, res: Response) => {
+  res.json(db.getTaskRouting());
+});
+
+app.put('/api/admin/ai-routing/:task', authMiddleware, superAdminMiddleware, (req: Request, res: Response) => {
+  const task = req.params.task;
+  const route = req.body;
+  const updated = db.updateTaskRouting(task, route);
+  res.json(updated);
 });
 
 // 5. Centralized API & Integrations Management

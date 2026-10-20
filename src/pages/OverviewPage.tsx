@@ -87,7 +87,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigate }) => {
             className="flex items-center gap-1.5 rounded-xl border border-purple-500/40 bg-purple-900/40 px-3.5 py-2 text-xs font-bold text-purple-200 hover:bg-purple-800/50 hover:text-white transition shadow-sm"
           >
             <Mic className="h-3.5 w-3.5 text-purple-400 animate-pulse" />
-            <span>{isBn ? '🎙️ ভয়েস অ্যাসিস্ট্যান্ট' : '🎙️ Voice Assistant'}</span>
+            <span>{isBn ? '🎙️ এআই অ্যাসিস্ট্যান্ট' : '🎙️ AI Assistant'}</span>
           </button>
           <button
             onClick={() => onNavigate('inbox')}
