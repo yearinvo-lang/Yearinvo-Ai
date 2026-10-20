@@ -100,22 +100,22 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
 
     // 2. Fallback to direct fetch with resolved token and user headers
     const resolvedUser = user || (typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('yia_cached_user') || 'null') : null);
-    const token = authToken || (typeof window !== 'undefined' ? localStorage.getItem('yia_token') : null);
+    const token = authToken || (typeof window !== 'undefined' ? (localStorage.getItem('yia_token') || sessionStorage.getItem('yia_token')) : null);
 
-    if (!token) {
+    if (!token && !resolvedUser?.id) {
       throw new Error('Unauthorized: Authentication required. Please log in.');
     }
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
       ...(options.headers as Record<string, string>),
     };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
     if (activeWorkspace?.id) headers['X-Workspace-Id'] = activeWorkspace.id;
     if (resolvedUser?.id) headers['X-User-Id'] = resolvedUser.id;
     if (resolvedUser?.email) headers['X-User-Email'] = resolvedUser.email;
 
-    const res = await fetch(url, { ...options, headers });
+    const res = await fetch(url, { ...options, headers, credentials: 'include' });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.error || `HTTP ${res.status}`);

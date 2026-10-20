@@ -471,12 +471,39 @@ class DatabaseStore {
     // 2. Check client Firebase / OAuth session fallback token
     if (token.startsWith('yia_fb_')) {
       const raw = token.slice(7);
-      const parts = raw.split('.');
-      if (parts.length >= 2) {
-        const userId = parts[0];
-        const expiresAt = Number(parts[1]);
+      const lastDot = raw.lastIndexOf('.');
+      if (lastDot > 0) {
+        const userId = raw.slice(0, lastDot);
+        const expiresAt = Number(raw.slice(lastDot + 1));
         if (!isNaN(expiresAt) && expiresAt >= Date.now()) {
-          const user = this.getUserById(userId) || this.getUserByEmail(userId);
+          let user = this.getUserById(userId) || this.getUserByEmail(userId);
+          if (!user && userId) {
+            // Auto-provision user if they authenticated via Firebase on client
+            const cleanEmail = userId.includes('@') ? userId.toLowerCase() : `user_${userId.slice(0, 8)}@example.com`;
+            user = this.createUser({
+              id: userId,
+              name: userId.includes('@') ? userId.split('@')[0] : 'Business Owner',
+              email: cleanEmail,
+              role: 'owner',
+              isSuperAdmin: false,
+              status: 'active',
+              passwordHash: 'session-managed',
+              salt: 'session-managed',
+              createdAt: new Date().toISOString(),
+            });
+            const wsSlug = (user.name || 'store').toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 30);
+            this.createWorkspace({
+              id: `ws_${user.id}`,
+              name: `${user.name}'s Store`,
+              slug: `${wsSlug}-${user.id.slice(-4)}`,
+              ownerId: user.id,
+              businessType: 'Retail & E-commerce',
+              currency: 'BDT',
+              timezone: 'Asia/Dhaka',
+              language: 'both',
+              createdAt: new Date().toISOString(),
+            });
+          }
           if (user && user.status !== 'suspended') {
             return { token, userId: user.id, expiresAt };
           }
@@ -484,22 +511,53 @@ class DatabaseStore {
       }
     }
 
-    // 3. Cryptographically verify signed token (preserves sessions across Vercel / serverless restarts)
+    // 3. Cryptographically verify signed token (preserves sessions across Vercel / Cloud Run restarts)
     if (token.startsWith('yia_')) {
       const raw = token.slice(4);
-      const parts = raw.split('.');
-      if (parts.length === 3) {
-        const [userId, expiresAtStr, sig] = parts;
-        const payload = `${userId}.${expiresAtStr}`;
-        const secret = process.env.SESSION_SECRET || 'yia_session_hmac_secret_2026_bangladesh';
-        const expectedSig = crypto.createHmac('sha256', secret).update(payload).digest('hex');
+      const lastDot = raw.lastIndexOf('.');
+      if (lastDot > 0) {
+        const sig = raw.slice(lastDot + 1);
+        const payload = raw.slice(0, lastDot);
+        const secondLastDot = payload.lastIndexOf('.');
+        if (secondLastDot > 0) {
+          const userId = payload.slice(0, secondLastDot);
+          const expiresAtStr = payload.slice(secondLastDot + 1);
+          const secret = process.env.SESSION_SECRET || 'yia_session_hmac_secret_2026_bangladesh';
+          const expectedSig = crypto.createHmac('sha256', secret).update(payload).digest('hex');
 
-        if (sig === expectedSig) {
-          const expiresAt = Number(expiresAtStr);
-          if (!isNaN(expiresAt) && expiresAt >= Date.now()) {
-            const user = this.getUserById(userId);
-            if (user && user.status !== 'suspended') {
-              return { token, userId, expiresAt };
+          if (sig === expectedSig) {
+            const expiresAt = Number(expiresAtStr);
+            if (!isNaN(expiresAt) && expiresAt >= Date.now()) {
+              let user = this.getUserById(userId) || this.getUserByEmail(userId);
+              if (!user && userId) {
+                const cleanEmail = userId.includes('@') ? userId.toLowerCase() : `user_${userId.slice(0, 8)}@example.com`;
+                user = this.createUser({
+                  id: userId,
+                  name: userId.includes('@') ? userId.split('@')[0] : 'Business Owner',
+                  email: cleanEmail,
+                  role: 'owner',
+                  isSuperAdmin: false,
+                  status: 'active',
+                  passwordHash: 'session-managed',
+                  salt: 'session-managed',
+                  createdAt: new Date().toISOString(),
+                });
+                const wsSlug = (user.name || 'store').toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 30);
+                this.createWorkspace({
+                  id: `ws_${user.id}`,
+                  name: `${user.name}'s Store`,
+                  slug: `${wsSlug}-${user.id.slice(-4)}`,
+                  ownerId: user.id,
+                  businessType: 'Retail & E-commerce',
+                  currency: 'BDT',
+                  timezone: 'Asia/Dhaka',
+                  language: 'both',
+                  createdAt: new Date().toISOString(),
+                });
+              }
+              if (user && user.status !== 'suspended') {
+                return { token, userId: user.id, expiresAt };
+              }
             }
           }
         }

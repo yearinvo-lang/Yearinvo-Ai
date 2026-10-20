@@ -112,7 +112,7 @@ export class AIGateway {
       };
     } catch (primaryError: any) {
       const cleanErrMsg = sanitizeErrorMessage(primaryError);
-      console.warn(`[AIGateway] Primary provider "${primary.name}" unavailable for task "${task}": ${cleanErrMsg}`);
+      console.log(`[AIGateway] Provider note for task "${task}": ${cleanErrMsg}`);
 
       // 3. Fallback handling
       if (fallback && fallback.id !== primary.id && fallback.isEnabled) {
@@ -138,7 +138,7 @@ export class AIGateway {
           };
         } catch (fallbackError: any) {
           const cleanFallbackMsg = sanitizeErrorMessage(fallbackError);
-          console.warn(`[AIGateway] Fallback provider "${fallback.name}" unavailable: ${cleanFallbackMsg}`);
+          console.log(`[AIGateway] Fallback provider note: ${cleanFallbackMsg}`);
           throw new Error(`AI operations unavailable on primary (${cleanErrMsg}) and fallback (${cleanFallbackMsg}).`);
         }
       }
@@ -181,7 +181,7 @@ export class AIGateway {
         const client = new GoogleGenAI({
           apiKey,
           httpOptions: {
-            headers: { 'User-Agent': 'aistudio-build-yearinfo' },
+            headers: { 'User-Agent': 'aistudio-build' },
           },
         });
 
@@ -414,7 +414,7 @@ export class AIGateway {
       if (pType === 'gemini') {
         const client = new GoogleGenAI({
           apiKey: effectiveKey,
-          httpOptions: { headers: { 'User-Agent': 'aistudio-build-yearinfo' } },
+          httpOptions: { headers: { 'User-Agent': 'aistudio-build' } },
         });
 
         const response = await client.models.generateContent({

@@ -11,6 +11,12 @@ import {
   LogOut,
   Sun,
   Moon,
+  Sparkles,
+  Key,
+  Check,
+  AlertTriangle,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.tsx';
 
@@ -25,6 +31,57 @@ export const SettingsPage: React.FC = () => {
 
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  // AI Provider & API Key States
+  const [selectedProvider, setSelectedProvider] = useState<'prov_gemini' | 'prov_openai' | 'prov_groq'>('prov_gemini');
+  const [aiApiKey, setAiApiKey] = useState('');
+  const [showKey, setShowKey] = useState(false);
+  const [testingKey, setTestingKey] = useState(false);
+  const [savingKey, setSavingKey] = useState(false);
+  const [keyFeedback, setKeyFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const handleTestAIKey = async () => {
+    if (!aiApiKey.trim()) return;
+    setTestingKey(true);
+    setKeyFeedback(null);
+    try {
+      const res = await apiRequest(`/api/admin/ai-providers/${selectedProvider}/test`, {
+        method: 'POST',
+        body: JSON.stringify({ testKey: aiApiKey.trim() }),
+      });
+      if (res.success) {
+        setKeyFeedback({ type: 'success', message: `Verification successful! Connected in ${res.latencyMs || 0}ms.` });
+      } else {
+        setKeyFeedback({ type: 'error', message: res.error || res.message || 'Key test failed.' });
+      }
+    } catch (err: any) {
+      setKeyFeedback({ type: 'error', message: err.message || 'Connection test failed.' });
+    } finally {
+      setTestingKey(false);
+    }
+  };
+
+  const handleSaveAIKey = async () => {
+    if (!aiApiKey.trim()) return;
+    setSavingKey(true);
+    setKeyFeedback(null);
+    try {
+      await apiRequest(`/api/admin/ai-providers/${selectedProvider}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          apiKey: aiApiKey.trim(),
+          isEnabled: true,
+          isConfigured: true,
+        }),
+      });
+      setKeyFeedback({ type: 'success', message: 'API key saved securely! The AI Assistant will now use this key.' });
+      setAiApiKey('');
+    } catch (err: any) {
+      setKeyFeedback({ type: 'error', message: err.message || 'Failed to save API key.' });
+    } finally {
+      setSavingKey(false);
+    }
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -200,6 +257,97 @@ export const SettingsPage: React.FC = () => {
                 <span>Dark</span>
               </button>
             </div>
+          </div>
+        </div>
+
+        {/* AI Assistant & Intelligence Configuration */}
+        <div className="rounded-2xl border border-purple-500/20 bg-gradient-to-b from-purple-950/20 to-transparent p-6 space-y-4 shadow-sm">
+          <div className="flex items-center justify-between border-b border-purple-500/20 pb-3">
+            <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-purple-500" />
+              AI Assistant & API Gateway Configuration
+            </h2>
+            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
+              Active Grounded Brain
+            </span>
+          </div>
+
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Configure your custom Gemini, OpenAI, or Groq API key to power conversational business intelligence, sales agent chats, and social post generation. When using the default project, grounded store analytics are always enabled automatically.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {[
+              { id: 'prov_gemini', name: 'Google Gemini', desc: 'gemini-3.8-flash (Recommended)' },
+              { id: 'prov_openai', name: 'OpenAI', desc: 'gpt-4o-mini' },
+              { id: 'prov_groq', name: 'Groq Cloud', desc: 'llama-3.3-70b-versatile' },
+            ].map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => setSelectedProvider(p.id as any)}
+                className={`p-3 rounded-xl border text-left transition ${
+                  selectedProvider === p.id
+                    ? 'border-purple-500 bg-purple-600/10 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 shadow-sm'
+                    : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
+                }`}
+              >
+                <div className="font-bold text-xs">{p.name}</div>
+                <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">{p.desc}</div>
+              </button>
+            ))}
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+              <span>{selectedProvider === 'prov_gemini' ? 'Gemini API Key' : selectedProvider === 'prov_openai' ? 'OpenAI API Key' : 'Groq API Key'}</span>
+              <span className="text-[11px] font-normal text-slate-500">Stored securely server-side</span>
+            </label>
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <input
+                  type={showKey ? 'text' : 'password'}
+                  value={aiApiKey}
+                  onChange={(e) => setAiApiKey(e.target.value)}
+                  placeholder={selectedProvider === 'prov_gemini' ? 'AIzaSy... (Custom Gemini Key)' : selectedProvider === 'prov_openai' ? 'sk-... (Custom OpenAI Key)' : 'gsk_... (Custom Groq Key)'}
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3.5 py-2 text-xs text-slate-900 dark:text-white focus:border-purple-500 focus:outline-none pr-10 font-mono"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowKey(!showKey)}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                >
+                  {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+
+              <button
+                type="button"
+                disabled={testingKey || !aiApiKey.trim()}
+                onClick={handleTestAIKey}
+                className="px-3.5 py-2 rounded-xl border border-purple-500/40 bg-purple-900/30 text-purple-200 text-xs font-bold hover:bg-purple-800/40 disabled:opacity-50 transition shrink-0"
+              >
+                {testingKey ? 'Testing...' : 'Test Key'}
+              </button>
+
+              <button
+                type="button"
+                disabled={savingKey || !aiApiKey.trim()}
+                onClick={handleSaveAIKey}
+                className="px-4 py-2 rounded-xl bg-purple-600 text-white text-xs font-bold hover:bg-purple-500 disabled:opacity-50 transition shadow-sm shrink-0"
+              >
+                {savingKey ? 'Saving...' : 'Save Key'}
+              </button>
+            </div>
+
+            {keyFeedback && (
+              <div className={`p-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 ${
+                keyFeedback.type === 'success' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
+              }`}>
+                {keyFeedback.type === 'success' ? <Check className="w-4 h-4 shrink-0" /> : <AlertTriangle className="w-4 h-4 shrink-0" />}
+                <span>{keyFeedback.message}</span>
+              </div>
+            )}
           </div>
         </div>
 

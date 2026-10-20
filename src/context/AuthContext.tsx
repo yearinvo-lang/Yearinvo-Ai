@@ -393,19 +393,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       createdAt: new Date().toISOString(),
     };
 
-    const expiresAt = Date.now() + 86400000 * 7;
+    const expiresAt = Date.now() + 86400000 * 30;
     const clientToken = `yia_fb_${localUser.id}.${expiresAt}`;
     setToken(clientToken);
     sessionStorage.setItem('yia_token', clientToken);
-    if (localStorage.getItem('yia_remember') === 'true') {
-      localStorage.setItem('yia_token', clientToken);
-    }
+    localStorage.setItem('yia_token', clientToken);
 
     setUser(localUser);
     localStorage.setItem('yia_cached_user', JSON.stringify(localUser));
     localStorage.setItem('yia_cached_workspace', JSON.stringify(localWorkspace));
     setWorkspaces([localWorkspace]);
     setActiveWorkspaceState(localWorkspace);
+
+    // Asynchronously synchronize with backend to establish HMAC session & HttpOnly cookie
+    fetch('/api/auth/firebase-sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        uid: localUser.id,
+        email: localUser.email,
+        name: localUser.name,
+        avatarUrl: localUser.avatarUrl,
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.token) {
+          setToken(data.token);
+          localStorage.setItem('yia_token', data.token);
+          sessionStorage.setItem('yia_token', data.token);
+        }
+        if (data?.user) {
+          setUser(data.user);
+          localStorage.setItem('yia_cached_user', JSON.stringify(data.user));
+        }
+        if (data?.workspaces && data.workspaces.length > 0) {
+          setWorkspaces(data.workspaces);
+          if (data.activeWorkspace) {
+            setActiveWorkspaceState(data.activeWorkspace);
+            localStorage.setItem('yia_cached_workspace', JSON.stringify(data.activeWorkspace));
+          }
+        }
+      })
+      .catch(() => {});
   };
 
   const login = async (email: string, password?: string, firebaseUid?: string, fbUserObj?: any, rememberMe: boolean = false) => {

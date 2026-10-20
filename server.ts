@@ -27,6 +27,37 @@ const isProduction = process.env.NODE_ENV === 'production';
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Cookie Helpers for iframe compatibility (SameSite=None; Secure for https/Cloud Run, SameSite=Lax for http)
+function getCookieHeader(token: string, req: Request, maxAge: number = 2592000): string {
+  const isSecure = req.secure || req.headers['x-forwarded-proto'] === 'https' || (req.headers['host'] || '').includes('run.app');
+  const sameSite = isSecure ? 'SameSite=None; Secure' : 'SameSite=Lax';
+  return `yia_token=${token}; Path=/; HttpOnly; ${sameSite}; Max-Age=${maxAge}`;
+}
+
+function getClearCookieHeader(req: Request): string {
+  const isSecure = req.secure || req.headers['x-forwarded-proto'] === 'https' || (req.headers['host'] || '').includes('run.app');
+  const sameSite = isSecure ? 'SameSite=None; Secure' : 'SameSite=Lax';
+  return `yia_token=; Path=/; HttpOnly; ${sameSite}; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+}
+
+// Cross-Origin and iframe Credentials Middleware
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const origin = req.headers.origin;
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  }
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-workspace-id, x-workspace, x-user-id, x-user-email');
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(204);
+    return;
+  }
+  next();
+});
+
 // Start background worker in non-serverless runtime
 if (process.env.VERCEL !== '1' && !process.env.NOW_REGION) {
   backgroundScheduler.start();
@@ -59,22 +90,30 @@ function authMiddleware(req: Request, res: Response, next: NextFunction): void {
     token = cookieToken.trim();
   }
 
+  // Resolve session using either the Bearer token or cookieToken as fallback
+  let session = token ? db.getSession(token) : null;
+  if (!session && cookieToken && cookieToken !== token) {
+    const cookieSession = db.getSession(cookieToken);
+    if (cookieSession) {
+      session = cookieSession;
+      token = cookieToken;
+    }
+  }
+
   if (!token) {
     res.status(401).json({ error: 'Unauthorized: Authentication required. Please log in.' });
     return;
   }
 
-  const session = db.getSession(token);
-
   if (!session || (session.expiresAt && session.expiresAt <= Date.now())) {
-    res.setHeader('Set-Cookie', 'yia_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT');
+    res.setHeader('Set-Cookie', getClearCookieHeader(req));
     res.status(401).json({ error: 'Unauthorized: Invalid or expired session. Please log in.' });
     return;
   }
 
-  let user = db.getUserById(session.userId);
+  let user = db.getUserById(session.userId) || db.getUserByEmail(session.userId);
   if (!user) {
-    res.setHeader('Set-Cookie', 'yia_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT');
+    res.setHeader('Set-Cookie', getClearCookieHeader(req));
     res.status(401).json({ error: 'Unauthorized: User account not found.' });
     return;
   }
@@ -83,6 +122,9 @@ function authMiddleware(req: Request, res: Response, next: NextFunction): void {
     res.status(403).json({ error: 'Forbidden: Account is suspended. Please contact support.' });
     return;
   }
+
+  // Maintain active iframe-safe HttpOnly session cookie
+  res.setHeader('Set-Cookie', getCookieHeader(token, req));
 
   // Authoritative email synchronization: If client supplies a verified real email via x-user-email,
   // and the user currently has a placeholder/generated email, automatically synchronize it
@@ -270,20 +312,52 @@ app.post('/api/auth/login', (req: Request, res: Response) => {
       }
     }
 
+    // If user does not exist yet but was verified by Firebase Auth
+    if (!user && firebaseUid) {
+      const { salt, hash } = db.hashPassword(password || crypto.randomBytes(16).toString('hex'));
+      user = db.createUser({
+        id: firebaseUid,
+        name: cleanEmail.split('@')[0],
+        email: cleanEmail,
+        businessName: `${cleanEmail.split('@')[0]}'s Store`,
+        role: 'owner',
+        isSuperAdmin: false,
+        status: 'active',
+        createdAt: new Date().toISOString(),
+        passwordHash: hash,
+        salt,
+      });
+      const wsSlug = (user.name || 'store').toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 30);
+      db.createWorkspace({
+        id: `ws_${user.id}`,
+        name: user.businessName || `${user.name}'s Store`,
+        slug: `${wsSlug}-${user.id.slice(-4)}`,
+        ownerId: user.id,
+        businessType: 'Retail & E-commerce',
+        currency: 'BDT',
+        timezone: 'Asia/Dhaka',
+        language: 'both',
+        createdAt: new Date().toISOString(),
+      });
+    }
+
     if (!user) {
       res.status(401).json({ error: 'Invalid email address or password.' });
       return;
     }
 
-    if (!user.passwordHash || !user.salt) {
-      res.status(401).json({ error: 'Invalid credentials. If you registered via Google or Facebook, please use that provider.' });
-      return;
-    }
+    // Only verify server password if NOT authenticated via Firebase Auth
+    if (!firebaseUid) {
+      if (!user.passwordHash || !user.salt || user.passwordHash === 'session-managed') {
+        res.status(401).json({ error: 'Please sign in with your email and password or Google account.' });
+        return;
+      }
 
-    const valid = db.verifyPassword(password, user.passwordHash, user.salt);
-    if (!valid) {
-      res.status(401).json({ error: 'Invalid email address or password.' });
-      return;
+      const valid = db.verifyPassword(password, user.passwordHash, user.salt);
+      if (!valid) {
+        res.status(401).json({ error: 'Invalid email address or password.' });
+        return;
+      }
     }
 
     if (user.status === 'suspended') {
@@ -297,9 +371,7 @@ app.post('/api/auth/login', (req: Request, res: Response) => {
     }
 
     const token = db.createSession(user.id);
-    const isSecure = req.secure || req.headers['x-forwarded-proto'] === 'https';
-    const cookieHeader = `yia_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000${isSecure ? '; Secure' : ''}`;
-    res.setHeader('Set-Cookie', cookieHeader);
+    res.setHeader('Set-Cookie', getCookieHeader(token, req));
     const workspaces = db.getWorkspacesForUser(user.id);
 
     const safeUser = {
@@ -385,8 +457,7 @@ app.post('/api/auth/firebase-sync', (req: Request, res: Response) => {
     }
 
     const token = db.createSession(user.id);
-    const isSecure = req.secure || req.headers['x-forwarded-proto'] === 'https';
-    res.setHeader('Set-Cookie', `yia_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000${isSecure ? '; Secure' : ''}`);
+    res.setHeader('Set-Cookie', getCookieHeader(token, req));
     const workspaces = db.getWorkspacesForUser(user.id);
 
     const safeUser = {
@@ -442,9 +513,8 @@ app.get('/api/auth/me', authMiddleware, (req: Request, res: Response) => {
   const activeWsId = (req as any).workspaceId;
   const activeWorkspace = workspaces.find((w) => w.id === activeWsId) || workspaces[0] || null;
 
-  const isSecure = req.secure || req.headers['x-forwarded-proto'] === 'https';
   if (token) {
-    res.setHeader('Set-Cookie', `yia_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000${isSecure ? '; Secure' : ''}`);
+    res.setHeader('Set-Cookie', getCookieHeader(token, req));
   }
 
   const safeUser = {

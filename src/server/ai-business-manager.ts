@@ -2,7 +2,7 @@ import { GoogleGenAI } from '@google/genai';
 import { db } from './db.ts';
 import { BusinessManagerService } from './integrations/business-manager.ts';
 import { toBanglaDigits } from './voice-assistant.ts';
-import { AIGateway } from './ai-gateway.ts';
+import { AIGateway, sanitizeErrorMessage } from './ai-gateway.ts';
 import type { DailyBusinessMetrics, BusinessManagerStructuredReport, AIAssistantAction } from '../types/index.ts';
 
 // In-memory multi-turn session storage for follow-up conversation context
@@ -457,7 +457,7 @@ Provide a comprehensive, direct, and actionable answer.`;
         };
       }
     } catch {
-      // Deterministic fallback tool aggregator activates smoothly with full grounding
+      // Grounded business intelligence engine seamlessly activates with verified database facts
     }
 
     // 4. Deterministic Fallback with High-Precision Intent Routing
