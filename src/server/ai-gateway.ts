@@ -54,21 +54,50 @@ export interface ProviderConnectionTestResult {
 export function sanitizeErrorMessage(err: any): string {
   if (!err) return 'Unknown error';
   const raw = typeof err === 'string' ? err : err.message || String(err);
+  const status = (err && typeof err === 'object' && (err.status || err.code)) || undefined;
+
+  let parsed: any = null;
   try {
-    const parsed = JSON.parse(raw);
-    if (parsed.error?.message) {
-      if (parsed.error?.code === 403 || parsed.error?.status === 'PERMISSION_DENIED') {
-        return 'Project API access restricted (PERMISSION_DENIED). Please configure your custom Gemini, OpenAI, or Groq API key in Settings.';
-      }
-      return parsed.error.message;
-    }
+    parsed = JSON.parse(raw);
   } catch {
-    // not json
+    // not JSON
   }
-  if (/PERMISSION_DENIED|denied access|403/i.test(raw)) {
-    return 'Project API access restricted (PERMISSION_DENIED). Please configure your custom Gemini, OpenAI, or Groq API key in Settings.';
+
+  const code = parsed?.error?.code || status;
+  const statusStr = parsed?.error?.status || '';
+  const innerMsg = parsed?.error?.message || raw;
+
+  // 1. Missing credentials
+  if (/no valid api key|no api credential|api key is required|api_key_missing|not configured/i.test(raw)) {
+    return 'API key is missing or not configured. Please enter your API key in Settings > AI Assistant & API Gateway Configuration.';
   }
-  return raw;
+
+  // 2. Invalid API Key
+  if ((code === 400 || code === 401) && /API_KEY_INVALID|key not valid|invalid api key/i.test(innerMsg)) {
+    return 'The provided API key is invalid or expired (API_KEY_INVALID). Please verify and enter a valid API key from Google AI Studio (aistudio.google.com).';
+  }
+
+  // 3. Project Denied / Permission Denied
+  if (code === 403 || statusStr === 'PERMISSION_DENIED' || /PERMISSION_DENIED|denied access|project has been denied access/i.test(innerMsg)) {
+    return 'Project API access restricted (403 PERMISSION_DENIED). Please enter your custom Gemini API key from Google AI Studio (aistudio.google.com) in Settings.';
+  }
+
+  // 4. Quota Exceeded / Rate Limit
+  if (code === 429 || statusStr === 'RESOURCE_EXHAUSTED' || /RESOURCE_EXHAUSTED|quota exceeded|rate limit/i.test(innerMsg)) {
+    return 'AI request limit or quota exceeded (429 RESOURCE_EXHAUSTED). Please wait a few moments or check your quota at Google AI Studio.';
+  }
+
+  // 5. Model Not Found / Unsupported
+  if (code === 404 || statusStr === 'NOT_FOUND' || /NOT_FOUND|is not found|no longer available/i.test(innerMsg)) {
+    return `The requested AI model was not found or is deprecated (404 NOT_FOUND). Please ensure gemini-3.8-flash is configured in AI Providers. (${innerMsg})`;
+  }
+
+  // 6. Network / Abort
+  if (err?.name === 'AbortError' || /timeout|network|econnrefused|fetch failed/i.test(raw)) {
+    return 'Connection to AI service timed out or failed. Please check your internet connectivity.';
+  }
+
+  return innerMsg;
 }
 
 export class AIGateway {

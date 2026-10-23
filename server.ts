@@ -3172,6 +3172,36 @@ app.get('/api/admin/ai-providers', authMiddleware, superAdminMiddleware, (req: R
   res.json(providers);
 });
 
+// Settings AI Configuration (accessible to all authenticated workspace members/owners)
+app.get('/api/settings/ai-config', authMiddleware, (req: Request, res: Response) => {
+  const providers = db.getAIProviders();
+  const defaultProv = db.getDefaultAIProvider();
+  const hasEnvGemini = Boolean(process.env.GEMINI_API_KEY);
+
+  res.json({
+    providers: providers.map((p) => {
+      const hasCustom = db.hasCustomAIProviderCredential(p.id);
+      return {
+        id: p.id,
+        name: p.name,
+        providerType: p.providerType,
+        model: p.model,
+        apiKeyMasked: p.apiKeyMasked,
+        isConfigured: p.isConfigured,
+        isDefault: p.isDefault,
+        isFallback: p.isFallback,
+        lastTestStatus: p.lastTestStatus,
+        lastTestedAt: p.lastTestedAt,
+        lastError: p.lastError,
+        hasCustomKey: hasCustom,
+        isEnvKey: p.id === 'prov_gemini' && hasEnvGemini && !hasCustom,
+      };
+    }),
+    activeProviderId: defaultProv?.id || 'prov_gemini',
+    envKeyAvailable: hasEnvGemini,
+  });
+});
+
 app.post('/api/admin/ai-providers', authMiddleware, superAdminMiddleware, (req: Request, res: Response) => {
   const actor = (req as any).user;
   const { name, providerType, apiEndpoint, model, apiKey, isDefault, isFallback } = req.body;
@@ -3260,6 +3290,27 @@ app.delete('/api/admin/ai-providers/:id', authMiddleware, superAdminMiddleware, 
   });
 
   res.json({ success: true });
+});
+
+// Remove custom saved key for provider (reverting to environment variable or unconfigured)
+app.post('/api/admin/ai-providers/:id/remove-key', authMiddleware, superAdminMiddleware, (req: Request, res: Response) => {
+  const providerId = req.params.id;
+  const actor = (req as any).user;
+  db.removeAIProviderCredential(providerId);
+
+  const updated = db.getAIProvider(providerId);
+
+  db.logAudit({
+    id: `audit_ai_rem_${Date.now()}`,
+    userId: actor.id,
+    userName: actor.name,
+    action: 'AI_PROVIDER_KEY_REMOVED',
+    details: `Removed custom API key for "${updated?.name || providerId}"`,
+    timestamp: new Date().toISOString(),
+    status: 'success',
+  });
+
+  res.json({ success: true, provider: updated });
 });
 
 app.post('/api/admin/ai-providers/:id/set-default', authMiddleware, superAdminMiddleware, (req: Request, res: Response) => {

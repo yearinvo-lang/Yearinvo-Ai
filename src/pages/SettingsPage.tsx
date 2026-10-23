@@ -34,25 +34,62 @@ export const SettingsPage: React.FC = () => {
 
   // AI Provider & API Key States
   const [selectedProvider, setSelectedProvider] = useState<'prov_gemini' | 'prov_openai' | 'prov_groq'>('prov_gemini');
+  const [aiConfig, setAiConfig] = useState<any>(null);
+  const [loadingAiConfig, setLoadingAiConfig] = useState(false);
   const [aiApiKey, setAiApiKey] = useState('');
   const [showKey, setShowKey] = useState(false);
   const [testingKey, setTestingKey] = useState(false);
   const [savingKey, setSavingKey] = useState(false);
+  const [removingKey, setRemovingKey] = useState(false);
   const [keyFeedback, setKeyFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
+  const isOwnerOrAdmin = Boolean(
+    user && (user.isSuperAdmin || user.role === 'superadmin' || user.role === 'owner' || user.role === 'admin')
+  );
+
+  const fetchAiConfig = async () => {
+    setLoadingAiConfig(true);
+    try {
+      const data = await apiRequest('/api/settings/ai-config');
+      if (data && data.providers) {
+        setAiConfig(data);
+      }
+    } catch (err: any) {
+      console.warn('Could not load AI configuration:', err);
+    } finally {
+      setLoadingAiConfig(false);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchAiConfig();
+  }, []);
+
+  const activeProviderInfo = aiConfig?.providers?.find((p: any) => p.id === selectedProvider);
+
   const handleTestAIKey = async () => {
-    if (!aiApiKey.trim()) return;
     setTestingKey(true);
     setKeyFeedback(null);
     try {
+      const body: any = {};
+      if (aiApiKey.trim()) {
+        body.testKey = aiApiKey.trim();
+      }
       const res = await apiRequest(`/api/admin/ai-providers/${selectedProvider}/test`, {
         method: 'POST',
-        body: JSON.stringify({ testKey: aiApiKey.trim() }),
+        body: JSON.stringify(body),
       });
       if (res.success) {
-        setKeyFeedback({ type: 'success', message: `Verification successful! Connected in ${res.latencyMs || 0}ms.` });
+        setKeyFeedback({
+          type: 'success',
+          message: `Verification successful! Connected to ${res.model || activeProviderInfo?.model || 'model'} in ${res.latencyMs || 0}ms.`,
+        });
+        fetchAiConfig();
       } else {
-        setKeyFeedback({ type: 'error', message: res.error || res.message || 'Key test failed.' });
+        setKeyFeedback({
+          type: 'error',
+          message: res.error || res.message || 'Key test failed. Check key validity, API quotas, or network.',
+        });
       }
     } catch (err: any) {
       setKeyFeedback({ type: 'error', message: err.message || 'Connection test failed.' });
@@ -74,12 +111,36 @@ export const SettingsPage: React.FC = () => {
           isConfigured: true,
         }),
       });
-      setKeyFeedback({ type: 'success', message: 'API key saved securely! The AI Assistant will now use this key.' });
+      setKeyFeedback({
+        type: 'success',
+        message: 'API key saved securely in encrypted vault (AES-256-GCM)! It is now the active credential.',
+      });
       setAiApiKey('');
+      await fetchAiConfig();
     } catch (err: any) {
       setKeyFeedback({ type: 'error', message: err.message || 'Failed to save API key.' });
     } finally {
       setSavingKey(false);
+    }
+  };
+
+  const handleRemoveAIKey = async () => {
+    setRemovingKey(true);
+    setKeyFeedback(null);
+    try {
+      await apiRequest(`/api/admin/ai-providers/${selectedProvider}/remove-key`, {
+        method: 'POST',
+      });
+      setKeyFeedback({
+        type: 'success',
+        message: 'Custom API key removed from secure vault. Reverted to environment fallback if configured.',
+      });
+      setAiApiKey('');
+      await fetchAiConfig();
+    } catch (err: any) {
+      setKeyFeedback({ type: 'error', message: err.message || 'Failed to remove custom key.' });
+    } finally {
+      setRemovingKey(false);
     }
   };
 
@@ -262,55 +323,140 @@ export const SettingsPage: React.FC = () => {
 
         {/* AI Assistant & Intelligence Configuration */}
         <div className="rounded-2xl border border-purple-500/20 bg-gradient-to-b from-purple-950/20 to-transparent p-6 space-y-4 shadow-sm">
-          <div className="flex items-center justify-between border-b border-purple-500/20 pb-3">
-            <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-purple-500" />
-              AI Assistant & API Gateway Configuration
-            </h2>
-            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-purple-500/20 pb-3">
+            <div>
+              <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-purple-500" />
+                AI Assistant & API Gateway Configuration
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Google Gemini is the default intelligence engine for conversational store business intelligence. Keys are stored in an encrypted server-side vault (AES-256-GCM).
+              </p>
+            </div>
+            <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 self-start sm:self-auto shrink-0">
               Active Grounded Brain
             </span>
           </div>
 
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Configure your custom Gemini, OpenAI, or Groq API key to power conversational business intelligence, sales agent chats, and social post generation. When using the default project, grounded store analytics are always enabled automatically.
-          </p>
-
+          {/* Provider Selector */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {[
-              { id: 'prov_gemini', name: 'Google Gemini', desc: 'gemini-3.8-flash (Recommended)' },
-              { id: 'prov_openai', name: 'OpenAI', desc: 'gpt-4o-mini' },
+              { id: 'prov_gemini', name: 'Google Gemini', desc: 'gemini-3.8-flash (Primary Default)' },
+              { id: 'prov_openai', name: 'OpenAI', desc: 'gpt-4o-mini (Fallback)' },
               { id: 'prov_groq', name: 'Groq Cloud', desc: 'llama-3.3-70b-versatile' },
-            ].map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => setSelectedProvider(p.id as any)}
-                className={`p-3 rounded-xl border text-left transition ${
-                  selectedProvider === p.id
-                    ? 'border-purple-500 bg-purple-600/10 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 shadow-sm'
-                    : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
-                }`}
-              >
-                <div className="font-bold text-xs">{p.name}</div>
-                <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">{p.desc}</div>
-              </button>
-            ))}
+            ].map((p) => {
+              const provData = aiConfig?.providers?.find((item: any) => item.id === p.id);
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedProvider(p.id as any);
+                    setKeyFeedback(null);
+                  }}
+                  className={`p-3 rounded-xl border text-left transition ${
+                    selectedProvider === p.id
+                      ? 'border-purple-500 bg-purple-600/10 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 shadow-sm'
+                      : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="font-bold text-xs">{p.name}</div>
+                    {provData?.hasCustomKey ? (
+                      <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-mono font-semibold">Vault</span>
+                    ) : provData?.isEnvKey ? (
+                      <span className="text-[10px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded font-mono font-semibold">ENV</span>
+                    ) : null}
+                  </div>
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">{p.desc}</div>
+                </button>
+              );
+            })}
           </div>
 
-          <div className="space-y-2">
+          {/* Current Provider Status Card */}
+          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-4 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+              <div className="space-y-0.5">
+                <div className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <span>Selected: {activeProviderInfo?.name || (selectedProvider === 'prov_gemini' ? 'Google Gemini' : selectedProvider)}</span>
+                  <span className="font-mono text-[11px] text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">
+                    {activeProviderInfo?.model || 'gemini-3.8-flash'}
+                  </span>
+                </div>
+                <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Credential Status:{' '}
+                  {activeProviderInfo?.hasCustomKey ? (
+                    <span className="text-emerald-500 dark:text-emerald-400 font-semibold">
+                      Configured & Encrypted in Server Vault ({activeProviderInfo.apiKeyMasked || '••••••••'})
+                    </span>
+                  ) : activeProviderInfo?.isEnvKey ? (
+                    <span className="text-blue-500 dark:text-blue-400 font-semibold">
+                      Loaded from Environment Variable ({activeProviderInfo.apiKeyMasked || '••••••••env'})
+                    </span>
+                  ) : (
+                    <span className="text-rose-500 dark:text-rose-400 font-semibold">
+                      Not Configured (Custom key required)
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-slate-500 dark:text-slate-400">Connection:</span>
+                {activeProviderInfo?.lastTestStatus === 'success' ? (
+                  <span className="text-[11px] font-bold text-emerald-500 dark:text-emerald-400 flex items-center gap-1">
+                    <CheckCircle className="w-3.5 h-3.5" /> Verified
+                  </span>
+                ) : activeProviderInfo?.lastTestStatus === 'failed' ? (
+                  <span className="text-[11px] font-bold text-rose-500 dark:text-rose-400 flex items-center gap-1">
+                    <AlertTriangle className="w-3.5 h-3.5" /> Check Error
+                  </span>
+                ) : (
+                  <span className="text-[11px] text-slate-400">Untested</span>
+                )}
+              </div>
+            </div>
+
+            {activeProviderInfo?.lastError && (
+              <div className="text-[11px] p-2.5 rounded-lg border border-rose-500/30 bg-rose-500/10 text-rose-400 space-y-1">
+                <div className="font-semibold flex items-center gap-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                  <span>Last Test Error:</span>
+                </div>
+                <div className="font-mono text-[10px] break-words">{activeProviderInfo.lastError}</div>
+              </div>
+            )}
+          </div>
+
+          {/* Key Input & Actions */}
+          <div className="space-y-3">
             <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
-              <span>{selectedProvider === 'prov_gemini' ? 'Gemini API Key' : selectedProvider === 'prov_openai' ? 'OpenAI API Key' : 'Groq API Key'}</span>
-              <span className="text-[11px] font-normal text-slate-500">Stored securely server-side</span>
+              <span>
+                {selectedProvider === 'prov_gemini'
+                  ? 'Enter or Replace Gemini API Key'
+                  : selectedProvider === 'prov_openai'
+                  ? 'Enter or Replace OpenAI API Key'
+                  : 'Enter or Replace Groq API Key'}
+              </span>
+              <span className="text-[11px] font-normal text-slate-500">Encrypted with AES-256-GCM server-side</span>
             </label>
-            <div className="flex gap-2">
+
+            <div className="flex flex-col sm:flex-row gap-2">
               <div className="relative flex-1">
                 <input
                   type={showKey ? 'text' : 'password'}
                   value={aiApiKey}
                   onChange={(e) => setAiApiKey(e.target.value)}
-                  placeholder={selectedProvider === 'prov_gemini' ? 'AIzaSy... (Custom Gemini Key)' : selectedProvider === 'prov_openai' ? 'sk-... (Custom OpenAI Key)' : 'gsk_... (Custom Groq Key)'}
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3.5 py-2 text-xs text-slate-900 dark:text-white focus:border-purple-500 focus:outline-none pr-10 font-mono"
+                  disabled={!isOwnerOrAdmin}
+                  placeholder={
+                    selectedProvider === 'prov_gemini'
+                      ? 'AIzaSy... (Paste Gemini API key here)'
+                      : selectedProvider === 'prov_openai'
+                      ? 'sk-... (Paste OpenAI API key here)'
+                      : 'gsk_... (Paste Groq API key here)'
+                  }
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3.5 py-2.5 text-xs text-slate-900 dark:text-white focus:border-purple-500 focus:outline-none pr-10 font-mono disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <button
                   type="button"
@@ -321,33 +467,80 @@ export const SettingsPage: React.FC = () => {
                 </button>
               </div>
 
-              <button
-                type="button"
-                disabled={testingKey || !aiApiKey.trim()}
-                onClick={handleTestAIKey}
-                className="px-3.5 py-2 rounded-xl border border-purple-500/40 bg-purple-900/30 text-purple-200 text-xs font-bold hover:bg-purple-800/40 disabled:opacity-50 transition shrink-0"
-              >
-                {testingKey ? 'Testing...' : 'Test Key'}
-              </button>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  disabled={testingKey || (!aiApiKey.trim() && !activeProviderInfo?.isConfigured)}
+                  onClick={handleTestAIKey}
+                  className="px-3.5 py-2.5 rounded-xl border border-purple-500/40 bg-purple-900/30 text-purple-200 text-xs font-bold hover:bg-purple-800/40 disabled:opacity-50 transition shrink-0"
+                  title="Test key connection"
+                >
+                  {testingKey ? 'Testing...' : 'Test Key'}
+                </button>
 
-              <button
-                type="button"
-                disabled={savingKey || !aiApiKey.trim()}
-                onClick={handleSaveAIKey}
-                className="px-4 py-2 rounded-xl bg-purple-600 text-white text-xs font-bold hover:bg-purple-500 disabled:opacity-50 transition shadow-sm shrink-0"
-              >
-                {savingKey ? 'Saving...' : 'Save Key'}
-              </button>
+                <button
+                  type="button"
+                  disabled={savingKey || !aiApiKey.trim() || !isOwnerOrAdmin}
+                  onClick={handleSaveAIKey}
+                  className="px-4 py-2.5 rounded-xl bg-purple-600 text-white text-xs font-bold hover:bg-purple-500 disabled:opacity-50 transition shadow-sm shrink-0"
+                >
+                  {savingKey ? 'Saving...' : 'Save Key'}
+                </button>
+
+                {activeProviderInfo?.hasCustomKey && isOwnerOrAdmin && (
+                  <button
+                    type="button"
+                    disabled={removingKey}
+                    onClick={handleRemoveAIKey}
+                    className="px-3 py-2.5 rounded-xl border border-rose-500/40 bg-rose-950/30 text-rose-300 text-xs font-bold hover:bg-rose-900/40 disabled:opacity-50 transition shrink-0"
+                    title="Remove custom key from vault"
+                  >
+                    {removingKey ? 'Removing...' : 'Remove Key'}
+                  </button>
+                )}
+              </div>
             </div>
 
             {keyFeedback && (
-              <div className={`p-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 ${
-                keyFeedback.type === 'success' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
-              }`}>
+              <div
+                className={`p-3 rounded-xl text-xs font-semibold flex items-center gap-2 ${
+                  keyFeedback.type === 'success'
+                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                    : 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
+                }`}
+              >
                 {keyFeedback.type === 'success' ? <Check className="w-4 h-4 shrink-0" /> : <AlertTriangle className="w-4 h-4 shrink-0" />}
                 <span>{keyFeedback.message}</span>
               </div>
             )}
+
+            {/* Clear setup instructions */}
+            <div className="mt-2 rounded-xl bg-slate-900/50 border border-slate-800 p-3 text-[11px] text-slate-400 space-y-1.5">
+              <div className="font-bold text-slate-300 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                <span>How to Configure Gemini API Key:</span>
+              </div>
+              <ul className="list-disc list-inside space-y-1 pl-1">
+                <li>
+                  <span className="font-semibold text-slate-200">Google AI Studio (Recommended):</span> Visit{' '}
+                  <a
+                    href="https://aistudio.google.com/app/apikey"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-purple-400 hover:underline"
+                  >
+                    aistudio.google.com/app/apikey
+                  </a>
+                  , create an API key, paste it into the field above and click <strong>Save Key</strong>.
+                </li>
+                <li>
+                  <span className="font-semibold text-slate-200">Persistence Guarantee:</span> Saved keys are encrypted using AES-256-GCM in an encrypted credential vault on the server. Navigating away, restarting the application, or redeploying will preserve your key.
+                </li>
+                <li>
+                  <span className="font-semibold text-slate-200">Vercel Environment Variables:</span> If hosting on Vercel or cloud containers, you may set <code className="text-purple-300">GEMINI_API_KEY</code> in project environment variables. Note that changing variables in Vercel requires triggering a redeploy for the server to load the new value.
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
 

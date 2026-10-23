@@ -59,7 +59,7 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
     {
       id: 'welcome_1',
       sender: 'assistant',
-      text: 'আসসালামু আলাইকুম! আমি আপনার YEAR INFO AI ভয়েস অ্যাসিস্ট্যান্ট। আমাকে মুখে জিজ্ঞাসা করুন: "আজকের কতটুকু সেল হলো?", "আজকের সেলে কি কি রিপোর্ট?", "কতগুলা সেল হইছে?", "কমপ্লিট হইছে কতগুলা?", অথবা "অর্ডার পেন্ডিংয়ে রয়েছে কতগুলা?"। এরপর এই রিপোর্টটি সরাসরি ইমেইলেও পাঠাতে পারবেন!',
+      text: 'আসসালামু আলাইকুম! আমি YEAR INFO AI এর বুদ্ধিমান সহকারী। যেকোনো সাধারণ প্রশ্ন, ব্যবসায়িক পরিকল্পনা ও কৌশল, পণ্যের দাম ও স্টক, আজকের সেলস কিংবা মেসেঞ্জার ও হোয়াটসঅ্যাপের আপডেট সম্পর্কে আমাকে নির্দ্বিধায় জিজ্ঞাসা করুন।',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     },
   ]);
@@ -130,10 +130,9 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
     }
   }, [messages, interimTranscript, isOpen]);
 
-  // Fetch initial sales metrics when modal opens
+  // Manage voice audio on modal open/close
   useEffect(() => {
     if (isOpen) {
-      fetchTodayStats();
       if (user?.email) {
         setRecipientEmail(user.email);
       }
@@ -717,6 +716,19 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
                     >
                       {msg.text}
 
+                      {/* If the response asks to configure API key in settings, show direct action link */}
+                      {isAssistant && (msg.text.includes('Settings') || msg.text.includes('API key')) && (
+                        <div className="mt-2.5 pt-2 border-t border-purple-500/20">
+                          <a
+                            href="/settings"
+                            onClick={onClose}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-md transition"
+                          >
+                            <span>⚙️ Settings এ API Key কনফিগার করুন</span>
+                          </a>
+                        </div>
+                      )}
+
                       {/* If assistant returned metrics in message, show quick summary pills */}
                       {isAssistant && msg.metrics && (
                         <div className="mt-3 pt-3 border-t border-purple-500/20 grid grid-cols-2 gap-2 text-xs">
@@ -763,25 +775,25 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
               <div ref={messagesEndRef} />
             </div>
 
-            {/* QUICK QUESTION CHIPS (Exact user requested phrases) */}
+            {/* QUICK QUESTION CHIPS (Conversational & Business Intelligence) */}
             <div className="px-3 sm:px-4 py-1.5 border-t border-purple-500/10 bg-purple-950/20 shrink-0">
               <div className="text-[10px] uppercase font-bold text-slate-400 mb-1 flex items-center gap-1">
                 <span>দ্রুত জিজ্ঞাসা করুন (Quick Prompts):</span>
               </div>
               <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-purple-900/60">
                 {[
-                  'আজকের কতটুকু সেল হলো?',
-                  'আজকে কতটি অর্ডার এসেছে?',
-                  'আজকে কতটি অর্ডার ডেলিভারি হয়েছে?',
-                  'আমাদের ক্রিম হানির দাম কত?',
-                  'আমাদের সবচেয়ে বেশি বিক্রি হওয়া পণ্য কোনটি?',
                   'কেমন আছো?',
+                  'আজকে সেলসের অবস্থা কী?',
+                  'আজকে কতগুলো Messenger মেসেজ এসেছে?',
+                  'আমাদের বিক্রি কীভাবে বাড়ানো যায়?',
+                  'আমাদের ক্রিম হানির দাম কত?',
+                  'হোয়াটসঅ্যাপে কোনো নতুন মেসেজ আছে?',
+                  'আজকে কতটি অর্ডার ডেলিভারি হয়েছে?',
                   'বাংলাদেশের রাজধানী কী?',
                   '২৭৫ গুণ ১৬ কত?',
                   'What is artificial intelligence?',
                   'আমার বর্তমান লোকেশন কী?',
                   'আজকে আমার ব্যবসার সম্পূর্ণ রিপোর্ট দাও',
-                  'গতকালের সঙ্গে তুলনা করো',
                   'কমপ্লিট হইছে কতগুলা?',
                   'অর্ডার পেন্ডিংয়ে রয়েছে কতগুলা?',
                 ].map((promptText) => (
@@ -884,10 +896,10 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
               <div>
                 <h3 className="text-sm font-bold text-white flex items-center gap-2">
                   <TrendingUp className="w-4 h-4 text-purple-400" />
-                  <span>আজকের লাইভ সেলস রিপোর্ট</span>
+                  <span>{latestMetrics ? 'আজকের লাইভ সেলস রিপোর্ট' : 'ব্যবসায়িক ইন্টেলিজেন্স ও চ্যানেল ডেটা'}</span>
                 </h3>
                 <p className="text-[11px] text-slate-400">
-                  {latestMetrics ? `${latestMetrics.dateBangla} · ${latestMetrics.date}` : 'ডেটা লোড হচ্ছে...'}
+                  {latestMetrics ? `${latestMetrics.dateBangla} · ${latestMetrics.date}` : 'প্রয়োজনে অন-ডিমান্ড সেলস রিপোর্ট লোড করুন'}
                 </p>
               </div>
               <button
@@ -1070,8 +1082,48 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
                 </div>
               </>
             ) : (
-              <div className="py-12 text-center text-slate-400 text-xs">
-                সেলস ডেটা লোড হচ্ছে...
+              <div className="py-6 px-2 space-y-4 text-xs">
+                <div className="rounded-2xl border border-purple-500/30 bg-purple-950/20 p-4 space-y-3">
+                  <div className="flex items-center gap-2 text-purple-300 font-bold">
+                    <Sparkles className="w-4 h-4 text-purple-400" />
+                    <span>অন-ডিমান্ড ডেটা ইন্টেলিজেন্স</span>
+                  </div>
+                  <p className="text-[11px] text-slate-300 leading-relaxed">
+                    অ্যাসিস্ট্যান্ট সাধারণ কথোপকথন, ব্যবসায়িক পরামর্শ ও পণ্যের তথ্য সরাসরি দিতে সক্ষম। সেলস বা চ্যানেল সংক্রান্ত প্রশ্ন করলে তা কেবল তখনই ডেটাবেস থেকে বিশ্লেষণ করে প্রদর্শিত হয়।
+                  </p>
+                  <button
+                    onClick={fetchTodayStats}
+                    disabled={loadingMetrics}
+                    className="w-full py-2.5 px-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition shadow-sm"
+                  >
+                    <TrendingUp className="w-3.5 h-3.5" />
+                    <span>{loadingMetrics ? 'সেলস হিসাব করা হচ্ছে...' : 'আজকের সম্পূর্ণ সেলস রিপোর্ট লোড করুন'}</span>
+                  </button>
+                </div>
+
+                <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 space-y-2.5">
+                  <div className="text-[11px] font-bold text-slate-200 uppercase tracking-wider">
+                    অনুমোদিত ডেটা সোর্স ও চ্যানেল (Authorized Sources):
+                  </div>
+                  <div className="space-y-2 text-[11px]">
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-slate-800/40">
+                      <span className="text-slate-300">🛍️ ওয়েবসাইট পণ্য ও মূল্য তালিকা</span>
+                      <span className="text-emerald-400 font-semibold">Active</span>
+                    </div>
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-slate-800/40">
+                      <span className="text-slate-300">📦 অর্ডার ও ডেলিভারি রেকর্ডস</span>
+                      <span className="text-emerald-400 font-semibold">Active</span>
+                    </div>
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-slate-800/40">
+                      <span className="text-slate-300">💬 ফেসবুক মেসেঞ্জার ইনবক্স</span>
+                      <span className="text-purple-300 font-semibold">On-demand</span>
+                    </div>
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-slate-800/40">
+                      <span className="text-slate-300">📱 হোয়াটসঅ্যাপ ক্লাউড এপিআই</span>
+                      <span className="text-purple-300 font-semibold">On-demand</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>

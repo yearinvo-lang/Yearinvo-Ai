@@ -67,6 +67,7 @@ interface DBState {
 
 const DATA_DIR = path.resolve(process.cwd(), 'data');
 const DB_FILE = path.join(DATA_DIR, 'db.json');
+const VAULT_FILE = path.join(DATA_DIR, 'secure-credentials.enc');
 
 class DatabaseStore {
   private data: DBState = {
@@ -275,15 +276,74 @@ class DatabaseStore {
         this.persist();
       }
 
-      // Initialize secure credentials from environment
-      if (process.env.GEMINI_API_KEY) {
-        this.setAIProviderCredential('prov_gemini', process.env.GEMINI_API_KEY);
+      // Load server-side AES-256-GCM encrypted credentials vault
+      this.loadVault();
+
+      // Synchronize provider masked status with loaded credentials without overwriting custom keys
+      const geminiProv = this.data.aiProviders?.find((p) => p.id === 'prov_gemini');
+      if (geminiProv) {
+        const customGeminiKey = this.secureCredentials['ai_provider:prov_gemini']?.apiKey;
+        if (customGeminiKey) {
+          geminiProv.isConfigured = true;
+          geminiProv.apiKeyMasked = `••••••••${customGeminiKey.slice(-4)}`;
+        } else if (process.env.GEMINI_API_KEY) {
+          geminiProv.isConfigured = true;
+          geminiProv.apiKeyMasked = `••••••••${process.env.GEMINI_API_KEY.slice(-4)}`;
+        } else {
+          geminiProv.isConfigured = false;
+          geminiProv.apiKeyMasked = undefined;
+        }
       }
 
       this.initialized = true;
     } catch (err) {
       console.error('Error initializing database file:', err);
       this.seedInitialData();
+    }
+  }
+
+  private getVaultDerivedKey(): Buffer {
+    const secret = process.env.SESSION_SECRET || 'yia-vault-master-key-2026-auth';
+    return crypto.scryptSync(secret, 'yia-credential-vault-salt-v1', 32);
+  }
+
+  private loadVault(): void {
+    try {
+      if (!fs.existsSync(VAULT_FILE)) {
+        this.secureCredentials = {};
+        return;
+      }
+      const raw = fs.readFileSync(VAULT_FILE, 'utf-8');
+      const payload = JSON.parse(raw);
+      if (!payload.iv || !payload.authTag || !payload.data) {
+        this.secureCredentials = {};
+        return;
+      }
+      const decipher = crypto.createDecipheriv('aes-256-gcm', this.getVaultDerivedKey(), Buffer.from(payload.iv, 'hex'));
+      decipher.setAuthTag(Buffer.from(payload.authTag, 'hex'));
+      let dec = decipher.update(payload.data, 'hex', 'utf8');
+      dec += decipher.final('utf8');
+      this.secureCredentials = JSON.parse(dec) || {};
+    } catch (err) {
+      console.warn('Notice loading encrypted credentials vault (initializing fresh):', (err as any)?.message || err);
+      this.secureCredentials = {};
+    }
+  }
+
+  private persistVault(): void {
+    try {
+      if (!fs.existsSync(DATA_DIR)) {
+        fs.mkdirSync(DATA_DIR, { recursive: true });
+      }
+      const iv = crypto.randomBytes(12);
+      const cipher = crypto.createCipheriv('aes-256-gcm', this.getVaultDerivedKey(), iv);
+      let enc = cipher.update(JSON.stringify(this.secureCredentials), 'utf8', 'hex');
+      enc += cipher.final('hex');
+      const authTag = cipher.getAuthTag().toString('hex');
+      const payload = JSON.stringify({ iv: iv.toString('hex'), authTag, data: enc }, null, 2);
+      fs.writeFileSync(VAULT_FILE, payload, 'utf-8');
+    } catch (err) {
+      console.error('Failed to persist encrypted credential vault:', err);
     }
   }
 
@@ -755,6 +815,7 @@ class DatabaseStore {
       ...creds,
       savedAt: Date.now(),
     };
+    this.persistVault();
   }
 
   public getChannelCredential(workspaceId: string, type: string) {
@@ -765,6 +826,7 @@ class DatabaseStore {
   public deleteChannelCredential(workspaceId: string, type: string) {
     const key = `${workspaceId}:${type}`;
     delete this.secureCredentials[key];
+    this.persistVault();
   }
 
   // Temporary Meta authorization sessions for serverless consistency
@@ -1574,13 +1636,39 @@ class DatabaseStore {
 
   public setAIProviderCredential(providerId: string, apiKey: string) {
     this.secureCredentials[`ai_provider:${providerId}`] = {
-      apiKey,
+      apiKey: apiKey.trim(),
       savedAt: Date.now(),
     };
+    this.persistVault();
   }
 
   public getAIProviderCredential(providerId: string): string | undefined {
-    return this.secureCredentials[`ai_provider:${providerId}`]?.apiKey;
+    const custom = this.secureCredentials[`ai_provider:${providerId}`]?.apiKey;
+    if (custom) return custom;
+    if (providerId === 'prov_gemini' && process.env.GEMINI_API_KEY) {
+      return process.env.GEMINI_API_KEY;
+    }
+    return undefined;
+  }
+
+  public hasCustomAIProviderCredential(providerId: string): boolean {
+    return Boolean(this.secureCredentials[`ai_provider:${providerId}`]?.apiKey);
+  }
+
+  public removeAIProviderCredential(providerId: string): boolean {
+    delete this.secureCredentials[`ai_provider:${providerId}`];
+    this.persistVault();
+    const prov = this.getAIProvider(providerId);
+    if (prov) {
+      const hasEnv = providerId === 'prov_gemini' && Boolean(process.env.GEMINI_API_KEY);
+      this.updateAIProvider(providerId, {
+        isConfigured: hasEnv,
+        apiKeyMasked: hasEnv ? `••••••••${process.env.GEMINI_API_KEY?.slice(-4)}` : undefined,
+        lastTestStatus: 'untested',
+        lastError: undefined,
+      });
+    }
+    return true;
   }
 
   public createAIProvider(provider: AIProviderConfig, secretKey?: string): AIProviderConfig {
@@ -1638,6 +1726,7 @@ class DatabaseStore {
 
     this.data.aiProviders.splice(idx, 1);
     delete this.secureCredentials[`ai_provider:${id}`];
+    this.persistVault();
 
     // Ensure a default provider exists
     if (!this.data.aiProviders.some((p) => p.isDefault)) {

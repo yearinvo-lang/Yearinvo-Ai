@@ -2171,17 +2171,16 @@
       "name": "Google Gemini (Official @google/genai)",
       "providerType": "gemini",
       "model": "gemini-3.8-flash",
-      "apiKeyMasked": "••••••••env",
-      "isConfigured": false,
+      "apiKeyMasked": "••••••••Ppkw",
+      "isConfigured": true,
       "isEnabled": true,
       "isDefault": true,
       "isFallback": false,
-      "lastTestStatus": "failed",
-      "lastTestedAt": "2026-10-19T16:23:36.927Z",
+      "lastTestStatus": "untested",
+      "lastTestedAt": "2026-10-23T15:43:16.563Z",
       "totalRequests": 142,
       "totalTokens": 58200,
-      "createdAt": "2026-10-09T15:54:18.491Z",
-      "lastError": "Default API key restricted (PERMISSION_DENIED). Please provide your custom Gemini API key in Settings."
+      "createdAt": "2026-10-09T15:54:18.491Z"
     },
     {
       "id": "prov_openai",
